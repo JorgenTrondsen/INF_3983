@@ -1,7 +1,12 @@
+Content/Assets/Characters/*
+!Content/Assets/Characters/.gitkeep
+INF_3910.code-workspace
 Binaries
 DerivedDataCache
 Intermediate
 Saved
+.clangd
+.clang-format
 .vscode
 .vs
 *.VC.db
