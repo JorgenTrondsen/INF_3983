@@ -9,7 +9,12 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "InputActionValue.h"
+#include "GameplayAbilitySystem/GASAbilitySystemLibrary.h"
+#include "GameplayAbilitySystem/GASCharacterClassInfo.h"
+#include "GameplayAbilitySystem/GASPlayerState.h"
+#include "GameplayAbilitySystem/GASAbilitySystemComponent.h"
+#include "UObject/Object.h"
+#include "GameplayAbilitySystem/GASAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -126,5 +131,93 @@ void AINF_3910Character::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AINF_3910Character::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (HasAuthority())
+	{
+		InitAbilityActorInfo();
+	}
+}
+
+void AINF_3910Character::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	InitAbilityActorInfo();
+}
+
+UAbilitySystemComponent* AINF_3910Character::GetAbilitySystemComponent() const
+{
+	return GASAbilitySystemComp;
+}
+
+void AINF_3910Character::InitAbilityActorInfo()
+{
+    if(AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>())
+    {
+		GASAbilitySystemComp = Cast<UGASAbilitySystemComponent>(GASPlayerState->GetAbilitySystemComponent());
+        GASAttributes = GASPlayerState->GetGASAttributes();
+		
+        if (IsValid(GASAbilitySystemComp))
+        {
+			GASAbilitySystemComp->InitAbilityActorInfo(GASPlayerState, this);
+			BindCallbacksToDependencies();
+
+			if (HasAuthority())
+			{
+				InitClassDefaults();
+			}
+        }
+    }
+}
+
+
+void AINF_3910Character::InitClassDefaults()
+{
+	if (!CharacterTag.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Character Tag Selected In This Character %s"), *GetNameSafe(this));
+	}
+	else if (UGASCharacterClassInfo *ClassInfo = UGASAbilitySystemLibrary::GetCharacterClassDefaultInfo(this))
+	{
+		if (const FCharacterClassDefaultInfo *SelectedClassInfo = ClassInfo->ClassDefaultInfoMap.Find(CharacterTag))
+		{
+			if (IsValid(GASAbilitySystemComp))
+			{
+				GASAbilitySystemComp->AddCharacterAbilities(SelectedClassInfo->StartingAbilities);
+				GASAbilitySystemComp->AddCharacterPassiveAbilities(SelectedClassInfo->StartingPassives);
+				GASAbilitySystemComp->InitializeDefaultAttributes(SelectedClassInfo->DefaultAttributes);
+			}
+		}
+		
+	}
+}
+void AINF_3910Character::BindCallbacksToDependencies()
+{
+	if (IsValid(GASAbilitySystemComp) && IsValid(GASAttributes))
+	{
+		GASAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(GASAttributes->GetHealthAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) 
+		{
+			OnHealthChanged(Data.NewValue, GASAttributes->GetMaxHealth());
+		});
+
+		GASAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(GASAttributes->GetStaminaAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) 
+		{
+			OnStaminaChanged(Data.NewValue, GASAttributes->GetMaxStamina());
+		});
+	}
+}
+
+void AINF_3910Character::BroadcastInitialValues()
+{
+	if (IsValid(GASAttributes))
+	{
+		OnHealthChanged(GASAttributes->GetHealth(), GASAttributes->GetMaxHealth());
+		OnStaminaChanged(GASAttributes->GetStamina(), GASAttributes->GetMaxStamina());
 	}
 }
