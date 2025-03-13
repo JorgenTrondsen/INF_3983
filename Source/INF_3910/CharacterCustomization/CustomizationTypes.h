@@ -25,22 +25,22 @@ struct FCharacterModelParts
 {
     GENERATED_BODY()
 
+    // Reference to the animation blueprint for this model
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
+    TSubclassOf<UAnimInstance> AnimBlueprint;
+
     // The skeletal meshes for different body parts
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
-    TObjectPtr<USkeletalMesh> Face;
+    TObjectPtr<USkeletalMesh> Torso;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
-    TObjectPtr<USkeletalMesh> Torso;
+    TObjectPtr<USkeletalMesh> Face;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
     TObjectPtr<USkeletalMesh> Legs;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
     TArray<TObjectPtr<USkeletalMesh>> HairOptions;
-
-    // Reference to the animation blueprint for this model
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
-    TSubclassOf<UAnimInstance> AnimBlueprint;
 };
 
 // New intermediate struct to hold gender-specific models
@@ -48,10 +48,10 @@ USTRUCT(BlueprintType)
 struct FRaceModels
 {
     GENERATED_BODY()
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Models")
     FCharacterModelParts MaleModel;
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Models")
     FCharacterModelParts FemaleModel;
 };
