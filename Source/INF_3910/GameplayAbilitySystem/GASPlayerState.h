@@ -10,7 +10,7 @@
 #include "GASPlayerState.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class INF_3910_API AGASPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -29,9 +29,9 @@ public:
 	UGASAttributeSet *GetGASAttributes() const;
 
 protected:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UGASAbilitySystemComponent> GASAbilitySystemComp;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UGASAttributeSet> GASAttributes;
 };

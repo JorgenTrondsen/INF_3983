@@ -12,7 +12,6 @@ TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(ECharacterRace Race, E
 
         if (const FWeaponAnimMontages *WeaponAnim = GenderAnim.WeaponAnimations.Find(WeaponType))
         {
-            // Convert TObjectPtr array to raw pointer array
             for (const TObjectPtr<UAnimMontage> &Montage : WeaponAnim->AttackMontages)
             {
                 Result.Add(Montage.Get());
