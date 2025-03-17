@@ -11,10 +11,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "GameplayAbilitySystem/GASAbilitySystemLibrary.h"
 #include "GameplayAbilitySystem/GASCharacterClassInfo.h"
-#include "GameplayAbilitySystem/GASPlayerState.h"
-#include "GameplayAbilitySystem/GASAbilitySystemComponent.h"
+#include "GameplayAbilitySystem/Game/GASPlayerState.h"
+#include "GameplayAbilitySystem/AbilitySystem/GASAbilitySystemComponent.h"
+#include "GameplayAbilitySystem/AbilitySystem/GASAttributeSet.h"
 #include "UObject/Object.h"
-#include "GameplayAbilitySystem/GASAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 

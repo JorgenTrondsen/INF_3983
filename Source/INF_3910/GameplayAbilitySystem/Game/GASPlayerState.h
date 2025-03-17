@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemInterface.h"
-#include "GASAbilitySystemComponent.h"
-#include "GASAttributeSet.h"
+#include "../AbilitySystem/GASAbilitySystemComponent.h"
+#include "../AbilitySystem/GASAttributeSet.h"
 #include "GASPlayerState.generated.h"
 
 /**

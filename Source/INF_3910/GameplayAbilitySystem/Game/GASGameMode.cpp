@@ -2,7 +2,7 @@
 
 
 #include "GASGameMode.h"
-#include "GASCharacterClassInfo.h"
+#include "../GASCharacterClassInfo.h"
 
 UGASCharacterClassInfo* AGASGameMode::GetCharacterClassDefaultInfo() const
 {

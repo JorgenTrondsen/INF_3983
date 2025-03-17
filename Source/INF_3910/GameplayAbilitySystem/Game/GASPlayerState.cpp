@@ -2,8 +2,8 @@
 
 
 #include "GASPlayerState.h"
-#include "GASAbilitySystemComponent.h"
-#include "GASAttributeSet.h"
+#include "../AbilitySystem/GASAbilitySystemComponent.h"
+#include "../AbilitySystem/GASAttributeSet.h"
 
 
 AGASPlayerState::AGASPlayerState()

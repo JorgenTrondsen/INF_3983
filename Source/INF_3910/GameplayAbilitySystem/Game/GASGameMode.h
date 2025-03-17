@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
-#include "GASCharacterClassInfo.h"
+#include "../GASCharacterClassInfo.h"
 #include "GASGameMode.generated.h"
 
 /**
