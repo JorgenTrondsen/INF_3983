@@ -25,6 +25,7 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "Net/UnrealNetwork.h"
 #include "UObject/CoreNet.h"
+#include <cstdlib>
 
 void AMapGenerator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -42,6 +43,8 @@ AMapGenerator::AMapGenerator()
 
 	// enable replication
 	bReplicates = true;
+
+	bHasGeneratedMesh = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
 
@@ -86,7 +89,7 @@ void AMapGenerator::PostInitializeComponents()
 		{
 			MapSeed = FMath::Rand();
 		}
-		else
+		else 
 		{
 			MapSeed = CustomSeed;
 		}
@@ -106,7 +109,15 @@ void AMapGenerator::PostInitializeComponents()
 void AMapGenerator::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bHasGeneratedMesh = false;
     
+	if (!HasAuthority() && MapSeed != 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Client forcing mesh generation in BeginPlay with seed: %d"), MapSeed);
+        GenerateMesh();
+    }
+
     // Just log mesh status
     bool HasMeshData = (Vertices.Num() > 0);
     bool HasCollision = ProceduralMesh->GetBodySetup() != nullptr;
@@ -117,8 +128,11 @@ void AMapGenerator::BeginPlay()
 
 void AMapGenerator::OnRep_MapSeed()
 {
-	if (!HasAuthority() && !bHasGeneratedMesh)
+	if (!HasAuthority())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Client received MapSeed: %d"), MapSeed);
+        // Always regenerate the mesh when we get a new seed
+        bHasGeneratedMesh = false;
 		GenerateMesh();
 	}
 

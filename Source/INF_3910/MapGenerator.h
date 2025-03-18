@@ -104,7 +104,7 @@ private:
 
 	// add the option to use custom seed
 	UPROPERTY(EditAnywhere, Category="Map Generation")
-	bool bUseCustomSeed = false;
+	bool bUseCustomSeed = true;
 
 	UPROPERTY(EditAnywhere, Category="Map Generation", Meta = (EditCondition = "bUseCustomSeed"))
 	int32 CustomSeed = 12345; // used if bUseCustomSeed is true
