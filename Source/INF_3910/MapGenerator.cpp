@@ -26,6 +26,7 @@
 #include "Net/UnrealNetwork.h"
 #include "UObject/CoreNet.h"
 #include <cstdlib>
+#include "INF3910GameInstance.h"
 
 void AMapGenerator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -111,12 +112,48 @@ void AMapGenerator::BeginPlay()
 	Super::BeginPlay();
 
 	bHasGeneratedMesh = false;
-    
-	if (!HasAuthority() && MapSeed != 0)
+
+	// get game instance and check for a seed
+	if (UGameInstance* GameInst = GetWorld()->GetGameInstance())
     {
-        UE_LOG(LogTemp, Warning, TEXT("Client forcing mesh generation in BeginPlay with seed: %d"), MapSeed);
-        GenerateMesh();
+        if (UINF3910GameInstance* MyGameInst = Cast<UINF3910GameInstance>(GameInst))
+        {
+            int32 StoredSeed = MyGameInst->GetMapSeed();
+            
+            // If we have a valid seed from the session
+            if (StoredSeed != 0)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Using seed from session: %d"), StoredSeed);
+                
+                // Override the replicated seed with our session seed
+                MapSeed = StoredSeed;
+                
+                if (GEngine) 
+				{
+					GEngine->AddOnScreenDebugMessage(-1,
+						35.0f,
+						FColor::Green,
+						FString::Printf(TEXT("Generating map with this seed %d players"), MapSeed)
+					);
+				}
+                
+            }
+        } else {
+			GEngine->AddOnScreenDebugMessage(-1,
+				35.0f,
+				FColor::Green,
+				FString::Printf(TEXT("could not cast game instance"), MapSeed)
+			);
+		}
     }
+	if (GEngine) 
+	{
+		GEngine->AddOnScreenDebugMessage(-1,
+			35.0f,
+			FColor::Green,
+			FString::Printf(TEXT("Generating map with this seed %d"), MapSeed)
+		);
+	}
 
     // Just log mesh status
     bool HasMeshData = (Vertices.Num() > 0);
@@ -135,8 +172,6 @@ void AMapGenerator::OnRep_MapSeed()
         bHasGeneratedMesh = false;
 		GenerateMesh();
 	}
-
-
 }
 
 // Called every frame
