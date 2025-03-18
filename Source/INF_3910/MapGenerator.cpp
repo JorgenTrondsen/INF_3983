@@ -23,15 +23,24 @@
 #include "Math/UnrealMathUtility.h"
 #include "ProceduralMeshComponent.h"
 #include "PhysicsEngine/BodySetup.h"
+#include "Net/UnrealNetwork.h"
+#include "UObject/CoreNet.h"
 
+void AMapGenerator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	// replicate the seed to all clients
+	DOREPLIFETIME(AMapGenerator, MapSeed);
+}
 
 // Sets default values
 AMapGenerator::AMapGenerator()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// do not call tick every frame
 	PrimaryActorTick.bCanEverTick = false;
 
+	// enable replication
 	bReplicates = true;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
@@ -40,66 +49,56 @@ AMapGenerator::AMapGenerator()
 	ProceduralMesh->SetupAttachment(RootComponent);
 	
 	// settings for proper replication
-	ProceduralMesh->SetIsReplicated(true);
 	ProceduralMesh->SetEnableGravity(false);
 	ProceduralMesh->SetCollisionProfileName("BlockAll");
 	ProceduralMesh->bUseComplexAsSimpleCollision = true;
 
 	bUseAsyncCooking = true;
-
 }
 
-void AMapGenerator::ServerGenerateAndReplicateMesh_Implementation()
+void AMapGenerator::GenerateMesh()
 {
-	if (HasAuthority())
+	CreateVertices();
+	CreateTriangles();
+
+	ProceduralMesh->CreateMeshSection(0, Vertices, Triangles, TArray<FVector>(), UV0, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
+    ProceduralMesh->SetMaterial(0, Material);
+    
+    // Set up collision
+    ProceduralMesh->ContainsPhysicsTriMeshData(true);
+    if (ProceduralMesh->GetBodySetup())
     {
-        CreateVertices();
-        CreateTriangles();
-        
-        ProceduralMesh->CreateMeshSection(0, Vertices, Triangles, TArray<FVector>(), UV0, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
-        ProceduralMesh->SetMaterial(0, Material);
-
-		ProceduralMesh->ContainsPhysicsTriMeshData(true);
-
-		// Set collision complexity through the body setup
-		if (ProceduralMesh->GetBodySetup())
-		{
-			ProceduralMesh->GetBodySetup()->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseSimpleAndComplex;
-		}
-        
-        GenerateMap(4); // For player starts
-
-		// Notify clients to sync their collision
-        MulticastSyncMesh();
+        ProceduralMesh->GetBodySetup()->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseSimpleAndComplex;
     }
-}
-
-void AMapGenerator::MulticastSyncMesh_Implementation()
-{
-    // Only clients should execute this
-    if (!HasAuthority())
-    {
-        UE_LOG(LogTemp, Log, TEXT("Client received mesh sync request"));
-        
-        // Force collision update on clients
-        if (ProceduralMesh)
-        {
-            ProceduralMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        }
-    }
+    
+    bHasGeneratedMesh = true;
 }
 
 void AMapGenerator::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	// server initializes the seed
 	if(HasAuthority())
 	{
-		ServerGenerateAndReplicateMesh();
+		// generate random seed if custom seed is not enabled
+		if(!bUseCustomSeed)
+		{
+			MapSeed = FMath::Rand();
+		}
+		else
+		{
+			MapSeed = CustomSeed;
+		}
+
+		// generate the mesh on the server
+		GenerateMesh();
+
+		// Generate the player starts on the server
+		GenerateMap(4);
 	}
-
+	
 	UE_LOG(LogTemp, Log, TEXT("MapGenerator: PostInitializeComponents - Generating Early"));
-
 
 }
 
@@ -107,22 +106,23 @@ void AMapGenerator::PostInitializeComponents()
 void AMapGenerator::BeginPlay()
 {
 	Super::BeginPlay();
-	
-
-	// For both server and clients, log mesh status
-    bool IsServer = HasAuthority();
+    
+    // Just log mesh status
     bool HasMeshData = (Vertices.Num() > 0);
     bool HasCollision = ProceduralMesh->GetBodySetup() != nullptr;
     
-    UE_LOG(LogTemp, Warning, TEXT("MapGenerator BeginPlay - IsServer: %d, HasMeshData: %d, HasCollision: %d, VertexCount: %d"),
-           IsServer, HasMeshData, HasCollision, Vertices.Num());
-           
-    // If client and no mesh data, request from server
-    if (!IsServer && !HasMeshData)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Client has no mesh data, should receive from server"));
-    }
-	
+    UE_LOG(LogTemp, Warning, TEXT("MapGenerator BeginPlay - HasMeshData: %d, HasCollision: %d, VertexCount: %d"),
+           HasMeshData, HasCollision, Vertices.Num());
+}
+
+void AMapGenerator::OnRep_MapSeed()
+{
+	if (!HasAuthority() && !bHasGeneratedMesh)
+	{
+		GenerateMesh();
+	}
+
+
 }
 
 // Called every frame
@@ -169,7 +169,39 @@ void AMapGenerator::GenerateMap(int32 PlayerCount)
 
 }
 
+float AMapGenerator::GenerateSeedBasedNoise(float X, float Y)
+{
+	// initialize a random stream with the seed and the X,Y position
+	// this ensures the same coordinates will always return the same value
+	int32 PositionSeed = MapSeed + (X * 1000) + (Y * 1000);
+	FRandomStream RandomStream(PositionSeed);
 
+	// deterministic noise algorithm
+	// multiple octaves of noise to create a more natural look
+
+	float Amplitude = 1.0f;
+	float Frequency = 1.0f;
+	float NoiseValue = 0.0f;
+	float TotalAmplitude = 0.0f;
+
+	for (int i = 0; i < 4; i++)
+	{
+		float PointValue = 0.0f;
+		for (int j = 0; j < 4; j++)
+		{
+			PointValue += (RandomStream.FRandRange(0.0f, 1.0f) * 2.0f - 1.0f);
+		}
+		PointValue /= 4.0f;
+
+		NoiseValue += PointValue * Amplitude;
+		TotalAmplitude += Amplitude;
+
+		Amplitude *= 0.5f;
+		Frequency *= 2.0f;
+	}
+
+	return NoiseValue / TotalAmplitude;
+}
 
 // method to generate the player starts and add them to the map
 void AMapGenerator::GeneratePlayerStarts(int32 NumStarts, FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right)
@@ -362,8 +394,6 @@ void AMapGenerator::CreateVertices()
 
 			float NormalizedDistance = FMath::Min(DistanceFromCenter / MaxRadius, 1.0f);
 
-
-            
 			// Calculate height factor:
             float HeightFactor = 0.0f;
 
@@ -400,7 +430,7 @@ void AMapGenerator::CreateVertices()
 				HeightFactor = PlainsStartHeight * (1.0f - PlainDistance);
 			}
 
-			float NoiseHeight = FMath::PerlinNoise2D(FVector2D(X * NoiseScale + 0.1, Y * NoiseScale + 0.1));
+			float NoiseHeight = GenerateSeedBasedNoise(X * NoiseScale, Y * NoiseScale);
 
 			// Combine the height factor with the noise and apply the multiplier
 			// float BaseHeight = 1000.0f;
