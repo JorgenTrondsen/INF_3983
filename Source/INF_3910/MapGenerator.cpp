@@ -82,26 +82,34 @@ void AMapGenerator::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	// server initializes the seed
-	if(HasAuthority())
-	{
-		// generate random seed if custom seed is not enabled
-		if(!bUseCustomSeed)
-		{
-			MapSeed = FMath::Rand();
-		}
-		else 
-		{
-			MapSeed = CustomSeed;
-		}
+	// // server initializes the seed
+	// if(HasAuthority())
+	// {
+	// 	// generate random seed if custom seed is not enabled
+	// 	if(!bUseCustomSeed)
+	// 	{
+	// 		MapSeed = FMath::Rand();
+	// 	}
+	// 	else 
+	// 	{
+	// 		MapSeed = CustomSeed;
+	// 	}
 
-		// generate the mesh on the server
-		GenerateMesh();
+	// 	// generate the mesh on the server	
+	// 	// Generate the player starts on the server
+	// }
+	GenerateMap(4);
 
-		// Generate the player starts on the server
-		GenerateMap(4);
-	}
+	// if (GEngine) 
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1,
+	// 		35.0f,
+	// 		FColor::Green,
+	// 		FString::Printf(TEXT("PostInitializeComponents: Generating mesh with seed: %d "), MapSeed)
+	// 	);
+	// }
 	
+	// GenerateMesh();
 	UE_LOG(LogTemp, Log, TEXT("MapGenerator: PostInitializeComponents - Generating Early"));
 
 }
@@ -133,17 +141,21 @@ void AMapGenerator::BeginPlay()
 					GEngine->AddOnScreenDebugMessage(-1,
 						35.0f,
 						FColor::Green,
-						FString::Printf(TEXT("Generating map with this seed %d players"), MapSeed)
+						FString::Printf(TEXT("Generating map with this seed %d"), MapSeed)
 					);
 				}
-                
+
+				GenerateMesh();
             }
         } else {
-			GEngine->AddOnScreenDebugMessage(-1,
-				35.0f,
-				FColor::Green,
-				FString::Printf(TEXT("could not cast game instance"), MapSeed)
-			);
+			if (GEngine) 
+			{
+				GEngine->AddOnScreenDebugMessage(-1,
+					35.0f,
+					FColor::Green,
+					FString::Printf(TEXT("could not cast game instance, seed:"), MapSeed)
+				);
+			}
 		}
     }
 	if (GEngine) 
@@ -167,6 +179,15 @@ void AMapGenerator::OnRep_MapSeed()
 {
 	if (!HasAuthority())
 	{
+		if (GEngine) 
+			{
+				GEngine->AddOnScreenDebugMessage(-1,
+					35.0f,
+					FColor::Green,
+					FString::Printf(TEXT("OnRep_MapSeed: Calling GenerateMesh with seed"), MapSeed)
+				);
+			}
+
 		UE_LOG(LogTemp, Warning, TEXT("Client received MapSeed: %d"), MapSeed);
         // Always regenerate the mesh when we get a new seed
         bHasGeneratedMesh = false;
@@ -223,6 +244,18 @@ float AMapGenerator::GenerateSeedBasedNoise(float X, float Y)
 	// initialize a random stream with the seed and the X,Y position
 	// this ensures the same coordinates will always return the same value
 	int32 PositionSeed = MapSeed + (X * 1000) + (Y * 1000);
+
+
+	if (GEngine) 
+		{
+			GEngine->AddOnScreenDebugMessage(-1,
+				15.0f,
+				FColor::Blue,
+				FString::Printf(TEXT("GenerateSeedBasedNoise: Creating noise with seed: %d"), MapSeed)
+			);
+		}
+
+
 	FRandomStream RandomStream(PositionSeed);
 
 	// deterministic noise algorithm
