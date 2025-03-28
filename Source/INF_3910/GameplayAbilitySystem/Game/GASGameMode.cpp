@@ -2,9 +2,13 @@
 
 
 #include "GASGameMode.h"
-#include "../GASCharacterClassInfo.h"
 
 UGASCharacterClassInfo* AGASGameMode::GetCharacterClassDefaultInfo() const
 {
     return ClassDefaults;
+}
+
+UProjectileInfo* AGASGameMode::GetProjectileInfo() const
+{
+    return ProjectileInfo;
 }

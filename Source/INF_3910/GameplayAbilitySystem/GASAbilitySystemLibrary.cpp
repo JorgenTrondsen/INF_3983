@@ -2,7 +2,6 @@
 
 
 #include "GASAbilitySystemLibrary.h"
-#include "GASCharacterClassInfo.h"
 #include "Game/GASGameMode.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -14,4 +13,14 @@ UGASCharacterClassInfo *UGASAbilitySystemLibrary::GetCharacterClassDefaultInfo(c
     }
 
     return nullptr;
+}
+
+UProjectileInfo* UGASAbilitySystemLibrary::GetProjectileInfo(const UObject* WorldContextObject)
+{
+	if (const AGASGameMode* GASGameMode = Cast<AGASGameMode>(UGameplayStatics::GetGameMode(WorldContextObject)))
+	{
+		return GASGameMode->GetProjectileInfo();
+	}
+
+	return nullptr;
 }

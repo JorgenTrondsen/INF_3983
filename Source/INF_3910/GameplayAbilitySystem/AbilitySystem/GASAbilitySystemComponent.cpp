@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GASAbilitySystemComponent.h"
-#include "GASGameplayAbility.h"
+#include "Abilities/GASGameplayAbility.h"
 
 void UGASAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)
 {

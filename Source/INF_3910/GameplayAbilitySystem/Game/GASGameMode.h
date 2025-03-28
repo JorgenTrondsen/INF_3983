@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
-#include "../GASCharacterClassInfo.h"
 #include "GASGameMode.generated.h"
 
+
+class UProjectileInfo;
+class UGASCharacterClassInfo;
 /**
  * 
  */
@@ -17,8 +19,12 @@ class INF_3910_API AGASGameMode : public AGameMode
 
 public:
 	UGASCharacterClassInfo* GetCharacterClassDefaultInfo() const;
+	UProjectileInfo* GetProjectileInfo() const;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Class Defaults")
 	TObjectPtr<UGASCharacterClassInfo> ClassDefaults;
+
+	UPROPERTY(EditDefaultsOnly, Category="Custom Values|Projectiles")
+	TObjectPtr<UProjectileInfo> ProjectileInfo;
 };

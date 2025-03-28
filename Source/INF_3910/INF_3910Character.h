@@ -10,6 +10,7 @@
 #include "Logging/LogMacros.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/ObjectPtr.h"
+#include "Interfaces/GASAbilitySystemInterface.h"
 #include "INF_3910Character.generated.h"
 
 class USpringArmComponent;
@@ -21,7 +22,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class AINF_3910Character : public ACharacter, public IAbilitySystemInterface
+class AINF_3910Character : public ACharacter, public IAbilitySystemInterface, public IGASAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -46,6 +47,8 @@ class AINF_3910Character : public ACharacter, public IAbilitySystemInterface
 public:
 	AINF_3910Character();
 
+	virtual USceneComponent *GetDynamicSpawnPoint_Implementation() override;
+
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
 
@@ -66,6 +69,10 @@ protected:
 	virtual void BeginPlay();
 
 private:
+
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USceneComponent> DynamicProjectileSpawnPoint;
+
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UGASAbilitySystemComponent> GASAbilitySystemComp;
 
