@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GASAbilitySystemComponent.h"
-#include "Abilities/GASGameplayAbility.h"
+#include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/ProjectileAbility.h"
+#include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/GASGameplayAbility.h"
+
 
 void UGASAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)
 {
@@ -70,4 +72,38 @@ void UGASAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
             InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
         }
     }
+}
+
+void UGASAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& ProjectileTag)
+{
+	if (!ProjectileTag.IsValid()) return;
+	
+	if (!GetAvatarActor()->HasAuthority())
+	{
+		ServerSetDynamicProjectile(ProjectileTag);
+		return;
+	}
+
+	if (ActiveProjectileAbility.IsValid())
+	{
+		ClearAbility(ActiveProjectileAbility);
+	}
+
+	if (IsValid(DynamicProjectileAbility))
+	{
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(DynamicProjectileAbility, 1);
+		if (UProjectileAbility* ProjectileAbility = Cast<UProjectileAbility>(Spec.Ability))
+		{
+			ProjectileAbility->ProjectileToSpawnTag = ProjectileTag;
+			Spec.DynamicAbilityTags.AddTag(ProjectileAbility->InputTag);
+
+			ActiveProjectileAbility = GiveAbility(Spec);
+		}
+	}
+	
+}
+
+void UGASAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag)
+{
+	SetDynamicProjectile(ProjectileTag);
 }
