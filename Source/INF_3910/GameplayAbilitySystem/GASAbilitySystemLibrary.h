@@ -7,6 +7,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GASAbilitySystemLibrary.generated.h"
 
+struct FDamageEffectInfo;
 class UProjectileInfo;
 class UCharacterClassInfo;
 /**
@@ -21,6 +22,9 @@ class INF_3910_API UGASAbilitySystemLibrary : public UBlueprintFunctionLibrary
 public:
 	UFUNCTION(BlueprintPure)
 	static UGASCharacterClassInfo *GetCharacterClassDefaultInfo(const UObject *WorldContextObject);
+
+	UFUNCTION(BlueprintCallable)
+ 	static void ApplyDamageEffect(const FDamageEffectInfo& DamageEffectInfo);
 
 	UFUNCTION(BlueprintPure)
 	static UProjectileInfo* GetProjectileInfo(const UObject* WorldContextObject);

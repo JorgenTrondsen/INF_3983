@@ -1,9 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ProjectileBase.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
+#include "Components/SphereComponent.h"
 #include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "INF_3910/GameplayAbilitySystem/GASAbilitySystemLibrary.h"
 
 
 AProjectileBase::AProjectileBase()
@@ -16,12 +19,16 @@ AProjectileBase::AProjectileBase()
 	SetRootComponent(ProjectileMesh);
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	ProjectileMesh->SetCollisionObjectType(ECC_WorldDynamic);
-	ProjectileMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	ProjectileMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProjectileMesh->SetIsReplicated(true);
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("MovementComponent");
 
+	OverlapSphere = CreateDefaultSubobject<USphereComponent>("OverlapSphere");
+ 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+ 	OverlapSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+ 	OverlapSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+ 	OverlapSphere->SetupAttachment(GetRootComponent());
 }
 
 void AProjectileBase::SetProjectileParams(const FProjectileParams& Params)
@@ -39,3 +46,27 @@ void AProjectileBase::SetProjectileParams(const FProjectileParams& Params)
 		ProjectileMovementComponent->Bounciness = Params.Bounciness;
 	}
 }
+
+void AProjectileBase::BeginPlay()
+ {
+ 	Super::BeginPlay();
+ 
+ 	if (HasAuthority())
+ 	{
+ 		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereBeginOverlap);
+ 	}
+ }
+ 
+ void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+ 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+ {
+ 	if (OtherActor == GetOwner()) return;
+ 
+ 	if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor))
+ 	{
+ 		DamageEffectInfo.TargetASC = TargetASC;
+ 		UGASAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
+ 
+ 		Destroy();
+ 	}
+ }

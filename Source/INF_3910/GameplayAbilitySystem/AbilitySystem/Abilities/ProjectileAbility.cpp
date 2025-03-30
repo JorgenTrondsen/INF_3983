@@ -2,10 +2,12 @@
 
 
 #include "ProjectileAbility.h"
+#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
 #include "INF_3910/Projectiles/ProjectileInfo.h"
 #include "INF_3910/Projectiles/ProjectileBase.h"
 #include "INF_3910/Interfaces/GASAbilitySystemInterface.h"
-#include "INF_3910/GameplayAbilitySystem//GASAbilitySystemLibrary.h"
+#include "INF_3910/GameplayAbilitySystem/GASAbilitySystemLibrary.h"
+#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
 
 UProjectileAbility::UProjectileAbility()
 {
@@ -43,9 +45,14 @@ void UProjectileAbility::SpawnProjectile()
 		SpawnTransform.SetLocation(SpawnPoint);
 		SpawnTransform.SetRotation(TargetRotation.Quaternion());
 
-		if (AProjectileBase* SpawnedProjectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(CurrentProjectileParams.ProjectileClass, SpawnTransform))
+		if (AProjectileBase* SpawnedProjectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(CurrentProjectileParams.ProjectileClass, SpawnTransform, AvatarActorFromInfo))
 		{
 			SpawnedProjectile->SetProjectileParams(CurrentProjectileParams);
+
+			FDamageEffectInfo DamageEffectInfo;
+			CaptureDamageEffectInfo(nullptr, DamageEffectInfo);
+
+			SpawnedProjectile->DamageEffectInfo = DamageEffectInfo;
 
 			SpawnedProjectile->FinishSpawning(SpawnTransform);
 		}

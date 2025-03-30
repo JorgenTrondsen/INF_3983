@@ -6,6 +6,8 @@
 #include "AbilityTypes.generated.h"
 
 class AProjectileBase;
+class UGameplayEffect;
+class UAbilitySystemComponent;
 
 USTRUCT()
 struct FProjectileParams
@@ -32,4 +34,26 @@ struct FProjectileParams
 	
 };
 
+USTRUCT(BlueprintType)
+struct FDamageEffectInfo
+{
+	GENERATED_BODY()
 
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<AActor> AvatarActor = nullptr;
+
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<UGameplayEffect> DamageEffect = nullptr;
+
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<UAbilitySystemComponent> SourceASC = nullptr;
+
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<UAbilitySystemComponent> TargetASC = nullptr;
+
+	UPROPERTY(BlueprintReadWrite)
+	float BaseDamage = 0.f;
+
+	UPROPERTY(BlueprintReadWrite)
+	float AbilityLevel = 1.f;
+};

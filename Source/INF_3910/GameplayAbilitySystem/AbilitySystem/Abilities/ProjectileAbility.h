@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DamageAbility.h"
 #include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
 #include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/GASGameplayAbility.h"
 #include "ProjectileAbility.generated.h"
@@ -11,7 +12,7 @@
  * 
  */
 UCLASS()
-class INF_3910_API UProjectileAbility : public UGASGameplayAbility
+class INF_3910_API UProjectileAbility : public UDamageAbility
 {
 	GENERATED_BODY()
 
