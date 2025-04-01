@@ -1,12 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GASAttributeSet.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
 
-
-void UGASAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void UGASAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
@@ -16,7 +14,7 @@ void UGASAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME_CONDITION_NOTIFY(UGASAttributeSet, MaxStamina, COND_None, REPNOTIFY_Always);
 }
 
-void UGASAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+void UGASAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData &Data)
 {
     Super::PostGameplayEffectExecute(Data);
 
@@ -29,25 +27,37 @@ void UGASAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
     {
         SetStamina(FMath::Clamp(GetStamina(), 0.0f, GetMaxStamina()));
     }
+
+    if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
+    {
+        HandleIncomingDamage(Data);
+    }
 }
 
-void UGASAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
+void UGASAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData &Data)
+{
+    const float LocalDamage = GetIncomingDamage();
+    SetIncomingDamage(0.f);
+
+    SetHealth(FMath::Clamp(GetHealth() - LocalDamage, 0.f, GetMaxHealth()));
+}
+
+void UGASAttributeSet::OnRep_Health(const FGameplayAttributeData &OldHealth)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UGASAttributeSet, Health, OldHealth);
 }
 
-void UGASAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
+void UGASAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData &OldMaxHealth)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UGASAttributeSet, MaxHealth, OldMaxHealth);
 }
 
-
-void UGASAttributeSet::OnRep_Stamina(const FGameplayAttributeData& OldStamina)
+void UGASAttributeSet::OnRep_Stamina(const FGameplayAttributeData &OldStamina)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UGASAttributeSet, Stamina, OldStamina);
 }
 
-void UGASAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStamina)
+void UGASAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData &OldMaxStamina)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UGASAttributeSet, MaxStamina, OldMaxStamina);
 }

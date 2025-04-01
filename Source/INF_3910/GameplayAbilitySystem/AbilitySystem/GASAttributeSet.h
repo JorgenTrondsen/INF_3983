@@ -5,16 +5,17 @@
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayEffectExtension.h"
 #include "GASAttributeSet.generated.h"
 
-#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName)           \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
-	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
-	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName)               \
+	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName)               \
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 /**
- * 
+ *
  */
 UCLASS()
 class INF_3910_API UGASAttributeSet : public UAttributeSet
@@ -22,8 +23,8 @@ class INF_3910_API UGASAttributeSet : public UAttributeSet
 	GENERATED_BODY()
 
 public:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData &Data) override;
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
@@ -41,18 +42,22 @@ public:
 	FGameplayAttributeData MaxStamina;
 	ATTRIBUTE_ACCESSORS(UGASAttributeSet, MaxStamina)
 
+	UPROPERTY()
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(UGASAttributeSet, IncomingDamage);
 
 private:
-	UFUNCTION()
-	void OnRep_Health(const FGameplayAttributeData& OldHealth);
+	void HandleIncomingDamage(const FGameplayEffectModCallbackData &Data);
 
 	UFUNCTION()
-	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
+	void OnRep_Health(const FGameplayAttributeData &OldHealth);
 
 	UFUNCTION()
-	void OnRep_Stamina(const FGameplayAttributeData& OldStamina);
+	void OnRep_MaxHealth(const FGameplayAttributeData &OldMaxHealth);
 
 	UFUNCTION()
-	void OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStamina);
-	
+	void OnRep_Stamina(const FGameplayAttributeData &OldStamina);
+
+	UFUNCTION()
+	void OnRep_MaxStamina(const FGameplayAttributeData &OldMaxStamina);
 };
