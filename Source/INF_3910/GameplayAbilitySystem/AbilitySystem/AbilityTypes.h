@@ -53,7 +53,4 @@ struct FDamageEffectInfo
 
 	UPROPERTY(BlueprintReadWrite)
 	float BaseDamage = 0.f;
-
-	UPROPERTY(BlueprintReadWrite)
-	float AbilityLevel = 1.f;
 };

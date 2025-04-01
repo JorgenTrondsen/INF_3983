@@ -9,9 +9,8 @@ void UDamageAbility::CaptureDamageEffectInfo(AActor* TargetActor, FDamageEffectI
 {
 	if (AActor* AvatarActorFromInfo = GetAvatarActorFromActorInfo())
 	{
-		OutInfo.AbilityLevel = GetAbilityLevel();
 		OutInfo.AvatarActor = AvatarActorFromInfo;
-		OutInfo.BaseDamage = BaseDamage.GetValueAtLevel(GetAbilityLevel());
+		OutInfo.BaseDamage = BaseDamage;
 		OutInfo.DamageEffect = DamageEffect;
 		OutInfo.SourceASC = GetAbilitySystemComponentFromActorInfo();
 

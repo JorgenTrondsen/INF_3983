@@ -25,5 +25,5 @@ private:
 	TSubclassOf<UGameplayEffect> DamageEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category="Custom Values|Damage Effect")
-	FScalableFloat BaseDamage;
+	float BaseDamage;
 };
