@@ -3,11 +3,11 @@
 #include "INFAbilitySystemLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffectTypes.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
-#include "Game/INFGameMode.h"
+#include "INF_3910/AbilitySystem/AbilityTypes.h"
+#include "INF_3910/Game/INFGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/INFGameplayTags.h"
+#include "INF_3910/AbilitySystem/INFGameplayTags.h"
 
 UCharacterClassInfo *UINFAbilitySystemLibrary::GetCharacterClassDefaultInfo(const UObject *WorldContextObject)
 {

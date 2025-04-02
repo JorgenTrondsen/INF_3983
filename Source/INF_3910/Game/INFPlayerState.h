@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemInterface.h"
-#include "../AbilitySystem/INFAbilitySystemComponent.h"
-#include "../AbilitySystem/INFAttributeSet.h"
+#include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
+#include "INF_3910/AbilitySystem/INFAttributeSet.h"
 #include "INFPlayerState.generated.h"
 
 /**

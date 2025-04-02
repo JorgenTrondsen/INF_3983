@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "DamageAbility.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/INFGameplayAbility.h"
+#include "INF_3910/AbilitySystem/AbilityTypes.h"
+#include "INF_3910/AbilitySystem/Abilities/INFGameplayAbility.h"
 #include "ProjectileAbility.generated.h"
 
 /**

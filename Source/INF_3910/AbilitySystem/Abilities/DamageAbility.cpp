@@ -1,13 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "DamageAbility.h"
 #include "AbilitySystemGlobals.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
+#include "INF_3910/AbilitySystem/AbilityTypes.h"
 
-void UDamageAbility::CaptureDamageEffectInfo(AActor* TargetActor, FDamageEffectInfo& OutInfo)
+void UDamageAbility::CaptureDamageEffectInfo(AActor *TargetActor, FDamageEffectInfo &OutInfo)
 {
-	if (AActor* AvatarActorFromInfo = GetAvatarActorFromActorInfo())
+	if (AActor *AvatarActorFromInfo = GetAvatarActorFromActorInfo())
 	{
 		OutInfo.AvatarActor = AvatarActorFromInfo;
 		OutInfo.BaseDamage = BaseDamage;

@@ -3,8 +3,8 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "AttackAnimTypes.h"
-#include "../Enums/CharacterEnums.h"
-#include "../Enums/WeaponEnums.h"
+#include "INF_3910/Enums/CharacterEnums.h"
+#include "INF_3910/Enums/WeaponEnums.h"
 #include "AttackAnimData.generated.h"
 
 /**

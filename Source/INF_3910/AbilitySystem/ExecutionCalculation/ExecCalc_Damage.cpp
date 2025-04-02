@@ -1,6 +1,6 @@
 #include "ExecCalc_Damage.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/INFGameplayTags.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/INFAttributeSet.h"
+#include "INF_3910/AbilitySystem/INFGameplayTags.h"
+#include "INF_3910/AbilitySystem/INFAttributeSet.h"
 
 struct INFDamageStatics
 {

@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ProjectileAbility.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
+#include "INF_3910/AbilitySystem/AbilityTypes.h"
 #include "INF_3910/Projectiles/ProjectileInfo.h"
 #include "INF_3910/Projectiles/ProjectileBase.h"
 #include "INF_3910/Interfaces/INFAbilitySystemInterface.h"
-#include "INF_3910/GameplayAbilitySystem/INFAbilitySystemLibrary.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
+#include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
+#include "INF_3910/AbilitySystem/AbilityTypes.h"
 
 UProjectileAbility::UProjectileAbility()
 {

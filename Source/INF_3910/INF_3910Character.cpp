@@ -9,11 +9,11 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameplayAbilitySystem/INFAbilitySystemLibrary.h"
-#include "GameplayAbilitySystem/CharacterClassInfo.h"
-#include "GameplayAbilitySystem/Game/INFPlayerState.h"
-#include "GameplayAbilitySystem/AbilitySystem/INFAbilitySystemComponent.h"
-#include "GameplayAbilitySystem/AbilitySystem/INFAttributeSet.h"
+#include "Libraries/INFAbilitySystemLibrary.h"
+#include "CharacterClassInfo.h"
+#include "Game/INFPlayerState.h"
+#include "AbilitySystem/INFAbilitySystemComponent.h"
+#include "AbilitySystem/INFAttributeSet.h"
 #include "UObject/Object.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);

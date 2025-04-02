@@ -4,9 +4,9 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "Components/SphereComponent.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
+#include "INF_3910/AbilitySystem/AbilityTypes.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "INF_3910/GameplayAbilitySystem/INFAbilitySystemLibrary.h"
+#include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
 
 AProjectileBase::AProjectileBase()
 {

@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
+#include "INF_3910/AbilitySystem/AbilityTypes.h"
 #include "Engine/DataAsset.h"
 #include "ProjectileInfo.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class INF_3910_API UProjectileInfo : public UDataAsset
@@ -17,8 +17,6 @@ class INF_3910_API UProjectileInfo : public UDataAsset
 	GENERATED_BODY()
 
 public:
-
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag, FProjectileParams> ProjectileInfoMap;
-	
 };

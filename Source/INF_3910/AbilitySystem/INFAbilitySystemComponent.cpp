@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "INFAbilitySystemComponent.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/ProjectileAbility.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/INFGameplayAbility.h"
+#include "INF_3910/AbilitySystem/Abilities/ProjectileAbility.h"
+#include "INF_3910/AbilitySystem/Abilities/INFGameplayAbility.h"
 
 void UINFAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)
 {

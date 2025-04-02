@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CharacterClassInfo.h"
+#include "INF_3910/CharacterClassInfo.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "INFAbilitySystemLibrary.generated.h"
 

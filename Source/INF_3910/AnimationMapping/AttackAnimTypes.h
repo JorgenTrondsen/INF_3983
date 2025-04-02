@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "../Enums/WeaponEnums.h"
-#include "../Enums/CharacterEnums.h"
+#include "INF_3910/Enums/WeaponEnums.h"
+#include "INF_3910/Enums/CharacterEnums.h"
 #include "AttackAnimTypes.generated.h"
 
 // Struct to hold animation montages for a specific weapon type

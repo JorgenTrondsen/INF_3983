@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "CustomizationTypes.h"
-#include "../Enums/CharacterEnums.h"
+#include "INF_3910/Enums/CharacterEnums.h"
 #include "CustomizationData.generated.h"
 
 /**
