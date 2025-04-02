@@ -1,25 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GASAbilitySystemComponent.h"
+#include "INFAbilitySystemComponent.h"
 #include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/ProjectileAbility.h"
-#include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/GASGameplayAbility.h"
+#include "INF_3910/GameplayAbilitySystem/AbilitySystem/Abilities/INFGameplayAbility.h"
 
-
-void UGASAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)
+void UINFAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)
 {
     for (const TSubclassOf<UGameplayAbility> &Ability : AbilitiesToGrant)
     {
         FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Ability, 1.f);
 
-        if (const UGASGameplayAbility *GASAbility = Cast<UGASGameplayAbility>(AbilitySpec.Ability))
+        if (const UINFGameplayAbility *INFAbility = Cast<UINFGameplayAbility>(AbilitySpec.Ability))
         {
-            AbilitySpec.DynamicAbilityTags.AddTag(GASAbility->InputTag);
+            AbilitySpec.DynamicAbilityTags.AddTag(INFAbility->InputTag);
             GiveAbility(AbilitySpec);
         }
     }
 }
 
-void UGASAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &PassivesToGrant)
+void UINFAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &PassivesToGrant)
 {
     for (const TSubclassOf<UGameplayAbility> &Ability : PassivesToGrant)
     {
@@ -28,7 +27,7 @@ void UGASAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubc
     }
 }
 
-void UGASAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf<UGameplayEffect> &AttributeEffect)
+void UINFAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf<UGameplayEffect> &AttributeEffect)
 {
     checkf(AttributeEffect, TEXT("No valid default attributes for this characer %s"), *GetAvatarActor()->GetName());
 
@@ -37,7 +36,7 @@ void UGASAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf<U
     ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 }
 
-void UGASAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
+void UINFAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
 {
     if (!InputTag.IsValid())
         return;
@@ -59,7 +58,7 @@ void UGASAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
     }
 }
 
-void UGASAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
+void UINFAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
 {
     if (!InputTag.IsValid())
         return;
@@ -74,36 +73,36 @@ void UGASAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
     }
 }
 
-void UGASAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& ProjectileTag)
+void UINFAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag &ProjectileTag)
 {
-	if (!ProjectileTag.IsValid()) return;
-	
-	if (!GetAvatarActor()->HasAuthority())
-	{
-		ServerSetDynamicProjectile(ProjectileTag);
-		return;
-	}
+    if (!ProjectileTag.IsValid())
+        return;
 
-	if (ActiveProjectileAbility.IsValid())
-	{
-		ClearAbility(ActiveProjectileAbility);
-	}
+    if (!GetAvatarActor()->HasAuthority())
+    {
+        ServerSetDynamicProjectile(ProjectileTag);
+        return;
+    }
 
-	if (IsValid(DynamicProjectileAbility))
-	{
-		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(DynamicProjectileAbility, 1);
-		if (UProjectileAbility* ProjectileAbility = Cast<UProjectileAbility>(Spec.Ability))
-		{
-			ProjectileAbility->ProjectileToSpawnTag = ProjectileTag;
-			Spec.DynamicAbilityTags.AddTag(ProjectileAbility->InputTag);
+    if (ActiveProjectileAbility.IsValid())
+    {
+        ClearAbility(ActiveProjectileAbility);
+    }
 
-			ActiveProjectileAbility = GiveAbility(Spec);
-		}
-	}
-	
+    if (IsValid(DynamicProjectileAbility))
+    {
+        FGameplayAbilitySpec Spec = FGameplayAbilitySpec(DynamicProjectileAbility, 1);
+        if (UProjectileAbility *ProjectileAbility = Cast<UProjectileAbility>(Spec.Ability))
+        {
+            ProjectileAbility->ProjectileToSpawnTag = ProjectileTag;
+            Spec.DynamicAbilityTags.AddTag(ProjectileAbility->InputTag);
+
+            ActiveProjectileAbility = GiveAbility(Spec);
+        }
+    }
 }
 
-void UGASAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag)
+void UINFAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag &ProjectileTag)
 {
-	SetDynamicProjectile(ProjectileTag);
+    SetDynamicProjectile(ProjectileTag);
 }

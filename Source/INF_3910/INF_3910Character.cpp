@@ -9,11 +9,11 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GameplayAbilitySystem/GASAbilitySystemLibrary.h"
-#include "GameplayAbilitySystem/GASCharacterClassInfo.h"
-#include "GameplayAbilitySystem/Game/GASPlayerState.h"
-#include "GameplayAbilitySystem/AbilitySystem/GASAbilitySystemComponent.h"
-#include "GameplayAbilitySystem/AbilitySystem/GASAttributeSet.h"
+#include "GameplayAbilitySystem/INFAbilitySystemLibrary.h"
+#include "GameplayAbilitySystem/CharacterClassInfo.h"
+#include "GameplayAbilitySystem/Game/INFPlayerState.h"
+#include "GameplayAbilitySystem/AbilitySystem/INFAbilitySystemComponent.h"
+#include "GameplayAbilitySystem/AbilitySystem/INFAttributeSet.h"
 #include "UObject/Object.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -25,14 +25,14 @@ AINF_3910Character::AINF_3910Character()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
+	GetCharacterMovement()->bOrientRotationToMovement = true;			 // Character moves in the direction of input...
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
@@ -47,13 +47,13 @@ AINF_3910Character::AINF_3910Character()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 400.0f;		// The camera follows at this distance behind the character
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->bUsePawnControlRotation = false;								// Camera does not rotate relative to arm
 
 	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(("ProjectileSpawnPoint"));
 	DynamicProjectileSpawnPoint->SetupAttachment(GetRootComponent());
@@ -61,27 +61,28 @@ AINF_3910Character::AINF_3910Character()
 
 void AINF_3910Character::BeginPlay()
 {
-	// Call the base class  
+	// Call the base class
 	Super::BeginPlay();
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void AINF_3910Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AINF_3910Character::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
 	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	if (APlayerController *PlayerController = Cast<APlayerController>(GetController()))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem *Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	
+
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
+	if (UEnhancedInputComponent *EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -98,7 +99,7 @@ void AINF_3910Character::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
-void AINF_3910Character::Move(const FInputActionValue& Value)
+void AINF_3910Character::Move(const FInputActionValue &Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -111,17 +112,17 @@ void AINF_3910Character::Move(const FInputActionValue& Value)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
+
+		// get right vector
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// add movement 
+		// add movement
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
 
-void AINF_3910Character::Look(const FInputActionValue& Value)
+void AINF_3910Character::Look(const FInputActionValue &Value)
 {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
@@ -134,12 +135,12 @@ void AINF_3910Character::Look(const FInputActionValue& Value)
 	}
 }
 
-USceneComponent* AINF_3910Character::GetDynamicSpawnPoint_Implementation()
+USceneComponent *AINF_3910Character::GetDynamicSpawnPoint_Implementation()
 {
 	return DynamicProjectileSpawnPoint;
 }
 
-void AINF_3910Character::PossessedBy(AController* NewController)
+void AINF_3910Character::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
 
@@ -156,31 +157,30 @@ void AINF_3910Character::OnRep_PlayerState()
 	InitAbilityActorInfo();
 }
 
-UAbilitySystemComponent* AINF_3910Character::GetAbilitySystemComponent() const
+UAbilitySystemComponent *AINF_3910Character::GetAbilitySystemComponent() const
 {
-	return GASAbilitySystemComp;
+	return INFAbilitySystemComp;
 }
 
 void AINF_3910Character::InitAbilityActorInfo()
 {
-    if(AGASPlayerState* GASPlayerState = GetPlayerState<AGASPlayerState>())
-    {
-		GASAbilitySystemComp = Cast<UGASAbilitySystemComponent>(GASPlayerState->GetAbilitySystemComponent());
-        GASAttributes = GASPlayerState->GetGASAttributes();
-		
-        if (IsValid(GASAbilitySystemComp))
-        {
-			GASAbilitySystemComp->InitAbilityActorInfo(GASPlayerState, this);
+	if (AINFPlayerState *INFPlayerState = GetPlayerState<AINFPlayerState>())
+	{
+		INFAbilitySystemComp = Cast<UINFAbilitySystemComponent>(INFPlayerState->GetAbilitySystemComponent());
+		INFAttributes = INFPlayerState->GetINFAttributes();
+
+		if (IsValid(INFAbilitySystemComp))
+		{
+			INFAbilitySystemComp->InitAbilityActorInfo(INFPlayerState, this);
 			BindCallbacksToDependencies();
 
 			if (HasAuthority())
 			{
 				InitClassDefaults();
 			}
-        }
-    }
+		}
+	}
 }
-
 
 void AINF_3910Character::InitClassDefaults()
 {
@@ -188,41 +188,36 @@ void AINF_3910Character::InitClassDefaults()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No Character Tag Selected In This Character %s"), *GetNameSafe(this));
 	}
-	else if (UGASCharacterClassInfo *ClassInfo = UGASAbilitySystemLibrary::GetCharacterClassDefaultInfo(this))
+	else if (UCharacterClassInfo *ClassInfo = UINFAbilitySystemLibrary::GetCharacterClassDefaultInfo(this))
 	{
 		if (const FCharacterClassDefaultInfo *SelectedClassInfo = ClassInfo->ClassDefaultInfoMap.Find(CharacterTag))
 		{
-			if (IsValid(GASAbilitySystemComp))
+			if (IsValid(INFAbilitySystemComp))
 			{
-				GASAbilitySystemComp->AddCharacterAbilities(SelectedClassInfo->StartingAbilities);
-				GASAbilitySystemComp->AddCharacterPassiveAbilities(SelectedClassInfo->StartingPassives);
-				GASAbilitySystemComp->InitializeDefaultAttributes(SelectedClassInfo->DefaultAttributes);
+				INFAbilitySystemComp->AddCharacterAbilities(SelectedClassInfo->StartingAbilities);
+				INFAbilitySystemComp->AddCharacterPassiveAbilities(SelectedClassInfo->StartingPassives);
+				INFAbilitySystemComp->InitializeDefaultAttributes(SelectedClassInfo->DefaultAttributes);
 			}
 		}
-		
 	}
 }
 void AINF_3910Character::BindCallbacksToDependencies()
 {
-	if (IsValid(GASAbilitySystemComp) && IsValid(GASAttributes))
+	if (IsValid(INFAbilitySystemComp) && IsValid(INFAttributes))
 	{
-		GASAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(GASAttributes->GetHealthAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) 
-		{
-			OnHealthChanged(Data.NewValue, GASAttributes->GetMaxHealth());
-		});
+		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetHealthAttribute()).AddLambda([this](const FOnAttributeChangeData &Data)
+																													 { OnHealthChanged(Data.NewValue, INFAttributes->GetMaxHealth()); });
 
-		GASAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(GASAttributes->GetStaminaAttribute()).AddLambda([this](const FOnAttributeChangeData& Data) 
-		{
-			OnStaminaChanged(Data.NewValue, GASAttributes->GetMaxStamina());
-		});
+		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetStaminaAttribute()).AddLambda([this](const FOnAttributeChangeData &Data)
+																													  { OnStaminaChanged(Data.NewValue, INFAttributes->GetMaxStamina()); });
 	}
 }
 
 void AINF_3910Character::BroadcastInitialValues()
 {
-	if (IsValid(GASAttributes))
+	if (IsValid(INFAttributes))
 	{
-		OnHealthChanged(GASAttributes->GetHealth(), GASAttributes->GetMaxHealth());
-		OnStaminaChanged(GASAttributes->GetStamina(), GASAttributes->GetMaxStamina());
+		OnHealthChanged(INFAttributes->GetHealth(), INFAttributes->GetMaxHealth());
+		OnStaminaChanged(INFAttributes->GetStamina(), INFAttributes->GetMaxStamina());
 	}
 }

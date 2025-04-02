@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
-#include "GameplayAbilitySystem/AbilitySystem/GASAbilitySystemComponent.h"
-#include "GameplayAbilitySystem/AbilitySystem/GASAttributeSet.h"
+#include "GameplayAbilitySystem/AbilitySystem/INFAbilitySystemComponent.h"
+#include "GameplayAbilitySystem/AbilitySystem/INFAttributeSet.h"
 #include "Logging/LogMacros.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/ObjectPtr.h"
-#include "Interfaces/GASAbilitySystemInterface.h"
+#include "Interfaces/INFAbilitySystemInterface.h"
 #include "INF_3910Character.generated.h"
 
 class USpringArmComponent;
@@ -21,63 +21,61 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config=Game)
-class AINF_3910Character : public ACharacter, public IAbilitySystemInterface, public IGASAbilitySystemInterface
+UCLASS(config = Game)
+class AINF_3910Character : public ACharacter, public IAbilitySystemInterface, public IINFAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	USpringArmComponent *CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
+	UCameraComponent *FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
+	UInputMappingContext *DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
+	UInputAction *JumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
+	UInputAction *MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction *LookAction;
 
 public:
 	AINF_3910Character();
 
 	virtual USceneComponent *GetDynamicSpawnPoint_Implementation() override;
 
-	virtual void PossessedBy(AController* NewController) override;
+	virtual void PossessedBy(AController *NewController) override;
 	virtual void OnRep_PlayerState() override;
 
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
-	
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnHealthChanged(float CurrentHealth, float MaxHealth);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnStaminaChanged(float CurrentStamina, float MaxStamina);
-	
 
 protected:
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-			
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	void Move(const FInputActionValue &Value);
+	void Look(const FInputActionValue &Value);
+
+	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 	virtual void BeginPlay();
 
 private:
-
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USceneComponent> DynamicProjectileSpawnPoint;
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UGASAbilitySystemComponent> GASAbilitySystemComp;
+	TObjectPtr<UINFAbilitySystemComponent> INFAbilitySystemComp;
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UGASAttributeSet> GASAttributes;
+	TObjectPtr<UINFAttributeSet> INFAttributes;
 
 	UPROPERTY(EditAnywhere, Category = "Custom Values|Character Info")
 	FGameplayTag CharacterTag;
@@ -90,7 +88,6 @@ private:
 	void BroadcastInitialValues();
 
 public:
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class USpringArmComponent *GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE class UCameraComponent *GetFollowCamera() const { return FollowCamera; }
 };
-

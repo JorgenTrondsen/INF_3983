@@ -6,7 +6,7 @@
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffectExtension.h"
-#include "GASAttributeSet.generated.h"
+#include "INFAttributeSet.generated.h"
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName)           \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
@@ -18,7 +18,7 @@
  *
  */
 UCLASS()
-class INF_3910_API UGASAttributeSet : public UAttributeSet
+class INF_3910_API UINFAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 
@@ -28,23 +28,23 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
-	ATTRIBUTE_ACCESSORS(UGASAttributeSet, Health)
+	ATTRIBUTE_ACCESSORS(UINFAttributeSet, Health)
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
-	ATTRIBUTE_ACCESSORS(UGASAttributeSet, MaxHealth)
+	ATTRIBUTE_ACCESSORS(UINFAttributeSet, MaxHealth)
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Stamina)
 	FGameplayAttributeData Stamina;
-	ATTRIBUTE_ACCESSORS(UGASAttributeSet, Stamina)
+	ATTRIBUTE_ACCESSORS(UINFAttributeSet, Stamina)
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxStamina)
 	FGameplayAttributeData MaxStamina;
-	ATTRIBUTE_ACCESSORS(UGASAttributeSet, MaxStamina)
+	ATTRIBUTE_ACCESSORS(UINFAttributeSet, MaxStamina)
 
 	UPROPERTY()
 	FGameplayAttributeData IncomingDamage;
-	ATTRIBUTE_ACCESSORS(UGASAttributeSet, IncomingDamage);
+	ATTRIBUTE_ACCESSORS(UINFAttributeSet, IncomingDamage);
 
 private:
 	void HandleIncomingDamage(const FGameplayEffectModCallbackData &Data);

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
-#include "GASCharacterClassInfo.generated.h"
+#include "CharacterClassInfo.generated.h"
 
 class UGameplayEffect;
 class UGameplayAbility;
@@ -26,13 +26,13 @@ struct FCharacterClassDefaultInfo
 };
 
 /**
- * 
+ *
  */
 UCLASS()
-class INF_3910_API UGASCharacterClassInfo : public UDataAsset
+class INF_3910_API UCharacterClassInfo : public UDataAsset
 {
 	GENERATED_BODY()
-	
+
 public:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FGameplayTag, FCharacterClassDefaultInfo> ClassDefaultInfoMap;

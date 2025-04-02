@@ -4,27 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
-#include "GASGameMode.generated.h"
-
+#include "INFGameMode.generated.h"
 
 class UProjectileInfo;
-class UGASCharacterClassInfo;
+class UCharacterClassInfo;
 /**
- * 
+ *
  */
 UCLASS()
-class INF_3910_API AGASGameMode : public AGameMode
+class INF_3910_API AINFGameMode : public AGameMode
 {
 	GENERATED_BODY()
 
 public:
-	UGASCharacterClassInfo* GetCharacterClassDefaultInfo() const;
-	UProjectileInfo* GetProjectileInfo() const;
+	UCharacterClassInfo *GetCharacterClassDefaultInfo() const;
+	UProjectileInfo *GetProjectileInfo() const;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Class Defaults")
-	TObjectPtr<UGASCharacterClassInfo> ClassDefaults;
+	TObjectPtr<UCharacterClassInfo> ClassDefaults;
 
-	UPROPERTY(EditDefaultsOnly, Category="Custom Values|Projectiles")
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Projectiles")
 	TObjectPtr<UProjectileInfo> ProjectileInfo;
 };

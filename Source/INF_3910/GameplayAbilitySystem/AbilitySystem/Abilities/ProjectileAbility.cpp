@@ -1,12 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ProjectileAbility.h"
 #include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
 #include "INF_3910/Projectiles/ProjectileInfo.h"
 #include "INF_3910/Projectiles/ProjectileBase.h"
-#include "INF_3910/Interfaces/GASAbilitySystemInterface.h"
-#include "INF_3910/GameplayAbilitySystem/GASAbilitySystemLibrary.h"
+#include "INF_3910/Interfaces/INFAbilitySystemInterface.h"
+#include "INF_3910/GameplayAbilitySystem/INFAbilitySystemLibrary.h"
 #include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
 
 UProjectileAbility::UProjectileAbility()
@@ -14,28 +13,28 @@ UProjectileAbility::UProjectileAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
-void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo *ActorInfo, const FGameplayAbilitySpec &Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
 
 	AvatarActorFromInfo = GetAvatarActorFromActorInfo();
-	
-	if (!ProjectileToSpawnTag.IsValid() || !IsValid(AvatarActorFromInfo)) return;
 
-	if (UProjectileInfo* ProjectileInfo = UGASAbilitySystemLibrary::GetProjectileInfo(AvatarActorFromInfo))
+	if (!ProjectileToSpawnTag.IsValid() || !IsValid(AvatarActorFromInfo))
+		return;
+
+	if (UProjectileInfo *ProjectileInfo = UINFAbilitySystemLibrary::GetProjectileInfo(AvatarActorFromInfo))
 	{
 		CurrentProjectileParams = *ProjectileInfo->ProjectileInfoMap.Find(ProjectileToSpawnTag);
 	}
-	
 }
 
 void UProjectileAbility::SpawnProjectile()
 {
 
-	if (!IsValid(CurrentProjectileParams.ProjectileClass)) return;
+	if (!IsValid(CurrentProjectileParams.ProjectileClass))
+		return;
 
-
-	if (const USceneComponent* SpawnPointComp = IGASAbilitySystemInterface::Execute_GetDynamicSpawnPoint(AvatarActorFromInfo))
+	if (const USceneComponent *SpawnPointComp = IINFAbilitySystemInterface::Execute_GetDynamicSpawnPoint(AvatarActorFromInfo))
 	{
 		const FVector SpawnPoint = SpawnPointComp->GetComponentLocation();
 		const FVector TargetLocation = AvatarActorFromInfo->GetActorForwardVector() * 10000;
@@ -45,7 +44,7 @@ void UProjectileAbility::SpawnProjectile()
 		SpawnTransform.SetLocation(SpawnPoint);
 		SpawnTransform.SetRotation(TargetRotation.Quaternion());
 
-		if (AProjectileBase* SpawnedProjectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(CurrentProjectileParams.ProjectileClass, SpawnTransform, AvatarActorFromInfo))
+		if (AProjectileBase *SpawnedProjectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(CurrentProjectileParams.ProjectileClass, SpawnTransform, AvatarActorFromInfo))
 		{
 			SpawnedProjectile->SetProjectileParams(CurrentProjectileParams);
 

@@ -6,8 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "INF_3910/GameplayAbilitySystem/AbilitySystem/AbilityTypes.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "INF_3910/GameplayAbilitySystem/GASAbilitySystemLibrary.h"
-
+#include "INF_3910/GameplayAbilitySystem/INFAbilitySystemLibrary.h"
 
 AProjectileBase::AProjectileBase()
 {
@@ -25,13 +24,13 @@ AProjectileBase::AProjectileBase()
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("MovementComponent");
 
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>("OverlapSphere");
- 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
- 	OverlapSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
- 	OverlapSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
- 	OverlapSphere->SetupAttachment(GetRootComponent());
+	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	OverlapSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	OverlapSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	OverlapSphere->SetupAttachment(GetRootComponent());
 }
 
-void AProjectileBase::SetProjectileParams(const FProjectileParams& Params)
+void AProjectileBase::SetProjectileParams(const FProjectileParams &Params)
 {
 	if (IsValid(ProjectileMesh))
 	{
@@ -48,25 +47,26 @@ void AProjectileBase::SetProjectileParams(const FProjectileParams& Params)
 }
 
 void AProjectileBase::BeginPlay()
- {
- 	Super::BeginPlay();
- 
- 	if (HasAuthority())
- 	{
- 		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereBeginOverlap);
- 	}
- }
- 
- void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
- 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
- {
- 	if (OtherActor == GetOwner()) return;
- 
- 	if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor))
- 	{
- 		DamageEffectInfo.TargetASC = TargetASC;
- 		UGASAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
- 
- 		Destroy();
- 	}
- }
+{
+	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereBeginOverlap);
+	}
+}
+
+void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor,
+										   UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
+{
+	if (OtherActor == GetOwner())
+		return;
+
+	if (UAbilitySystemComponent *TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor))
+	{
+		DamageEffectInfo.TargetASC = TargetASC;
+		UINFAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
+
+		Destroy();
+	}
+}
