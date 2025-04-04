@@ -10,7 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Libraries/INFAbilitySystemLibrary.h"
-#include "CharacterClassInfo.h"
+#include "AbilitySystem/CharacterClassInfo.h"
 #include "Game/INFPlayerState.h"
 #include "AbilitySystem/INFAbilitySystemComponent.h"
 #include "AbilitySystem/INFAttributeSet.h"

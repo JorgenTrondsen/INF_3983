@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "INF_3910/CharacterClassInfo.h"
+#include "INF_3910/AbilitySystem/CharacterClassInfo.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "INFAbilitySystemLibrary.generated.h"
 
@@ -22,9 +22,18 @@ public:
 	UFUNCTION(BlueprintPure)
 	static UCharacterClassInfo *GetCharacterClassDefaultInfo(const UObject *WorldContextObject);
 
+	UFUNCTION(BlueprintPure)
+	static UProjectileInfo *GetProjectileInfo(const UObject *WorldContextObject);
+
 	UFUNCTION(BlueprintCallable)
 	static void ApplyDamageEffect(const FDamageEffectInfo &DamageEffectInfo);
 
-	UFUNCTION(BlueprintPure)
-	static UProjectileInfo *GetProjectileInfo(const UObject *WorldContextObject);
+	template <typename T>
+	static T *GetDataTableRowByTag(UDataTable *DataTable, FGameplayTag Tag);
 };
+
+template <typename T>
+T *UINFAbilitySystemLibrary::GetDataTableRowByTag(UDataTable *DataTable, FGameplayTag Tag)
+{
+	return DataTable->FindRow<T>(Tag.GetTagName(), FString(""));
+}
