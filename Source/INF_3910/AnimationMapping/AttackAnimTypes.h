@@ -1,8 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "INF_3910/Enums/WeaponEnums.h"
-#include "INF_3910/Enums/CharacterEnums.h"
 #include "AttackAnimTypes.generated.h"
 
 // Struct to hold animation montages for a specific weapon type
@@ -12,7 +10,7 @@ struct FWeaponAnimMontages
     GENERATED_BODY()
 
     // Array of attack animation montages for this weapon type
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<TObjectPtr<UAnimMontage>> AttackMontages;
 };
 
@@ -22,8 +20,8 @@ struct FGenderWeaponAnimations
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-    TMap<EWeaponType, FWeaponAnimMontages> WeaponAnimations;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TMap<FString, FWeaponAnimMontages> WeaponAnimations;
 };
 
 // Maps genders to their weapon animations
@@ -32,9 +30,9 @@ struct FRaceAnimations
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Male")
     FGenderWeaponAnimations MaleAnimations;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Female")
     FGenderWeaponAnimations FemaleAnimations;
 };
