@@ -9,6 +9,8 @@
 
 class UItemTypesToTables;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FEquipmentItemUsed, const TSubclassOf<UEquipmentDefinition> & /* Equipment Definition */);
+
 USTRUCT(BlueprintType)
 struct FINFInventoryEntry : public FFastArraySerializerItem
 {
@@ -77,6 +79,8 @@ class INF_3910_API UInventoryComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
+    FEquipmentItemUsed EquipmentItemDelegate;
+
     UPROPERTY(Replicated)
     FINFInventoryList InventoryList;
 
