@@ -23,4 +23,7 @@ public:
 
     UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Info")
     TSubclassOf<UEquipmentInstance> InstanceType;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Stats")
+    FGameplayTagContainer PossibleStatRolls;
 };

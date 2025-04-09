@@ -4,13 +4,16 @@
 #include "GameplayTagContainer.h"
 #include "ItemTypes.h"
 #include "Components/ActorComponent.h"
+#include "INF_3910/Equipment/EquipmentDefinition.h"
+#include "INF_3910/Equipment/EquipmentTypes.h"
 #include "Net/Serialization/FastArraySerializer.h"
 #include "InventoryComponent.generated.h"
 
+class UInventoryComponent;
+class UEquipmentStatEffects;
 class UItemTypesToTables;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FEquipmentItemUsed, const TSubclassOf<UEquipmentDefinition> & /* Equipment Definition */);
-
+DECLARE_MULTICAST_DELEGATE_TwoParams(FEquipmentItemUsed, const TSubclassOf<UEquipmentDefinition> & /* Equipment Definition */, const TArray<FEquipmentStatEffectGroup> & /* Stat Effects */);
 USTRUCT(BlueprintType)
 struct FINFInventoryEntry : public FFastArraySerializerItem
 {
@@ -20,7 +23,21 @@ struct FINFInventoryEntry : public FFastArraySerializerItem
     FGameplayTag ItemTag = FGameplayTag();
 
     UPROPERTY(BlueprintReadOnly)
+    FText ItemName = FText();
+
+    UPROPERTY(BlueprintReadOnly)
     int32 Quantity = 0;
+
+    UPROPERTY(BlueprintReadOnly)
+    int64 ItemID = 0;
+
+    UPROPERTY(BlueprintReadOnly)
+    TArray<FEquipmentStatEffectGroup> StatEffects = TArray<FEquipmentStatEffectGroup>();
+
+    bool IsValid() const
+    {
+        return ItemID != 0;
+    }
 };
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDirtyInventoryItemSignature, const FINFInventoryEntry & /* Dirty Item */);
@@ -34,13 +51,17 @@ struct FINFInventoryList : public FFastArraySerializer
     {
     }
 
-    FINFInventoryList(UActorComponent *InComponent) : OwnerComponent(InComponent)
+    FINFInventoryList(UInventoryComponent *InComponent) : OwnerComponent(InComponent)
     {
     }
 
     void AddItem(const FGameplayTag &ItemTag, int32 NumItems = 1);
-    void RemoveItem(const FGameplayTag &ItemTag, int32 NumItems = 1);
+    void RemoveItem(const FINFInventoryEntry &Entry, int32 NumItems = 1);
     bool HasEnough(const FGameplayTag &ItemTag, int32 NumItems = 1);
+    uint64 GenerateID();
+    void SetStats(UEquipmentStatEffects *InStats);
+    void RollForStats(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, FINFInventoryEntry *Entry);
+    void AddUnEquippedItem(const FGameplayTag &ItemTag, const TArray<FEquipmentStatEffectGroup> &StatEffects);
 
     // FFastArraySerializer Contract
     void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize);
@@ -55,13 +76,19 @@ struct FINFInventoryList : public FFastArraySerializer
     FDirtyInventoryItemSignature DirtyItemDelegate;
 
 private:
-    friend class UInventoryComponent;
+    friend UInventoryComponent;
 
     UPROPERTY()
     TArray<FINFInventoryEntry> Entries;
 
     UPROPERTY(NotReplicated)
-    TObjectPtr<UActorComponent> OwnerComponent;
+    TObjectPtr<UInventoryComponent> OwnerComponent;
+
+    UPROPERTY(NotReplicated)
+    uint64 LastAssignedID = 0;
+
+    UPROPERTY(NotReplicated)
+    TWeakObjectPtr<UEquipmentStatEffects> WeakStats;
 };
 
 template <>
@@ -87,25 +114,30 @@ public:
     UInventoryComponent();
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+    virtual void BeginPlay() override;
 
     UFUNCTION(BlueprintCallable)
     void AddItem(const FGameplayTag &ItemTag, int32 NumItems = 1);
 
     UFUNCTION(BlueprintCallable)
-    void UseItem(const FGameplayTag &ItemTag, int32 NumItems);
+    void UseItem(const FINFInventoryEntry &Entry, int32 NumItems);
 
     UFUNCTION(BlueprintPure)
     FMasterItemDefinition GetItemDefinitionByTag(const FGameplayTag &ItemTag) const;
 
     TArray<FINFInventoryEntry> GetInventoryEntries();
+    void AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const TArray<FEquipmentStatEffectGroup> &InStatEffects);
 
 private:
-    UPROPERTY(EditDefaultsOnly)
+    UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Stat Effects")
+    TObjectPtr<UEquipmentStatEffects> StatEffects;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Item Definitions")
     TObjectPtr<UItemTypesToTables> InventoryDefinitions;
 
     UFUNCTION(Server, Reliable)
     void ServerAddItem(const FGameplayTag &ItemTag, int32 NumItems);
 
     UFUNCTION(Server, Reliable)
-    void ServerUseItem(const FGameplayTag &ItemTag, int32 NumItems);
+    void ServerUseItem(const FINFInventoryEntry &Entry, int32 NumItems);
 };

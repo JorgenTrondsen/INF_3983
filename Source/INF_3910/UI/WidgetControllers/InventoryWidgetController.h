@@ -4,10 +4,10 @@
 #include "WidgetController.h"
 #include "InventoryWidgetController.generated.h"
 
-struct FMasterItemDefinition;
+struct FINFInventoryEntry;
 class UInventoryComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemSignature, const FMasterItemDefinition &, Item);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryEntrySignature, const FINFInventoryEntry &, Entry);
 /**
  *
  */
@@ -18,7 +18,7 @@ class INF_3910_API UInventoryWidgetController : public UWidgetController
 
 public:
     UPROPERTY(BlueprintAssignable)
-    FInventoryItemSignature InventoryItemDelegate;
+    FInventoryEntrySignature InventoryEntryDelegate;
 
     void SetOwningActor(AActor *InOwner);
 

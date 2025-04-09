@@ -3,6 +3,9 @@
 #include "INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/Abilities/ProjectileAbility.h"
 #include "INF_3910/AbilitySystem/Abilities/INFGameplayAbility.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
+#include "INF_3910/Equipment/EquipmentManagerComponent.h"
 
 void UINFAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)
 {
@@ -99,6 +102,45 @@ void UINFAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag &Projec
 
             ActiveProjectileAbility = GiveAbility(Spec);
         }
+    }
+}
+
+void UINFAbilitySystemComponent::AddEquipmentEffects(FINFEquipmentEntry *EquipmentEntry)
+{
+    FStreamableManager &Manager = UAssetManager::GetStreamableManager();
+    TWeakObjectPtr<UINFAbilitySystemComponent> WeakThis(this);
+
+    const FGameplayEffectContextHandle ContextHandle = MakeEffectContext();
+
+    for (const FEquipmentStatEffectGroup &StatEffect : EquipmentEntry->StatEffects)
+    {
+        if (IsValid(StatEffect.EffectClass.Get()))
+        {
+            const FGameplayEffectSpecHandle SpecHandle = MakeOutgoingSpec(StatEffect.EffectClass.Get(), StatEffect.CurrentValue, ContextHandle);
+            const FActiveGameplayEffectHandle ActiveHandle = ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+            EquipmentEntry->GrantedHandles.AddEffectHandle(ActiveHandle);
+        }
+        else
+        {
+            Manager.RequestAsyncLoad(StatEffect.EffectClass.ToSoftObjectPath(),
+                                     [WeakThis, StatEffect, ContextHandle, EquipmentEntry]
+                                     {
+                                         const FGameplayEffectSpecHandle SpecHandle = WeakThis->MakeOutgoingSpec(StatEffect.EffectClass.Get(), StatEffect.CurrentValue, ContextHandle);
+                                         const FActiveGameplayEffectHandle ActiveHandle = WeakThis->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+                                         EquipmentEntry->GrantedHandles.AddEffectHandle(ActiveHandle);
+                                     });
+        }
+    }
+}
+
+void UINFAbilitySystemComponent::RemoveEquipmentEffects(FINFEquipmentEntry *EquipmentEntry)
+{
+    for (auto HandleIt = EquipmentEntry->GrantedHandles.ActiveEffects.CreateIterator(); HandleIt; ++HandleIt)
+    {
+        RemoveActiveGameplayEffect(*HandleIt);
+        HandleIt.RemoveCurrent();
     }
 }
 

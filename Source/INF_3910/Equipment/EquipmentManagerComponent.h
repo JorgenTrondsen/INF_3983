@@ -7,6 +7,7 @@
 #include "Net/Serialization/FastArraySerializer.h"
 #include "EquipmentManagerComponent.generated.h"
 
+class UINFAbilitySystemComponent;
 class UEquipmentInstance;
 class UEquipmentDefinition;
 class UEquipmentManagerComponent;
@@ -22,8 +23,16 @@ struct FINFEquipmentEntry : public FFastArraySerializerItem
     UPROPERTY(BlueprintReadOnly)
     FGameplayTag SlotTag = FGameplayTag();
 
+    UPROPERTY(BlueprintReadOnly)
+    TArray<FEquipmentStatEffectGroup> StatEffects = TArray<FEquipmentStatEffectGroup>();
+
     UPROPERTY(NotReplicated)
     FEquipmentGrantedHandles GrantedHandles = FEquipmentGrantedHandles();
+
+    bool HasStats() const
+    {
+        return !StatEffects.IsEmpty();
+    }
 
 private:
     friend UEquipmentManagerComponent;
@@ -37,6 +46,7 @@ private:
 };
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FEquipmentEntrySignature, const FINFEquipmentEntry & /* Equipment Entry */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnEquippedEntry, const FINFEquipmentEntry & /* UnEquipped Entry */);
 
 USTRUCT()
 struct FINFEquipmentList : public FFastArraySerializer
@@ -51,7 +61,10 @@ struct FINFEquipmentList : public FFastArraySerializer
     {
     }
 
-    UEquipmentInstance *AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition);
+    UINFAbilitySystemComponent *GetAbilitySystemComponent();
+    void AddEquipmentStats(FINFEquipmentEntry *Entry);
+    void RemoveEquipmentStats(FINFEquipmentEntry *Entry);
+    UEquipmentInstance *AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const TArray<FEquipmentStatEffectGroup> &StatEffects);
     void RemoveEntry(UEquipmentInstance *EquipmentInstance);
 
     // FFastArraySerializer Contract
@@ -65,6 +78,7 @@ struct FINFEquipmentList : public FFastArraySerializer
     }
 
     FEquipmentEntrySignature EquipmentEntryDelegate;
+    FOnUnEquippedEntry UnEquippedEntryDelegate;
 
 private:
     UPROPERTY()
@@ -95,12 +109,12 @@ public:
     UEquipmentManagerComponent();
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
-    void EquipItem(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition);
+    void EquipItem(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const TArray<FEquipmentStatEffectGroup> &StatEffects);
     void UnEquipItem(UEquipmentInstance *EquipmentInstance);
 
 private:
     UFUNCTION(Server, Reliable)
-    void ServerEquipItem(TSubclassOf<UEquipmentDefinition> EquipmentDefinition);
+    void ServerEquipItem(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const TArray<FEquipmentStatEffectGroup> &StatEffects);
 
     UFUNCTION(Server, Reliable)
     void ServerUnEquipItem(UEquipmentInstance *EquipmentInstance);

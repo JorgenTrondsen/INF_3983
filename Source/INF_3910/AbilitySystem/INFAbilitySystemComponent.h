@@ -6,6 +6,8 @@
 #include "AbilitySystemComponent.h"
 #include "INFAbilitySystemComponent.generated.h"
 
+struct FINFEquipmentEntry;
+DECLARE_MULTICAST_DELEGATE(FOnAttributesGiven);
 /**
  *
  */
@@ -15,6 +17,8 @@ class INF_3910_API UINFAbilitySystemComponent : public UAbilitySystemComponent
 	GENERATED_BODY()
 
 public:
+	FOnAttributesGiven OnAttributesGiven;
+
 	void AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant);
 	void AddCharacterPassiveAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &PassivesToGrant);
 	void InitializeDefaultAttributes(const TSubclassOf<UGameplayEffect> &AttributesEffect);
@@ -23,6 +27,9 @@ public:
 	void AbilityInputReleased(FGameplayTag InputTag);
 
 	void SetDynamicProjectile(const FGameplayTag &ProjectileTag);
+
+	void AddEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
+	void RemoveEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
 
 private:
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;

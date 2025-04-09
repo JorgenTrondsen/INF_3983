@@ -1,34 +1,56 @@
 #include "InventoryComponent.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "NativeGameplayTags.h"
+#include "INF_3910/Equipment/EquipmentStatEffects.h"
 #include "INF_3910/Equipment/EquipmentDefinition.h"
 #include "INF_3910/Inventory/ItemTypesToTables.h"
 #include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
 #include "Net/UnrealNetwork.h"
 
+namespace INFGameplayTags::Static
+{
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(Category_Equipment, "Item.Equipment");
+}
+
 void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
 {
-    for (auto EntryIt = Entries.CreateIterator(); EntryIt; ++EntryIt)
+    if (ItemTag.MatchesTag(INFGameplayTags::Static::Category_Equipment))
     {
-        FINFInventoryEntry &Entry = *EntryIt;
-
-        if (Entry.ItemTag.MatchesTagExact(ItemTag))
+        // Cannot stack these categories, do nothing.
+    }
+    else
+    {
+        for (auto EntryIt = Entries.CreateIterator(); EntryIt; ++EntryIt)
         {
-            Entry.Quantity += NumItems;
-            MarkItemDirty(Entry);
+            FINFInventoryEntry &Entry = *EntryIt;
 
-            if (OwnerComponent->GetOwner()->HasAuthority())
+            if (Entry.ItemTag.MatchesTagExact(ItemTag))
             {
-                DirtyItemDelegate.Broadcast(Entry);
+                Entry.Quantity += NumItems;
+                MarkItemDirty(Entry);
+
+                if (OwnerComponent->GetOwner()->HasAuthority())
+                {
+                    DirtyItemDelegate.Broadcast(Entry);
+                }
+                return;
             }
-            return;
         }
     }
 
+    const FMasterItemDefinition Item = OwnerComponent->GetItemDefinitionByTag(ItemTag);
+
     FINFInventoryEntry &NewEntry = Entries.AddDefaulted_GetRef();
     NewEntry.ItemTag = ItemTag;
+    NewEntry.ItemName = Item.ItemName;
     NewEntry.Quantity = NumItems;
+    NewEntry.ItemID = GenerateID();
+
+    if (NewEntry.ItemTag.MatchesTag(INFGameplayTags::Static::Category_Equipment) && IsValid(WeakStats.Get()))
+    {
+        RollForStats(Item.EquipmentItemProps.EquipmentClass, &NewEntry);
+    }
 
     if (OwnerComponent->GetOwner()->HasAuthority())
     {
@@ -38,13 +60,61 @@ void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
     MarkItemDirty(NewEntry);
 }
 
-void FINFInventoryList::RemoveItem(const FGameplayTag &ItemTag, int32 NumItems)
+void FINFInventoryList::RollForStats(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, FINFInventoryEntry *Entry)
+{
+    UEquipmentStatEffects *StatEffects = WeakStats.Get();
+    const UEquipmentDefinition *EquipmentCDO = GetDefault<UEquipmentDefinition>(EquipmentDefinition);
+
+    int32 StatRollIndex = 0;
+    while (StatRollIndex < 3)
+    {
+        const int32 RandomIndex = FMath::RandRange(0, EquipmentCDO->PossibleStatRolls.Num() - 1);
+        const FGameplayTag &RandomTag = EquipmentCDO->PossibleStatRolls.GetByIndex(RandomIndex);
+
+        for (const auto &Pair : StatEffects->MasterStatMap)
+        {
+            if (RandomTag.MatchesTag(Pair.Key))
+            {
+                if (const FEquipmentStatEffectGroup *PossibleStat = UINFAbilitySystemLibrary::GetDataTableRowByTag<FEquipmentStatEffectGroup>(Pair.Value, RandomTag))
+                {
+                    if (FMath::FRandRange(0.f, 1.f) < PossibleStat->ProbabilityToSelect)
+                    {
+                        FEquipmentStatEffectGroup NewStat = *PossibleStat;
+
+                        NewStat.CurrentValue = PossibleStat->bFractionalStat ? FMath::FRandRange(PossibleStat->MinStatLevel, PossibleStat->MaxStatLevel) : FMath::TruncToInt(FMath::FRandRange(PossibleStat->MinStatLevel, PossibleStat->MaxStatLevel));
+
+                        Entry->StatEffects.Add(NewStat);
+                        ++StatRollIndex;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag,
+                                          const TArray<FEquipmentStatEffectGroup> &StatEffects)
+{
+    const FMasterItemDefinition Item = OwnerComponent->GetItemDefinitionByTag(ItemTag);
+
+    FINFInventoryEntry &NewEntry = Entries.AddDefaulted_GetRef();
+    NewEntry.ItemTag = ItemTag;
+    NewEntry.ItemName = Item.ItemName;
+    NewEntry.Quantity = 1;
+    NewEntry.ItemID = GenerateID();
+    NewEntry.StatEffects = StatEffects;
+
+    DirtyItemDelegate.Broadcast(NewEntry);
+    MarkItemDirty(NewEntry);
+}
+
+void FINFInventoryList::RemoveItem(const FINFInventoryEntry &InventoryEntry, int32 NumItems)
 {
     for (auto EntryIt = Entries.CreateIterator(); EntryIt; ++EntryIt)
     {
         FINFInventoryEntry &Entry = *EntryIt;
 
-        if (Entry.ItemTag.MatchesTagExact(ItemTag))
+        if (Entry.ItemID == InventoryEntry.ItemID)
         {
             Entry.Quantity -= NumItems;
 
@@ -54,6 +124,7 @@ void FINFInventoryList::RemoveItem(const FGameplayTag &ItemTag, int32 NumItems)
             {
                 DirtyItemDelegate.Broadcast(Entry);
             }
+            break;
         }
     }
 }
@@ -74,6 +145,28 @@ bool FINFInventoryList::HasEnough(const FGameplayTag &ItemTag, int32 NumItems)
     }
 
     return false;
+}
+
+uint64 FINFInventoryList::GenerateID()
+{
+    uint64 NewID = ++LastAssignedID;
+
+    int32 SignatureIndex = 0;
+    while (SignatureIndex < 12)
+    {
+        if (FMath::RandRange(0, 100) < 85)
+        {
+            NewID |= (uint64)1 << FMath::RandRange(0, 63);
+        }
+        ++SignatureIndex;
+    }
+
+    return NewID;
+}
+
+void FINFInventoryList::SetStats(UEquipmentStatEffects *InStats)
+{
+    WeakStats = InStats;
 }
 
 void FINFInventoryList::PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize)
@@ -113,6 +206,16 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &
     DOREPLIFETIME(UInventoryComponent, InventoryList);
 }
 
+void UInventoryComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (GetOwner()->HasAuthority())
+    {
+        InventoryList.SetStats(StatEffects);
+    }
+}
+
 void UInventoryComponent::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
 {
     AActor *Owner = GetOwner();
@@ -133,7 +236,7 @@ void UInventoryComponent::ServerAddItem_Implementation(const FGameplayTag &ItemT
     AddItem(ItemTag, NumItems);
 }
 
-void UInventoryComponent::UseItem(const FGameplayTag &ItemTag, int32 NumItems)
+void UInventoryComponent::UseItem(const FINFInventoryEntry &Entry, int32 NumItems)
 {
     AActor *Owner = GetOwner();
     if (!IsValid(Owner))
@@ -141,13 +244,13 @@ void UInventoryComponent::UseItem(const FGameplayTag &ItemTag, int32 NumItems)
 
     if (!Owner->HasAuthority())
     {
-        ServerUseItem(ItemTag, NumItems);
+        ServerUseItem(Entry, NumItems);
         return;
     }
 
-    if (InventoryList.HasEnough(ItemTag, NumItems))
+    if (InventoryList.HasEnough(Entry.ItemTag, NumItems))
     {
-        const FMasterItemDefinition Item = GetItemDefinitionByTag(ItemTag);
+        const FMasterItemDefinition Item = GetItemDefinitionByTag(Entry.ItemTag);
 
         if (UAbilitySystemComponent *OwnerASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Owner))
         {
@@ -160,22 +263,22 @@ void UInventoryComponent::UseItem(const FGameplayTag &ItemTag, int32 NumItems)
 
                 OwnerASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
-                InventoryList.RemoveItem(ItemTag);
+                InventoryList.RemoveItem(Entry);
 
                 GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Magenta, FString::Printf(TEXT("Server Item Used: %s"), *Item.ItemTag.ToString()));
             }
             if (IsValid(Item.EquipmentItemProps.EquipmentClass))
             {
-                EquipmentItemDelegate.Broadcast(Item.EquipmentItemProps.EquipmentClass);
-                InventoryList.RemoveItem(ItemTag);
+                EquipmentItemDelegate.Broadcast(Item.EquipmentItemProps.EquipmentClass, Entry.StatEffects);
+                InventoryList.RemoveItem(Entry);
             }
         }
     }
 }
 
-void UInventoryComponent::ServerUseItem_Implementation(const FGameplayTag &ItemTag, int32 NumItems)
+void UInventoryComponent::ServerUseItem_Implementation(const FINFInventoryEntry &Entry, int32 NumItems)
 {
-    UseItem(ItemTag, NumItems);
+    UseItem(Entry, NumItems);
 }
 
 FMasterItemDefinition UInventoryComponent::GetItemDefinitionByTag(const FGameplayTag &ItemTag) const
@@ -196,4 +299,10 @@ FMasterItemDefinition UInventoryComponent::GetItemDefinitionByTag(const FGamepla
 TArray<FINFInventoryEntry> UInventoryComponent::GetInventoryEntries()
 {
     return InventoryList.Entries;
+}
+
+void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag,
+                                                 const TArray<FEquipmentStatEffectGroup> &InStatEffects)
+{
+    InventoryList.AddUnEquippedItem(ItemTag, InStatEffects);
 }
