@@ -25,3 +25,10 @@ Content/Stylized_PBR_Nature
 Config/DefaultEngine.ini
 .DS_Store
 Plugins
+
+
+# temp ignore
+Content/ForestLandscape/
+Content/PN_interactiveSpruceForest/
+Content/RP_Vol_01/
+Content/Stylized_PBR_Nature/
