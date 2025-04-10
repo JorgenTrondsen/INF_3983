@@ -18,3 +18,11 @@ Plugins/EOSIntegrationKit
 *.suo
 *.xcodeproj
 *.xcworkspace
+
+
+
+# temp ignore
+Content/ForestLandscape/
+Content/PN_interactiveSpruceForest/
+Content/RP_Vol_01/
+Content/Stylized_PBR_Nature/
