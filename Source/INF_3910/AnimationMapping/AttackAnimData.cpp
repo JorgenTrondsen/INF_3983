@@ -1,12 +1,12 @@
 #include "AttackAnimData.h"
 
-TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(ECharacterRace Race, ECharacterGender Gender, EWeaponType WeaponType) const
+TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(const FString& Race, const FString& Gender, const FString& WeaponType) const
 {
     TArray<UAnimMontage *> Result;
 
     if (const FRaceAnimations *RaceAnim = RaceAnimations.Find(Race))
     {
-        const FGenderWeaponAnimations &GenderAnim = (Gender == ECharacterGender::Male)
+        const FGenderWeaponAnimations &GenderAnim = (Gender.Equals(TEXT("Male"), ESearchCase::IgnoreCase))
                                                         ? RaceAnim->MaleAnimations
                                                         : RaceAnim->FemaleAnimations;
 
@@ -22,7 +22,7 @@ TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(ECharacterRace Race, E
     return Result;
 }
 
-UAnimMontage *UAttackAnimData::GetAttackMontage(ECharacterRace Race, ECharacterGender Gender, EWeaponType WeaponType, int32 MontageIndex) const
+UAnimMontage *UAttackAnimData::GetAttackMontage(const FString& Race, const FString& Gender, const FString& WeaponType, int32 MontageIndex) const
 {
     TArray<UAnimMontage *> Montages = GetAttackMontages(Race, Gender, WeaponType);
 

@@ -1,19 +1,19 @@
 #include "CustomizationData.h"
 
-FCharacterModelParts UCustomizationData::GetModelParts(ECharacterRace Race, ECharacterGender Gender) const
+FCharacterModelParts UCustomizationData::GetModelParts(const FString &Race, const FString &Gender) const
 {
-    if (const FRaceModels* RaceModels = CharacterModels.Find(Race))
+    if (const FRaceModels *RaceModels = CharacterModels.Find(Race))
     {
-        if (Gender == ECharacterGender::Male)
+        if (Gender.Equals(TEXT("Male"), ESearchCase::IgnoreCase))
         {
             return RaceModels->MaleModel;
         }
-        else // Female
+        else // Assuming Female or any other gender defaults to female
         {
             return RaceModels->FemaleModel;
         }
     }
-    
+
     // Return empty struct if not found
     return FCharacterModelParts();
 }

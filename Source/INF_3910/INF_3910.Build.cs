@@ -8,8 +8,21 @@ public class INF_3910 : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "GameplayAbilities", "GameplayTasks", "GameplayTags", "PCG", "Landscape" });
-
+		PublicDependencyModuleNames.AddRange(new string[] { 
+			"Core", 
+			"CoreUObject", 
+			"Engine", 
+			"InputCore", 
+			"EnhancedInput", 
+			"GameplayAbilities", 
+			"GameplayTasks", 
+			"GameplayTags",
+			"NetCore", 
+			"UMG", 
+			"PCG", 
+			"Landscape"
+		});
+		
 		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent" });
 	}
 }
