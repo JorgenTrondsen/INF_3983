@@ -19,8 +19,8 @@ public class INF_3910 : ModuleRules
 			"GameplayTags",
 			"NetCore", 
 			"UMG", 
-			"PCG", 
-			"Landscape"
+			// "PCG", 
+			// "Landscape"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent" });

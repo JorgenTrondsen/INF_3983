@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PCGGraph.h"
+// #include "PCGGraph.h"
 #include "MapGenerator.generated.h"
 
 
@@ -56,8 +56,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Player Starts Generation")
 	void GeneratePlayerStarts(int32 NumStarts, FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right);
 
-	UPROPERTY(EditAnywhere, Category="PCG Graph")
-	UPCGGraph* Graph = nullptr;
+	// UPROPERTY(EditAnywhere, Category="PCG Graph")
+	// UPCGGraph* Graph = nullptr;
 
 	// size of mesh
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
