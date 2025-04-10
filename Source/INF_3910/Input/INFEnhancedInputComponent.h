@@ -4,30 +4,30 @@
 
 #include "CoreMinimal.h"
 #include "EnhancedInputComponent.h"
-#include "GASInputConfig.h"
-#include "GASEnhancedInputComponent.generated.h"
+#include "INFInputConfig.h"
+#include "INFEnhancedInputComponent.generated.h"
 
-class UGASInputConfig;
+class UINFInputConfig;
 /**
  *
  */
 UCLASS()
-class INF_3910_API UGASEnhancedInputComponent : public UEnhancedInputComponent
+class INF_3910_API UINFEnhancedInputComponent : public UEnhancedInputComponent
 {
 	GENERATED_BODY()
 
 public:
 	template <class UserClass, typename PressedFuncType, typename ReleasedFuncType>
-	void BindAbilityActions(UGASInputConfig *InputConfig, UserClass *Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc);
+	void BindAbilityActions(UINFInputConfig *InputConfig, UserClass *Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc);
 };
 
 template <class UserClass, typename PressedFuncType, typename ReleasedFuncType>
-void UGASEnhancedInputComponent::BindAbilityActions(UGASInputConfig *InputConfig, UserClass *Object,
+void UINFEnhancedInputComponent::BindAbilityActions(UINFInputConfig *InputConfig, UserClass *Object,
 													PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc)
 {
 	check(InputConfig);
 
-	for (const FGASInputAction &Action : InputConfig->GASInputActions)
+	for (const FINFInputAction &Action : InputConfig->INFInputActions)
 	{
 		if (IsValid(Action.InputAction) && Action.InputTag.IsValid())
 		{

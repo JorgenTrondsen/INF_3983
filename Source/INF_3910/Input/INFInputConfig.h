@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
-#include "GASInputConfig.generated.h"
+#include "INFInputConfig.generated.h"
 
 class UInputAction;
 
 USTRUCT()
-struct FGASInputAction
+struct FINFInputAction
 {
 	GENERATED_BODY()
 
@@ -25,11 +25,11 @@ struct FGASInputAction
  *
  */
 UCLASS()
-class INF_3910_API UGASInputConfig : public UDataAsset
+class INF_3910_API UINFInputConfig : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditDefaultsOnly)
-	TArray<FGASInputAction> GASInputActions;
+	TArray<FINFInputAction> INFInputActions;
 };

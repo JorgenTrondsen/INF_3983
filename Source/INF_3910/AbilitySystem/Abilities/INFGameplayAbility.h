@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GASGameplayAbility.generated.h"
+#include "INFGameplayAbility.generated.h"
 
 /**
  *
  */
 UCLASS()
-class INF_3910_API UGASGameplayAbility : public UGameplayAbility
+class INF_3910_API UINFGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 
