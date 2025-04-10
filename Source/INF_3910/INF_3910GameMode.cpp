@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
 
+// COMMENT, WE MIGHT NOT NEED THIS, WE'LL SEE.
 AINF_3910GameMode::AINF_3910GameMode()
 {
 	// set default pawn class to our Blueprinted character
