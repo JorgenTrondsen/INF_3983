@@ -44,6 +44,7 @@ class AINF_3910Character : public ACharacter, public IAbilitySystemInterface, pu
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction *LookAction;
 
+
 public:
 	AINF_3910Character();
 

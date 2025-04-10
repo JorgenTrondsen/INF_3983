@@ -1,42 +1,42 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "INFGameMode.h"
+#include "INF_3910GameMode.h"
 #include "Engine/TimerHandle.h"
-#include "../INF_3910Character.h"
+#include "INF_3910Character.h"
 #include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
 
-UCharacterClassInfo *AINFGameMode::GetCharacterClassDefaultInfo() const
+// COMMENT, WE MIGHT NOT NEED THIS, WE'LL SEE.
+AINF_3910GameMode::AINF_3910GameMode()
 {
-    return ClassDefaults;
+	// set default pawn class to our Blueprinted character
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/Player/BP_Character"));
+	if (PlayerPawnBPClass.Class != NULL)
+	{
+		DefaultPawnClass = PlayerPawnBPClass.Class;
+	}
 }
 
-UProjectileInfo *AINFGameMode::GetProjectileInfo() const
-{
-    return ProjectileInfo;
-}
-
-// EVERYTHING UNDER HERE IS FROM MAP_GEN GAMEMODE
-void AINFGameMode::StartPlay()
+void AINF_3910GameMode::StartPlay()
 {
     // Delay StartPlay to give the map time to replicate
     FTimerHandle TimerHandle;
-    GetWorldTimerManager().SetTimer(TimerHandle, this, &AINFGameMode::DelayedStartPlay, 1.0f, false);
+    GetWorldTimerManager().SetTimer(TimerHandle, this, &AINF_3910GameMode::DelayedStartPlay, 1.0f, false);
     
     // Log that we're delaying game start
     UE_LOG(LogTemp, Log, TEXT("GameMode: Delaying game start to allow map replication"));
 
 }
 
-void AINFGameMode::DelayedStartPlay()
+void AINF_3910GameMode::DelayedStartPlay()
 {
     Super::StartPlay();
 }
 
-AActor* AINFGameMode::FindPlayerStart_Implementation(AController* Player, const FString& IncomingName)
+AActor* AINF_3910GameMode::FindPlayerStart_Implementation(AController* Player, const FString& IncomingName)
 {
    // Debug output to help trace what's happening
    UE_LOG(LogTemp, Log, TEXT("FindPlayerStart called for %s with incoming name: %s"), 
@@ -71,8 +71,7 @@ AActor* AINFGameMode::FindPlayerStart_Implementation(AController* Player, const 
     return Super::FindPlayerStart_Implementation(Player, IncomingName);
 }
 
-
-AActor* AINFGameMode::ChoosePlayerStart_Implementation(AController* Player)
+AActor* AINF_3910GameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
     // This will use the FindPlayerStart_Implementation to choose a start
     return Super::ChoosePlayerStart_Implementation(Player);
