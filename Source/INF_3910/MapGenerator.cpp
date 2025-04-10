@@ -246,16 +246,6 @@ float AMapGenerator::GenerateSeedBasedNoise(float X, float Y)
 	int32 PositionSeed = MapSeed + (X * 1000) + (Y * 1000);
 
 
-	if (GEngine) 
-		{
-			GEngine->AddOnScreenDebugMessage(-1,
-				15.0f,
-				FColor::Blue,
-				FString::Printf(TEXT("GenerateSeedBasedNoise: Creating noise with seed: %d"), MapSeed)
-			);
-		}
-
-
 	FRandomStream RandomStream(PositionSeed);
 
 	// deterministic noise algorithm
