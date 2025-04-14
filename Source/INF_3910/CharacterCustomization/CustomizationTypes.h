@@ -46,10 +46,10 @@ struct FCharacterModelParts
     TArray<TObjectPtr<USkeletalMesh>> Feet;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
-    TArray<TObjectPtr<USkeletalMesh>> Face;
+    TObjectPtr<USkeletalMesh> Eyes;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
-    TObjectPtr<USkeletalMesh> Eyes;
+    TArray<TObjectPtr<USkeletalMesh>> Face;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
     TArray<TObjectPtr<USkeletalMesh>> Ears;
@@ -75,4 +75,52 @@ struct FRaceModels
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Models")
     FCharacterModelParts FemaleModel;
+};
+
+USTRUCT(BlueprintType)
+struct FModelPartSelectionData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    TArray<FString> UniformPartNames;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    TArray<int32> UniformIndexes;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    TArray<FString> SpecificPartNames;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    TArray<int32> SpecificIndexes;
+
+    FModelPartSelectionData()
+    {
+        // Initialize with default uniform part names
+        UniformPartNames = {"Torso", "Gloves", "Belt", "Trousers", "Boots", "Feet", "Face", "Ears", "Hair"};
+        // Initialize with default values (0 for each uniform part)
+        UniformIndexes.Init(0, 9);
+    }
+
+    // Add a selection (similar to TMap::Add)
+    void Add(const FString &PartName, int8 SelectionIndex)
+    {
+        int8 ExistingIndex = UniformPartNames.Find(PartName);
+        if (ExistingIndex != INDEX_NONE)
+        {
+            UniformIndexes[ExistingIndex] = SelectionIndex;
+            return;
+        }
+
+        ExistingIndex = SpecificPartNames.Find(PartName);
+        if (ExistingIndex != INDEX_NONE)
+        {
+            SpecificIndexes[ExistingIndex] = SelectionIndex;
+        }
+        else
+        {
+            SpecificPartNames.Add(PartName);
+            SpecificIndexes.Add(SelectionIndex);
+        }
+    }
 };

@@ -3,85 +3,72 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Animation/Skeleton.h"
 
-FCharacterModelParts UCustomizationData::GetModelParts(const FString &Race, const FString &Gender) const
+void UCustomizationData::GetModelData(const FString &Race, const FString &Gender, TMap<FString, int32> &ModelCustomizations, FModelPartSelectionData &ModelPartSelections) const
 {
-    if (const FRaceModels *RaceModels = CharacterModels.Find(Race))
-    {
-        if (Gender.Equals(TEXT("Male"), ESearchCase::IgnoreCase))
-        {
-            return RaceModels->MaleModel;
-        }
-        else // Assuming Female or any other gender defaults to female
-        {
-            return RaceModels->FemaleModel;
-        }
-    }
+    const FCharacterModelParts &ModelParts = Gender.Equals(TEXT("Male"))
+                                                 ? CharacterModels.Find(Race)->MaleModel
+                                                 : CharacterModels.Find(Race)->FemaleModel;
 
-    UE_LOG(LogTemp, Warning, TEXT("Race '%s' not found in character models data"), *Race);
-    return FCharacterModelParts();
+    // Add the counts for Face, Ears, and Hair to ModelCustomizations
+    ModelCustomizations.Add(TEXT("Face"), ModelParts.Face.Num());
+    ModelCustomizations.Add(TEXT("Ears"), ModelParts.Ears.Num());
+    ModelCustomizations.Add(TEXT("Hair"), ModelParts.Hair.Num());
+
+    // Do the same for specific parts
+    for (const FModelSpecificParts &SpecificPart : ModelParts.SpecificParts)
+    {
+        ModelPartSelections.Add(SpecificPart.CategoryName, 0);
+        ModelCustomizations.Add(SpecificPart.CategoryName, SpecificPart.Parts.Num());
+    }
 }
 
-FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FString &Gender, const TMap<FString, int32> &ModelPartSelections) const
+FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FString &Gender, const FModelPartSelectionData &ModelPartSelections) const
 {
-    FCharacterModelParts ModelParts;
-    if (Gender.Equals(TEXT("Male")))
-    {
-        ModelParts = CharacterModels.Find(Race)->MaleModel;
-    }
-    else
-    {
-        ModelParts = CharacterModels.Find(Race)->FemaleModel;
-    }
+    const FCharacterModelParts &ModelParts = Gender.Equals(TEXT("Male"))
+                                                 ? CharacterModels.Find(Race)->MaleModel
+                                                 : CharacterModels.Find(Race)->FemaleModel;
 
     // Create arrays to hold all non-null skeletal meshes
     TArray<USkeletalMesh *> MeshesToMerge;
     TArray<USkeletalMesh *> FP_MeshesToMerge;
 
-    // Add base mesh (Geoset0)
     MeshesToMerge.Add(ModelParts.Geoset0);
     FP_MeshesToMerge.Add(ModelParts.Geoset0);
 
-    // Add Torso mesh based on selection
-    MeshesToMerge.Add(ModelParts.Torso[ModelPartSelections["Torso"]]);
-    FP_MeshesToMerge.Add(ModelParts.Torso[ModelPartSelections["Torso"]]);
+    MeshesToMerge.Add(ModelParts.Torso[ModelPartSelections.UniformIndexes[0]]);
+    FP_MeshesToMerge.Add(ModelParts.Torso[ModelPartSelections.UniformIndexes[0]]);
 
-    // Add Gloves mesh based on selection
-    MeshesToMerge.Add(ModelParts.Gloves[ModelPartSelections["Gloves"]]);
-    FP_MeshesToMerge.Add(ModelParts.Gloves[ModelPartSelections["Gloves"]]);
+    MeshesToMerge.Add(ModelParts.Gloves[ModelPartSelections.UniformIndexes[1]]);
+    FP_MeshesToMerge.Add(ModelParts.Gloves[ModelPartSelections.UniformIndexes[1]]);
 
-    // Add Belt mesh based on selection
-    MeshesToMerge.Add(ModelParts.Belt[ModelPartSelections["Belt"]]);
-    FP_MeshesToMerge.Add(ModelParts.Belt[ModelPartSelections["Belt"]]);
+    MeshesToMerge.Add(ModelParts.Belt[ModelPartSelections.UniformIndexes[2]]);
+    FP_MeshesToMerge.Add(ModelParts.Belt[ModelPartSelections.UniformIndexes[2]]);
 
-    // Add Trousers mesh based on selection
-    MeshesToMerge.Add(ModelParts.Trousers[ModelPartSelections["Trousers"]]);
-    FP_MeshesToMerge.Add(ModelParts.Trousers[ModelPartSelections["Trousers"]]);
+    MeshesToMerge.Add(ModelParts.Trousers[ModelPartSelections.UniformIndexes[3]]);
+    FP_MeshesToMerge.Add(ModelParts.Trousers[ModelPartSelections.UniformIndexes[3]]);
 
-    // Add Boots mesh based on selection
-    MeshesToMerge.Add(ModelParts.Boots[ModelPartSelections["Boots"]]);
-    FP_MeshesToMerge.Add(ModelParts.Boots[ModelPartSelections["Boots"]]);
+    MeshesToMerge.Add(ModelParts.Boots[ModelPartSelections.UniformIndexes[4]]);
+    FP_MeshesToMerge.Add(ModelParts.Boots[ModelPartSelections.UniformIndexes[4]]);
 
-    // Add Feet mesh based on selection
-    MeshesToMerge.Add(ModelParts.Feet[ModelPartSelections["Feet"]]);
-    FP_MeshesToMerge.Add(ModelParts.Feet[ModelPartSelections["Feet"]]);
+    MeshesToMerge.Add(ModelParts.Feet[ModelPartSelections.UniformIndexes[5]]);
+    FP_MeshesToMerge.Add(ModelParts.Feet[ModelPartSelections.UniformIndexes[5]]);
 
-    // Add Face mesh based on selection
-    MeshesToMerge.Add(ModelParts.Face[ModelPartSelections["Face"]]);
-    FP_MeshesToMerge.Add(ModelParts.Face[ModelPartSelections["Face"]]);
-
-    // Add Eyes mesh
     MeshesToMerge.Add(ModelParts.Eyes);
     FP_MeshesToMerge.Add(ModelParts.Eyes);
 
-    // Add Ears mesh based on selection
-    MeshesToMerge.Add(ModelParts.Ears[ModelPartSelections["Ears"]]);
-    FP_MeshesToMerge.Add(ModelParts.Ears[ModelPartSelections["Ears"]]);
+    // Add Face mesh based on selection
+    MeshesToMerge.Add(ModelParts.Face[ModelPartSelections.UniformIndexes[6]]);
+    FP_MeshesToMerge.Add(ModelParts.Face[ModelPartSelections.UniformIndexes[6]]);
 
-    // Add Hair mesh based on selection, 128 is the value for no mesh
-    if (ModelPartSelections["Hair"] != 128)
+    // Add Ears mesh based on selection
+    MeshesToMerge.Add(ModelParts.Ears[ModelPartSelections.UniformIndexes[7]]);
+    FP_MeshesToMerge.Add(ModelParts.Ears[ModelPartSelections.UniformIndexes[7]]);
+
+    // Add Hair mesh based on selection (-1 is the value for no mesh)
+    if (ModelPartSelections.UniformIndexes[8] != -1)
     {
-        MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections["Hair"]]);
-        FP_MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections["Hair"]]);
+        MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]]);
+        FP_MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]]);
     }
 
     // Process model specific parts - iterate through categories and add selected parts
@@ -89,10 +76,10 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FSt
     {
         const FModelSpecificParts &Category = ModelParts.SpecificParts[CategoryIndex];
 
-        // Get the selected index for this category from the map
-        int32 SelectedIndex = ModelPartSelections[Category.CategoryName];
+        // Get the selected index for this category from the structured data
+        int32 SelectedIndex = ModelPartSelections.SpecificIndexes[ModelPartSelections.SpecificPartNames.Find(Category.CategoryName)];
 
-        if (SelectedIndex == 128)
+        if (SelectedIndex == -1)
             continue; // Skip if no part is selected
 
         // Add the selected part
@@ -128,6 +115,7 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FSt
     FMergedMeshes Result;
     Result.ThirdPersonMesh = MergedMesh;
     Result.FirstPersonMesh = FP_MergedMesh;
+    Result.AnimBlueprint = ModelParts.AnimBlueprint;
 
     return Result;
 }

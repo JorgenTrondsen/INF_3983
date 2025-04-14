@@ -18,6 +18,9 @@ struct FMergedMeshes
 
     UPROPERTY(BlueprintReadOnly, Category = "Character Customization")
     USkeletalMesh *FirstPersonMesh;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Character Customization")
+    TSubclassOf<UAnimInstance> AnimBlueprint;
 };
 
 /**
@@ -33,11 +36,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Models")
     TMap<FString, FRaceModels> CharacterModels;
 
-    // Utility function to get model parts by race and gender strings
+    // Outputs key-value pairs for model customizations and selections
     UFUNCTION(BlueprintCallable, Category = "Character Customization")
-    FCharacterModelParts GetModelParts(const FString &Race, const FString &Gender) const;
+    void GetModelData(const FString &Race, const FString &Gender, TMap<FString, int32> &ModelCustomizations, FModelPartSelectionData &ModelPartSelections) const;
 
     // Merges all skeletal meshes from the character parts into two meshes (one for third person, one for first person)
     UFUNCTION(BlueprintCallable, Category = "Character Customization")
-    FMergedMeshes MergeModelParts(const FString &Race, const FString &Gender, const TMap<FString, int32> &ModelPartSelections) const;
+    FMergedMeshes MergeModelParts(const FString &Race, const FString &Gender, const FModelPartSelectionData &ModelPartSelections) const;
 };
