@@ -3,6 +3,16 @@
 #include "CoreMinimal.h"
 #include "CustomizationTypes.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FModelPartArray
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Customization Parts")
+    TArray<TObjectPtr<USkeletalMesh>> Parts;
+};
+
 // New struct to represent a single category of model-specific parts
 USTRUCT(BlueprintType)
 struct FModelSpecificParts
@@ -13,7 +23,7 @@ struct FModelSpecificParts
     FString CategoryName;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Model-specific Parts")
-    TArray<TObjectPtr<USkeletalMesh>> Parts;
+    TArray<FModelPartArray> CategoryParts;
 };
 
 USTRUCT(BlueprintType)
@@ -55,7 +65,7 @@ struct FCharacterModelParts
     TArray<TObjectPtr<USkeletalMesh>> Ears;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
-    TArray<TObjectPtr<USkeletalMesh>> Hair;
+    TArray<FModelPartArray> Hair;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Parts")
     TArray<FModelSpecificParts> SpecificParts;

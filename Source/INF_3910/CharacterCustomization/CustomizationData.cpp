@@ -18,7 +18,7 @@ void UCustomizationData::GetModelData(const FString &Race, const FString &Gender
     for (const FModelSpecificParts &SpecificPart : ModelParts.SpecificParts)
     {
         ModelPartSelections.Add(SpecificPart.CategoryName, 0);
-        ModelCustomizations.Add(SpecificPart.CategoryName, SpecificPart.Parts.Num());
+        ModelCustomizations.Add(SpecificPart.CategoryName, SpecificPart.CategoryParts.Num());
     }
 }
 
@@ -67,8 +67,11 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FSt
     // Add Hair mesh based on selection (-1 is the value for no mesh)
     if (ModelPartSelections.UniformIndexes[8] != -1)
     {
-        MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]]);
-        FP_MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]]);
+        for (int32 i = 0; i < ModelParts.Hair[ModelPartSelections.UniformIndexes[8]].Parts.Num(); i++)
+        {
+            MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]].Parts[i]);
+            FP_MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]].Parts[i]);
+        }
     }
 
     // Process model specific parts - iterate through categories and add selected parts
@@ -82,9 +85,11 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FSt
         if (SelectedIndex == -1)
             continue; // Skip if no part is selected
 
-        // Add the selected part
-        MeshesToMerge.Add(Category.Parts[SelectedIndex]);
-        FP_MeshesToMerge.Add(Category.Parts[SelectedIndex]);
+        for (int32 i = 0; i < Category.CategoryParts[SelectedIndex].Parts.Num(); i++)
+        {
+            MeshesToMerge.Add(Category.CategoryParts[SelectedIndex].Parts[i]);
+            FP_MeshesToMerge.Add(Category.CategoryParts[SelectedIndex].Parts[i]);
+        }
     }
 
     // Use the first mesh as a reference for skeleton
