@@ -44,4 +44,7 @@ public:
 
     UPROPERTY(EditDefaultsOnly, Category="Custom Values|Actors")
     TArray<FEquipmentActorsToSpawn> ActorsToSpawn;
+
+    UPROPERTY(EditDefaultsOnly, Category="Custom Values|Ability")
+    FGameplayTag AbilityTag;
 };

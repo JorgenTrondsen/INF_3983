@@ -13,8 +13,7 @@ UINFAbilitySystemComponent *FINFEquipmentList::GetAbilitySystemComponent()
     return Cast<UINFAbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerComponent->GetOwner()));
 }
 
-UEquipmentInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const TArray<FEquipmentStatEffectGroup> &StatEffects)
-{
+UEquipmentInstance* FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefinition>& EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage){
     check(EquipmentDefinition);
     check(OwnerComponent);
     check(OwnerComponent->GetOwner()->HasAuthority());
@@ -100,13 +99,18 @@ UEquipmentInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefi
     NewEntry.EntryTag = EquipmentCDO->ItemTag;
     NewEntry.SlotTag = ChosenSlotTag;
     NewEntry.EquipmentDefinition = EquipmentDefinition;
-    NewEntry.StatEffects = StatEffects;
+    NewEntry.EffectPackage = EffectPackage;
     NewEntry.Instance = NewObject<UEquipmentInstance>(OwnerComponent->GetOwner(), InstanceType);
 
     if (NewEntry.HasStats())
     {
         AddEquipmentStats(&NewEntry);
     }
+
+    if (NewEntry.HasAbility())
+ 	{
+ 		AddEquipmentAbility(&NewEntry);
+ 	}
 
     NewEntry.Instance->SpawnEquipmentActors(EquipmentCDO->ActorsToSpawn, ChosenSlotTag);
     MarkItemDirty(NewEntry);
@@ -136,6 +140,22 @@ void FINFEquipmentList::RemoveEquipmentStats(FINFEquipmentEntry *Entry)
     }
 }
 
+void FINFEquipmentList::AddEquipmentAbility(FINFEquipmentEntry* Entry)
+ {
+ 	if (UINFAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+ 	{
+ 		ASC->AddEquipmentAbility(Entry);
+ 	}
+ }
+ 
+ void FINFEquipmentList::RemoveEquipmentAbility(FINFEquipmentEntry* Entry)
+ {
+ 	if (UINFAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+ 	{
+ 		ASC->RemoveEquipmentAbility(Entry);
+ 	}
+ }
+
 void FINFEquipmentList::RemoveEntry(UEquipmentInstance *EquipmentInstance)
 {
     check(OwnerComponent);
@@ -148,6 +168,7 @@ void FINFEquipmentList::RemoveEntry(UEquipmentInstance *EquipmentInstance)
         {
             Entry.Instance->DestroySpawnedActors();
             RemoveEquipmentStats(&Entry);
+            RemoveEquipmentAbility(&Entry);
             EntryIt.RemoveCurrent();
             MarkArrayDirty();
         }
@@ -203,15 +224,15 @@ void UEquipmentManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
     DOREPLIFETIME(UEquipmentManagerComponent, EquipmentList);
 }
 
-void UEquipmentManagerComponent::EquipItem(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const TArray<FEquipmentStatEffectGroup> &StatEffects)
+void UEquipmentManagerComponent::EquipItem(const TSubclassOf<UEquipmentDefinition>& EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage)
 {
     if (!GetOwner()->HasAuthority())
     {
-        ServerEquipItem(EquipmentDefinition, StatEffects);
-        return;
+		ServerEquipItem(EquipmentDefinition, EffectPackage);
+                return;
     }
 
-    if (UEquipmentInstance* Result = EquipmentList.AddEntry(EquipmentDefinition, StatEffects))
+	if (UEquipmentInstance* Result = EquipmentList.AddEntry(EquipmentDefinition, EffectPackage))
  	{
  		Result->OnEquipped();
  	}
@@ -229,11 +250,10 @@ void UEquipmentManagerComponent::UnEquipItem(UEquipmentInstance *EquipmentInstan
     EquipmentList.RemoveEntry(EquipmentInstance);
 }
 
-void UEquipmentManagerComponent::ServerEquipItem_Implementation(
-    TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const TArray<FEquipmentStatEffectGroup> &StatEffects)
-{
-    EquipItem(EquipmentDefinition, StatEffects);
-}
+void UEquipmentManagerComponent::ServerEquipItem_Implementation(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage)
+    {
+        EquipItem(EquipmentDefinition, EffectPackage);
+    }
 
 void UEquipmentManagerComponent::ServerUnEquipItem_Implementation(UEquipmentInstance *EquipmentInstance)
 {

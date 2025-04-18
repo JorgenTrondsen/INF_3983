@@ -54,15 +54,12 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FSt
     FP_MeshesToMerge.Add(ModelParts.Feet[ModelPartSelections.UniformIndexes[5]]);
 
     MeshesToMerge.Add(ModelParts.Eyes);
-    FP_MeshesToMerge.Add(ModelParts.Eyes);
 
     // Add Face mesh based on selection
     MeshesToMerge.Add(ModelParts.Face[ModelPartSelections.UniformIndexes[6]]);
-    FP_MeshesToMerge.Add(ModelParts.Face[ModelPartSelections.UniformIndexes[6]]);
 
     // Add Ears mesh based on selection
     MeshesToMerge.Add(ModelParts.Ears[ModelPartSelections.UniformIndexes[7]]);
-    FP_MeshesToMerge.Add(ModelParts.Ears[ModelPartSelections.UniformIndexes[7]]);
 
     // Add Hair mesh based on selection (-1 is the value for no mesh)
     if (ModelPartSelections.UniformIndexes[8] != -1)
@@ -70,7 +67,6 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FSt
         for (int32 i = 0; i < ModelParts.Hair[ModelPartSelections.UniformIndexes[8]].Parts.Num(); i++)
         {
             MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]].Parts[i]);
-            FP_MeshesToMerge.Add(ModelParts.Hair[ModelPartSelections.UniformIndexes[8]].Parts[i]);
         }
     }
 
@@ -88,7 +84,6 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FSt
         for (int32 i = 0; i < Category.CategoryParts[SelectedIndex].Parts.Num(); i++)
         {
             MeshesToMerge.Add(Category.CategoryParts[SelectedIndex].Parts[i]);
-            FP_MeshesToMerge.Add(Category.CategoryParts[SelectedIndex].Parts[i]);
         }
     }
 

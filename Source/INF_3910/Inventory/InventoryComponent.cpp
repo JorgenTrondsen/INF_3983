@@ -49,7 +49,11 @@ void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
 
     if (NewEntry.ItemTag.MatchesTag(INFGameplayTags::Static::Category_Equipment) && IsValid(WeakStats.Get()))
     {
-        RollForStats(Item.EquipmentItemProps.EquipmentClass, &NewEntry);
+        UEquipmentStatEffects *StatEffects = WeakStats.Get();
+        const UEquipmentDefinition *EquipmentCDO = GetDefault<UEquipmentDefinition>(Item.EquipmentItemProps.EquipmentClass);
+
+        // RollForStats(EquipmentCDO, &NewEntry, StatEffects);
+        AddAbility(EquipmentCDO, &NewEntry, StatEffects);
     }
 
     if (OwnerComponent->GetOwner()->HasAuthority())
@@ -60,11 +64,8 @@ void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
     MarkItemDirty(NewEntry);
 }
 
-void FINFInventoryList::RollForStats(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, FINFInventoryEntry *Entry)
+void FINFInventoryList::RollForStats(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects)
 {
-    UEquipmentStatEffects *StatEffects = WeakStats.Get();
-    const UEquipmentDefinition *EquipmentCDO = GetDefault<UEquipmentDefinition>(EquipmentDefinition);
-
     int32 StatRollIndex = 0;
     while (StatRollIndex < 3)
     {
@@ -83,8 +84,9 @@ void FINFInventoryList::RollForStats(const TSubclassOf<UEquipmentDefinition> &Eq
 
                         NewStat.CurrentValue = PossibleStat->bFractionalStat ? FMath::FRandRange(PossibleStat->MinStatLevel, PossibleStat->MaxStatLevel) : FMath::TruncToInt(FMath::FRandRange(PossibleStat->MinStatLevel, PossibleStat->MaxStatLevel));
 
-                        Entry->StatEffects.Add(NewStat);
+                        Entry->EffectPackage.StatEffects.Add(NewStat);
                         ++StatRollIndex;
+                        break;
                     }
                 }
             }
@@ -92,8 +94,24 @@ void FINFInventoryList::RollForStats(const TSubclassOf<UEquipmentDefinition> &Eq
     }
 }
 
-void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag,
-                                          const TArray<FEquipmentStatEffectGroup> &StatEffects)
+void FINFInventoryList::AddAbility(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects)
+{
+    const FGameplayTag &AbilityTag = EquipmentCDO->AbilityTag;
+
+    for (const auto &Pair : StatEffects->MasterStatMap)
+    {
+        if (AbilityTag.MatchesTag(Pair.Key))
+        {
+            if (const FEquipmentAbilityGroup *Ability = UINFAbilitySystemLibrary::GetDataTableRowByTag<FEquipmentAbilityGroup>(Pair.Value, AbilityTag))
+            {
+                Entry->EffectPackage.Ability = *Ability;
+                break;
+            }
+        }
+    }
+}
+
+void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage& EffectPackage)
 {
     const FMasterItemDefinition Item = OwnerComponent->GetItemDefinitionByTag(ItemTag);
 
@@ -102,7 +120,7 @@ void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag,
     NewEntry.ItemName = Item.ItemName;
     NewEntry.Quantity = 1;
     NewEntry.ItemID = GenerateID();
-    NewEntry.StatEffects = StatEffects;
+    NewEntry.EffectPackage = EffectPackage;
 
     DirtyItemDelegate.Broadcast(NewEntry);
     MarkItemDirty(NewEntry);
@@ -269,7 +287,7 @@ void UInventoryComponent::UseItem(const FINFInventoryEntry &Entry, int32 NumItem
             }
             if (IsValid(Item.EquipmentItemProps.EquipmentClass))
             {
-                EquipmentItemDelegate.Broadcast(Item.EquipmentItemProps.EquipmentClass, Entry.StatEffects);
+                EquipmentItemDelegate.Broadcast(Item.EquipmentItemProps.EquipmentClass, Entry.EffectPackage);
                 InventoryList.RemoveItem(Entry);
             }
         }
@@ -301,8 +319,7 @@ TArray<FINFInventoryEntry> UInventoryComponent::GetInventoryEntries()
     return InventoryList.Entries;
 }
 
-void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag,
-                                                 const TArray<FEquipmentStatEffectGroup> &InStatEffects)
+void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage& EffectPackage)
 {
-    InventoryList.AddUnEquippedItem(ItemTag, InStatEffects);
+    InventoryList.AddUnEquippedItem(ItemTag, EffectPackage);
 }

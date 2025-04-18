@@ -17,11 +17,11 @@ class INF_3910_API UDamageAbility : public UINFGameplayAbility
 
 public:
 	void CaptureDamageEffectInfo(AActor *TargetActor, FDamageEffectInfo &OutInfo);
+	
+	UPROPERTY()
+	float BaseDamage = 0.f;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Damage Effect")
 	TSubclassOf<UGameplayEffect> DamageEffect;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Damage Effect")
-	float BaseDamage;
 };
