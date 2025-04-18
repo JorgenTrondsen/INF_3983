@@ -1,5 +1,7 @@
 Content/Assets/Characters/*
 !Content/Assets/Characters/.gitkeep
+Content/Assets/Weapons/*
+!Content/Assets/Weapons/.gitkeep
 INF_3910.code-workspace
 Binaries
 DerivedDataCache

@@ -108,6 +108,7 @@ UEquipmentInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefi
         AddEquipmentStats(&NewEntry);
     }
 
+    NewEntry.Instance->SpawnEquipmentActors(EquipmentCDO->ActorsToSpawn, ChosenSlotTag);
     MarkItemDirty(NewEntry);
     EquipmentEntryDelegate.Broadcast(NewEntry);
 
@@ -145,6 +146,7 @@ void FINFEquipmentList::RemoveEntry(UEquipmentInstance *EquipmentInstance)
 
         if (Entry.Instance == EquipmentInstance)
         {
+            Entry.Instance->DestroySpawnedActors();
             RemoveEquipmentStats(&Entry);
             EntryIt.RemoveCurrent();
             MarkArrayDirty();
@@ -209,7 +211,10 @@ void UEquipmentManagerComponent::EquipItem(const TSubclassOf<UEquipmentDefinitio
         return;
     }
 
-    EquipmentList.AddEntry(EquipmentDefinition, StatEffects);
+    if (UEquipmentInstance* Result = EquipmentList.AddEntry(EquipmentDefinition, StatEffects))
+ 	{
+ 		Result->OnEquipped();
+ 	}
 }
 
 void UEquipmentManagerComponent::UnEquipItem(UEquipmentInstance *EquipmentInstance)
@@ -220,6 +225,7 @@ void UEquipmentManagerComponent::UnEquipItem(UEquipmentInstance *EquipmentInstan
         return;
     }
 
+    EquipmentInstance->OnUnEquipped();
     EquipmentList.RemoveEntry(EquipmentInstance);
 }
 
