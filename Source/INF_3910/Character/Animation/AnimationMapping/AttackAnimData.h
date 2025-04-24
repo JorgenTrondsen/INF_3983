@@ -20,9 +20,5 @@ public:
 
     // Get attack animation montages by race, gender, and weapon type
     UFUNCTION(BlueprintCallable, Category = "Attack Animations")
-    TArray<UAnimMontage *> GetAttackMontages(const FString& Race, const FString& Gender, const FString& WeaponType) const;
-
-    // Get a specific attack montage with an index
-    UFUNCTION(BlueprintCallable, Category = "Attack Animations")
-    UAnimMontage *GetAttackMontage(const FString& Race, const FString& Gender, const FString& WeaponType, int32 MontageIndex = 0) const;
+    TArray<UAnimMontage *> GetAttackMontages(const FString &Race, const FString &Gender, const FString &WeaponType) const;
 };

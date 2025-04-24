@@ -1,6 +1,6 @@
 #include "AttackAnimData.h"
 
-TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(const FString& Race, const FString& Gender, const FString& WeaponType) const
+TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(const FString &Race, const FString &Gender, const FString &WeaponType) const
 {
     TArray<UAnimMontage *> Result;
 
@@ -20,16 +20,4 @@ TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(const FString& Race, c
     }
 
     return Result;
-}
-
-UAnimMontage *UAttackAnimData::GetAttackMontage(const FString& Race, const FString& Gender, const FString& WeaponType, int32 MontageIndex) const
-{
-    TArray<UAnimMontage *> Montages = GetAttackMontages(Race, Gender, WeaponType);
-
-    if (Montages.IsValidIndex(MontageIndex))
-    {
-        return Montages[MontageIndex];
-    }
-
-    return nullptr;
 }
