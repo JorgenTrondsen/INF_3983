@@ -1,5 +1,4 @@
-﻿// INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
-#include "INFGameInstance.h"
+﻿#include "INFGameInstance.h"
 
 UINFGameInstance::UINFGameInstance()
 {

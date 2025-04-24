@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -24,8 +22,8 @@ public:
 	virtual void StartPlay() override;
 	void DelayedStartPlay();
 	// Override FindPlayerStart to implement custom player start logic
-	virtual AActor* FindPlayerStart_Implementation(AController* Player, const FString& IncomingName) override;
-	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	virtual AActor *FindPlayerStart_Implementation(AController *Player, const FString &IncomingName) override;
+	virtual AActor *ChoosePlayerStart_Implementation(AController *Player) override;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Class Defaults")
@@ -36,5 +34,5 @@ private:
 
 	// FROM MAP_GEN GAMEMODE
 	// Keep track of which player starts have been used
-	TArray<AActor*> UsedPlayerStarts;
+	TArray<AActor *> UsedPlayerStarts;
 };

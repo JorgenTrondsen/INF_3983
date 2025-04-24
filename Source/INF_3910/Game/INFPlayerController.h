@@ -1,5 +1,3 @@
-// INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -77,47 +75,3 @@ private:
 	UINFAbilitySystemComponent *GetINFAbilitySystemComponent();
 	void BindCallbacksToDependencies();
 };
-
-
-
-/*
-
-// INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
-
-#pragma once
-
-#include "CoreMinimal.h"
-#include "AbilitySystemInterface.h"
-#include "GameFramework/PlayerController.h"
-#include "GameplayTagContainer.h"
-#include "GASPlayerController.generated.h"
-
-class UGASAbilitySystemComponent;
-class UGASInputConfig;
- UCLASS()
- class INF_3910_API AGASPlayerController : public APlayerController
- {
-	 GENERATED_BODY()
- 
- public:
-	 AGASPlayerController();
- 
-	 virtual void SetupInputComponent() override;
- 
- protected:
-	 virtual void BeginPlay() override;
-	 void AbilityInputPressed(FGameplayTag InputTag);
-	 void AbilityInputReleased(FGameplayTag InputTag);
- 
- private:
-	 UPROPERTY()
-	 TObjectPtr<UGASAbilitySystemComponent> GASAbilitySystemComp;
- 
-	 UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Input")
-	 TObjectPtr<UGASInputConfig> GASInputConfig;
- 
-	 UGASAbilitySystemComponent *GetGASAbilitySystemComponent();
- };
- 
-
-*/

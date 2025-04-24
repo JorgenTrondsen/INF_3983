@@ -1,6 +1,4 @@
-﻿// INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
@@ -19,7 +17,6 @@ public:
 	FGameplayTag InputTag;
 };
 
-
 /*
 // INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
 
@@ -32,10 +29,10 @@ public:
  class INF_3910_API UGASGameplayAbility : public UGameplayAbility
  {
 	 GENERATED_BODY()
- 
+
  public:
 	 UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Input")
 	 FGameplayTag InputTag;
  };
- 
+
 */

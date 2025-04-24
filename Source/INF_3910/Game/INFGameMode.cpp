@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "INFGameMode.h"
 #include "Engine/TimerHandle.h"
 #include "INF_3910/Character/INFCharacter.h"
@@ -19,7 +17,7 @@ UProjectileInfo *AINFGameMode::GetProjectileInfo() const
     return ProjectileInfo;
 }
 
-// EVERYTHING UNDER HERE IS FROM MAP_GEN GAMEMODE
+// EVERYTHING UNDER HERE IS FOR MAP_GEN
 void AINFGameMode::StartPlay()
 {
     // Delay StartPlay to give the map time to replicate

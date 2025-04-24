@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -31,8 +29,8 @@ public:
 
 	void AddEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
 	void RemoveEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
-	void AddEquipmentAbility(FINFEquipmentEntry* EquipmentEntry);
- 	void RemoveEquipmentAbility(const FINFEquipmentEntry* EquipmentEntry);
+	void AddEquipmentAbility(FINFEquipmentEntry *EquipmentEntry);
+	void RemoveEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry);
 
 private:
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;
@@ -40,7 +38,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Projectile Ability")
 	TSubclassOf<UGameplayAbility> DynamicProjectileAbility;
 
-	FGameplayAbilitySpecHandle GrantEquipmentAbility(const FINFEquipmentEntry* EquipmentEntry);
+	FGameplayAbilitySpecHandle GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetDynamicProjectile(const FGameplayTag &ProjectileTag);

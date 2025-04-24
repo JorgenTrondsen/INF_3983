@@ -1,7 +1,4 @@
 #include "EquipmentActor.h"
-#include "Components/StaticMeshComponent.h" // Included for clarity
-#include "Components/SkeletalMeshComponent.h" // Included for SkeletalMeshComponent
-
 
 AEquipmentActor::AEquipmentActor()
 {

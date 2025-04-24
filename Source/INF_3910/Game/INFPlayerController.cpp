@@ -78,10 +78,11 @@ void AINFPlayerController::BindCallbacksToDependencies()
     if (IsValid(InventoryComponent) && IsValid(EquipmentComponent))
     {
         InventoryComponent->EquipmentItemDelegate.AddLambda(
-			[this] (const TSubclassOf<UEquipmentDefinition>& EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage)            {
+            [this](const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage)
+            {
                 if (IsValid(EquipmentComponent))
                 {
-					EquipmentComponent->EquipItem(EquipmentDefinition, EffectPackage);
+                    EquipmentComponent->EquipItem(EquipmentDefinition, EffectPackage);
                 }
             });
 
@@ -90,7 +91,7 @@ void AINFPlayerController::BindCallbacksToDependencies()
             {
                 if (IsValid(InventoryComponent))
                 {
-					InventoryComponent->AddUnEquippedItemEntry(UnEquippedEntry.EntryTag, UnEquippedEntry.EffectPackage);                
+                    InventoryComponent->AddUnEquippedItemEntry(UnEquippedEntry.EntryTag, UnEquippedEntry.EffectPackage);
                 }
             });
     }
@@ -136,72 +137,3 @@ void AINFPlayerController::CreateInventoryWidget()
         InventoryWidget->AddToViewport();
     }
 }
-
-
-
-
-
-
-
-
-/*
-Gammel GASPlayerController.cpp
-
-// INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
-
-#include "GASPlayerController.h"
-#include "../Input/GASEnhancedInputComponent.h"
-#include "GASPlayerState.h"
-#include "../AbilitySystem/GASAbilitySystemComponent.h"
-#include "Net/UnrealNetwork.h"
-
-AGASPlayerController::AGASPlayerController()
-{
-    bReplicates = true;
-}
-
-void AGASPlayerController::SetupInputComponent()
-{
-    Super::SetupInputComponent();
-
-    if (UGASEnhancedInputComponent *GASInputComp = Cast<UGASEnhancedInputComponent>(InputComponent))
-    {
-        GASInputComp->BindAbilityActions(GASInputConfig, this, &ThisClass::AbilityInputPressed, &ThisClass::AbilityInputReleased);
-    }
-}
-
-void AGASPlayerController::BeginPlay()
-{
-    Super::BeginPlay();
-}
-
-void AGASPlayerController::AbilityInputPressed(FGameplayTag InputTag)
-{
-    if (IsValid(GetGASAbilitySystemComponent()))
-    {
-        GASAbilitySystemComp->AbilityInputPressed(InputTag);
-    }
-}
-
-void AGASPlayerController::AbilityInputReleased(FGameplayTag InputTag)
-{
-    if (IsValid(GetGASAbilitySystemComponent()))
-    {
-        GASAbilitySystemComp->AbilityInputReleased(InputTag);
-    }
-}
-
-UGASAbilitySystemComponent *AGASPlayerController::GetGASAbilitySystemComponent()
-{
-    if (!IsValid(GASAbilitySystemComp))
-    {
-        if (const AGASPlayerState *GASPlayerState = GetPlayerState<AGASPlayerState>())
-        {
-            GASAbilitySystemComp = GASPlayerState->GetGASAbilitySystemComponent();
-        }
-    }
-
-    return GASAbilitySystemComp;
-}
-
-*/

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "ProjectileAbility.h"
 #include "INF_3910/AbilitySystem/AbilityTypes.h"
 #include "INF_3910/Projectiles/ProjectileInfo.h"

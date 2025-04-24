@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "DamageAbility.h"
 #include "AbilitySystemGlobals.h"
 #include "INF_3910/AbilitySystem/AbilityTypes.h"

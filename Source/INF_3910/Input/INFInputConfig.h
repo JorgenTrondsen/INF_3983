@@ -1,6 +1,4 @@
-﻿// INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"

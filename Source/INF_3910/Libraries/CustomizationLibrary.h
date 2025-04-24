@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "INF_3910/CharacterCustomization/CustomizationTypes.h"
+#include "INF_3910/Character/Customization/CustomizationTypes.h"
 #include "CustomizationLibrary.generated.h"
 
 /**
