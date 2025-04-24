@@ -56,9 +56,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Player Starts Generation")
 	void GeneratePlayerStarts(int32 NumStarts, FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right);
 
-	// UPROPERTY(EditAnywhere, Category="PCG Graph")
-	// UPCGGraph* Graph = nullptr;
-
 	// size of mesh
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
 	int XSize = 100; // Number of squares along X axis
@@ -74,14 +71,31 @@ public:
 	float Scale = 100.0f;
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0.000001))
 	float UVScale = 1.0f;
-
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	int NumRings = 50;
 	
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
 	float BaseHeight = 1000.0f;
 	
 
+	// Asset distribution
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	TArray<TSubclassOf<AActor>> AssetClasses;
+	
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	int32 NumAssets = 100;
+
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	float MinAssetSpacing = 200.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	float AssetPlacementProb = 0.7f;
+
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	float MountainAssetDensity = 0.3f; // should be lower density on mountains
+
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	float PlainsAssetDensity = 0.8f; // should be higher density on plains
+
+	void SpawnAssets();
 
 private:
 	UPROPERTY(EditAnywhere, Category="Procedural Mesh Component")
@@ -122,4 +136,14 @@ private:
 	// function to generate the mesh
 	void GenerateMesh();
 
+	// helper function for noise generation
+	int32 HashCombine(int32 Seed, int32 Value) const;
+
+	float SimpleNoise(float X, float Y);
+	
+	UPROPERTY(EditAnywhere, Category="Simple Noise")
+	float SimpleFrequency = 0.02f;
+	
+	UPROPERTY(EditAnywhere, Category="Simple Noise")
+	float SimpleAmplitude = 1000;
 };
