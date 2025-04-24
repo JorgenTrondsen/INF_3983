@@ -1,5 +1,7 @@
 Content/Assets/Characters/*
 !Content/Assets/Characters/.gitkeep
+Content/Assets/Weapons/*
+!Content/Assets/Weapons/.gitkeep
 INF_3910.code-workspace
 Binaries
 DerivedDataCache
@@ -18,11 +20,6 @@ Plugins/EOSIntegrationKit
 *.suo
 *.xcodeproj
 *.xcworkspace
-Content/ForestLandscape
-Content/PN_interactiveSpruceForest
-Content/RP_Vol_01
-Content/Stylized_PBR_Nature
-Config/DefaultEngine.ini
 .DS_Store
 Plugins
 
@@ -32,3 +29,4 @@ Content/ForestLandscape/
 Content/PN_interactiveSpruceForest/
 Content/RP_Vol_01/
 Content/Stylized_PBR_Nature/
+Content/PCG/

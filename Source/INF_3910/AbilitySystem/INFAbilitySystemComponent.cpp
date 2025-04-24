@@ -112,7 +112,7 @@ void UINFAbilitySystemComponent::AddEquipmentEffects(FINFEquipmentEntry *Equipme
 
     const FGameplayEffectContextHandle ContextHandle = MakeEffectContext();
 
-    for (const FEquipmentStatEffectGroup &StatEffect : EquipmentEntry->StatEffects)
+	for (const FEquipmentStatEffectGroup& StatEffect : EquipmentEntry->EffectPackage.StatEffects)    
     {
         if (IsValid(StatEffect.EffectClass.Get()))
         {
@@ -143,6 +143,53 @@ void UINFAbilitySystemComponent::RemoveEquipmentEffects(FINFEquipmentEntry *Equi
         HandleIt.RemoveCurrent();
     }
 }
+
+void UINFAbilitySystemComponent::AddEquipmentAbility(FINFEquipmentEntry* EquipmentEntry)
+ {
+ 	FStreamableManager& Manager = UAssetManager::GetStreamableManager();
+ 	TWeakObjectPtr<UINFAbilitySystemComponent> WeakThis(this);
+ 
+ 	if (IsValid(EquipmentEntry->EffectPackage.Ability.AbilityClass.Get()))
+ 	{
+ 		EquipmentEntry->GrantedHandles.GrantedAbility = GrantEquipmentAbility(EquipmentEntry);
+ 	}
+ 	else
+ 	{
+ 		Manager.RequestAsyncLoad(EquipmentEntry->EffectPackage.Ability.AbilityClass.ToSoftObjectPath(),
+ 			[WeakThis, EquipmentEntry]
+ 			{
+ 				EquipmentEntry->GrantedHandles.GrantedAbility = WeakThis->GrantEquipmentAbility(EquipmentEntry);
+ 			});
+ 	}
+ }
+ 
+ void UINFAbilitySystemComponent::RemoveEquipmentAbility(const FINFEquipmentEntry* EquipmentEntry)
+ {
+ 	ClearAbility(EquipmentEntry->GrantedHandles.GrantedAbility);
+ }
+ 
+ FGameplayAbilitySpecHandle UINFAbilitySystemComponent::GrantEquipmentAbility(const FINFEquipmentEntry* EquipmentEntry)
+ {
+ 	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(EquipmentEntry->EffectPackage.Ability.AbilityClass.Get());
+ 
+ 	if (UINFGameplayAbility* INFAbility = Cast<UINFGameplayAbility>(AbilitySpec.Ability))
+ 	{
+ 		AbilitySpec.DynamicAbilityTags.AddTag(INFAbility->InputTag);
+ 	}
+ 
+ 	if (UProjectileAbility* ProjectileAbility = Cast<UProjectileAbility>(AbilitySpec.Ability))
+ 	{
+ 		ProjectileAbility->ProjectileToSpawnTag = EquipmentEntry->EffectPackage.Ability.ContextTag;
+ 	}
+ 
+    // Set BaseDamage property for DamageAbility instances
+    if (auto* DamageAbility = Cast<UDamageAbility>(AbilitySpec.Ability))
+    {
+        DamageAbility->BaseDamage = EquipmentEntry->EffectPackage.Ability.BaseDamage;
+    }
+
+ 	return GiveAbility(AbilitySpec);
+ }
 
 void UINFAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag &ProjectileTag)
 {

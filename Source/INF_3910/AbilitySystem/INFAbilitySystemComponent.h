@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "INF_3910/Equipment/EquipmentManagerComponent.h"
 #include "INFAbilitySystemComponent.generated.h"
 
 struct FINFEquipmentEntry;
@@ -30,12 +31,16 @@ public:
 
 	void AddEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
 	void RemoveEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
+	void AddEquipmentAbility(FINFEquipmentEntry* EquipmentEntry);
+ 	void RemoveEquipmentAbility(const FINFEquipmentEntry* EquipmentEntry);
 
 private:
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Projectile Ability")
 	TSubclassOf<UGameplayAbility> DynamicProjectileAbility;
+
+	FGameplayAbilitySpecHandle GrantEquipmentAbility(const FINFEquipmentEntry* EquipmentEntry);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetDynamicProjectile(const FGameplayTag &ProjectileTag);

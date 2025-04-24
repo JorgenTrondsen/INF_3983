@@ -6,6 +6,7 @@
 #include "GameplayTagContainer.h"
 #include "EquipmentTypes.generated.h"
 
+class UGameplayAbility;
 class UGameplayEffect;
 USTRUCT()
 struct FEquipmentGrantedHandles
@@ -13,15 +14,10 @@ struct FEquipmentGrantedHandles
     GENERATED_BODY()
 
     UPROPERTY()
-    TArray<FGameplayAbilitySpecHandle> GrantedAbilities = TArray<FGameplayAbilitySpecHandle>();
+    FGameplayAbilitySpecHandle GrantedAbility = FGameplayAbilitySpecHandle();
 
     UPROPERTY()
     TArray<FActiveGameplayEffectHandle> ActiveEffects = TArray<FActiveGameplayEffectHandle>();
-
-    void AddAbilityHandle(FGameplayAbilitySpecHandle AbilityHandle)
-    {
-        GrantedAbilities.Add(AbilityHandle);
-    }
 
     void AddEffectHandle(FActiveGameplayEffectHandle EffectHandle)
     {
@@ -55,3 +51,33 @@ struct FEquipmentStatEffectGroup : public FTableRowBase
     UPROPERTY(BlueprintReadOnly)
     float CurrentValue = 0.f;
 };
+
+USTRUCT(BlueprintType)
+ struct FEquipmentAbilityGroup : public FTableRowBase
+ {
+ 	GENERATED_BODY()
+ 
+ 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+ 	FGameplayTag AbilityTag = FGameplayTag();
+ 
+ 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+ 	TSoftClassPtr<UGameplayAbility> AbilityClass = nullptr;
+ 
+ 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+ 	FGameplayTag ContextTag = FGameplayTag();
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    float BaseDamage = 0.f;
+ };
+ 
+ USTRUCT(BlueprintType)
+ struct FEquipmentEffectPackage
+ {
+ 	GENERATED_BODY()
+ 
+ 	UPROPERTY(BlueprintReadOnly)
+ 	TArray<FEquipmentStatEffectGroup> StatEffects = TArray<FEquipmentStatEffectGroup>();
+ 
+ 	UPROPERTY(BlueprintReadOnly)
+ 	FEquipmentAbilityGroup Ability = FEquipmentAbilityGroup();
+ };

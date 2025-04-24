@@ -78,11 +78,10 @@ void AINFPlayerController::BindCallbacksToDependencies()
     if (IsValid(InventoryComponent) && IsValid(EquipmentComponent))
     {
         InventoryComponent->EquipmentItemDelegate.AddLambda(
-            [this](const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const TArray<FEquipmentStatEffectGroup> &StatEffects)
-            {
+			[this] (const TSubclassOf<UEquipmentDefinition>& EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage)            {
                 if (IsValid(EquipmentComponent))
                 {
-                    EquipmentComponent->EquipItem(EquipmentDefinition, StatEffects);
+					EquipmentComponent->EquipItem(EquipmentDefinition, EffectPackage);
                 }
             });
 
@@ -91,7 +90,7 @@ void AINFPlayerController::BindCallbacksToDependencies()
             {
                 if (IsValid(InventoryComponent))
                 {
-                    InventoryComponent->AddUnEquippedItemEntry(UnEquippedEntry.EntryTag, UnEquippedEntry.StatEffects);
+					InventoryComponent->AddUnEquippedItemEntry(UnEquippedEntry.EntryTag, UnEquippedEntry.EffectPackage);                
                 }
             });
     }
