@@ -5,6 +5,8 @@
 #include "AbilitySystemInterface.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
+#include "INF_3910/Character/Customization/CustomizationTypes.h" // Include customization types
+#include "Net/UnrealNetwork.h"									 // Include for replication
 #include "INFPlayerState.generated.h"
 
 /**
@@ -18,6 +20,8 @@ class INF_3910_API AINFPlayerState : public APlayerState, public IAbilitySystemI
 public:
 	AINFPlayerState();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintPure)
@@ -26,10 +30,19 @@ public:
 	UFUNCTION(BlueprintPure)
 	UINFAttributeSet *GetINFAttributes() const;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_ModelPartSelectionData, Category = "Character Customization")
+	FModelPartSelectionData ModelPartSelectionData;
+
+	UFUNCTION(BlueprintCallable)
+	void ApplyAppearanceData();
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UINFAbilitySystemComponent> INFAbilitySystemComp;
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UINFAttributeSet> INFAttributes;
+
+	UFUNCTION()
+	void OnRep_ModelPartSelectionData();
 };

@@ -9,6 +9,9 @@ void UCustomizationData::GetModelData(const FString &Race, const FString &Gender
                                                  ? CharacterModels.Find(Race)->MaleModel
                                                  : CharacterModels.Find(Race)->FemaleModel;
 
+    ModelPartSelections.Race = Race;
+    ModelPartSelections.Gender = Gender;
+
     // Add the counts for Face, Ears, and Hair to ModelCustomizations
     ModelCustomizations.Add(TEXT("Face"), ModelParts.Face.Num());
     ModelCustomizations.Add(TEXT("Ears"), ModelParts.Ears.Num());
@@ -22,11 +25,11 @@ void UCustomizationData::GetModelData(const FString &Race, const FString &Gender
     }
 }
 
-FMergedMeshes UCustomizationData::MergeModelParts(const FString &Race, const FString &Gender, const FModelPartSelectionData &ModelPartSelections) const
+FMergedMeshes UCustomizationData::MergeModelParts(const FModelPartSelectionData &ModelPartSelections) const
 {
-    const FCharacterModelParts &ModelParts = Gender.Equals(TEXT("Male"))
-                                                 ? CharacterModels.Find(Race)->MaleModel
-                                                 : CharacterModels.Find(Race)->FemaleModel;
+    const FCharacterModelParts &ModelParts = ModelPartSelections.Gender.Equals(TEXT("Male"))
+                                                 ? CharacterModels.Find(ModelPartSelections.Race)->MaleModel
+                                                 : CharacterModels.Find(ModelPartSelections.Race)->FemaleModel;
 
     // Create arrays to hold all non-null skeletal meshes
     TArray<USkeletalMesh *> MeshesToMerge;

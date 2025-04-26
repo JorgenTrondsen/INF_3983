@@ -12,7 +12,9 @@
 #include "INF_3910/Game/INFPlayerState.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
+#include "INF_3910/Character/Animation/INFAnimInstance.h"
 #include "UObject/Object.h"
+#include "INF_3910/Character/Customization/CustomizationData.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -45,6 +47,10 @@ AINFCharacter::AINFCharacter()
 
 	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(("ProjectileSpawnPoint"));
 	DynamicProjectileSpawnPoint->SetupAttachment(GetRootComponent());
+
+	FP_Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
+	FP_Mesh->SetupAttachment(GetMesh());
+	FP_Mesh->SetLeaderPoseComponent(GetMesh());
 }
 
 void AINFCharacter::BeginPlay()
@@ -107,6 +113,34 @@ void AINFCharacter::Look(const FInputActionValue &Value)
 	}
 }
 
+void AINFCharacter::UpdateAppearance(const FModelPartSelectionData &ModelPartSelections)
+{
+	if (!CustomizationData)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CustomizationData asset is not assigned in %s"), *GetNameSafe(this));
+		return;
+	}
+
+	const FMergedMeshes MergedMeshes = CustomizationData->MergeModelParts(ModelPartSelections);
+
+	GetMesh()->SetAnimClass(MergedMeshes.AnimBlueprint);
+	GetMesh()->SetSkeletalMeshAsset(MergedMeshes.ThirdPersonMesh);
+
+	if (FP_Mesh)
+	{
+		FP_Mesh->SetAnimClass(MergedMeshes.AnimBlueprint);
+		FP_Mesh->SetSkeletalMeshAsset(MergedMeshes.FirstPersonMesh);
+	}
+
+	if (IsValid(INFAbilitySystemComp))
+	{
+		if (UINFAnimInstance *INFAnimInstance = Cast<UINFAnimInstance>(GetMesh()->GetAnimInstance()))
+		{
+			INFAnimInstance->InitializeWithAbilitySystem(INFAbilitySystemComp);
+		}
+	}
+}
+
 USceneComponent *AINFCharacter::GetDynamicSpawnPoint_Implementation()
 {
 	return DynamicProjectileSpawnPoint;
@@ -116,10 +150,7 @@ void AINFCharacter::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (HasAuthority())
-	{
-		InitAbilityActorInfo();
-	}
+	InitAbilityActorInfo();
 }
 
 void AINFCharacter::OnRep_PlayerState()

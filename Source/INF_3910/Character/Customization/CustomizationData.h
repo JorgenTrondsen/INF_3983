@@ -42,5 +42,5 @@ public:
 
     // Merges all skeletal meshes from the character parts into two meshes (one for third person, one for first person)
     UFUNCTION(BlueprintCallable, Category = "Character Customization")
-    FMergedMeshes MergeModelParts(const FString &Race, const FString &Gender, const FModelPartSelectionData &ModelPartSelections) const;
+    FMergedMeshes MergeModelParts(const FModelPartSelectionData &ModelPartSelections) const;
 };

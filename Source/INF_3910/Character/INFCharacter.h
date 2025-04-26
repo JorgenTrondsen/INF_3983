@@ -9,6 +9,7 @@
 #include "UObject/ObjectMacros.h"
 #include "UObject/ObjectPtr.h"
 #include "INF_3910/Interfaces/INFAbilitySystemInterface.h"
+#include "INF_3910/Character/Customization/CustomizationTypes.h"
 #include "INFCharacter.generated.h"
 
 class USpringArmComponent;
@@ -16,6 +17,8 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class UCustomizationData;
+struct FModelPartSelectionData;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -42,8 +45,19 @@ class INF_3910_API AINFCharacter : public ACharacter, public IAbilitySystemInter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction *LookAction;
 
+	// Add the Customization Data Asset property
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Customization", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCustomizationData> CustomizationData;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent *FP_Mesh;
+
 public:
 	AINFCharacter();
+
+	// Declare the new function
+	UFUNCTION(BlueprintCallable, Category = "Character Customization")
+	void UpdateAppearance(const FModelPartSelectionData &ModelPartSelections);
 
 	virtual USceneComponent *GetDynamicSpawnPoint_Implementation() override;
 

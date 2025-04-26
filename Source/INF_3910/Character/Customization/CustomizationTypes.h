@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "CustomizationTypes.generated.h"
 
-
 USTRUCT(BlueprintType)
 struct FModelPartArray
 {
@@ -92,16 +91,22 @@ struct FModelPartSelectionData
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Customization")
+    FString Race;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Customization")
+    FString Gender;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Customization")
     TArray<FString> UniformPartNames;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Customization")
     TArray<int32> UniformIndexes;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Customization")
     TArray<FString> SpecificPartNames;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Customization")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Customization")
     TArray<int32> SpecificIndexes;
 
     FModelPartSelectionData()

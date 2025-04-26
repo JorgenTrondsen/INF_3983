@@ -18,6 +18,8 @@ public:
 	UCharacterClassInfo *GetCharacterClassDefaultInfo() const;
 	UProjectileInfo *GetProjectileInfo() const;
 
+	virtual void PostLogin(APlayerController *NewPlayer) override;
+
 	// FROM MAP_GEN GAMEMODE V
 	virtual void StartPlay() override;
 	void DelayedStartPlay();
