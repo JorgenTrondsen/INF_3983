@@ -147,28 +147,45 @@ void UINFAbilitySystemComponent::AddEquipmentAbility(FINFEquipmentEntry *Equipme
     FStreamableManager &Manager = UAssetManager::GetStreamableManager();
     TWeakObjectPtr<UINFAbilitySystemComponent> WeakThis(this);
 
-    if (IsValid(EquipmentEntry->EffectPackage.Ability.AbilityClass.Get()))
+    for (const TSoftClassPtr<UGameplayAbility> &AbilityClassPtr : EquipmentEntry->EffectPackage.Ability.AbilityClasses)
     {
-        EquipmentEntry->GrantedHandles.GrantedAbility = GrantEquipmentAbility(EquipmentEntry);
-    }
-    else
-    {
-        Manager.RequestAsyncLoad(EquipmentEntry->EffectPackage.Ability.AbilityClass.ToSoftObjectPath(),
-                                 [WeakThis, EquipmentEntry]
-                                 {
-                                     EquipmentEntry->GrantedHandles.GrantedAbility = WeakThis->GrantEquipmentAbility(EquipmentEntry);
-                                 });
+        if (IsValid(AbilityClassPtr.Get()))
+        {
+            FGameplayAbilitySpecHandle GrantedHandle = GrantEquipmentAbility(EquipmentEntry, AbilityClassPtr.Get()); // Pass the specific class
+            EquipmentEntry->GrantedHandles.AddAbilityHandle(GrantedHandle);                                          // Add the handle to the array
+        }
+        else
+        {
+            Manager.RequestAsyncLoad(AbilityClassPtr.ToSoftObjectPath(),
+                                     [WeakThis, EquipmentEntry, AbilityClassPtr] // Capture the specific class ptr
+                                     {
+                                         if (WeakThis.IsValid())
+                                         {
+                                             FGameplayAbilitySpecHandle GrantedHandle = WeakThis->GrantEquipmentAbility(EquipmentEntry, AbilityClassPtr.Get());
+                                             EquipmentEntry->GrantedHandles.AddAbilityHandle(GrantedHandle);
+                                         }
+                                     });
+        }
     }
 }
 
-void UINFAbilitySystemComponent::RemoveEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry)
+void UINFAbilitySystemComponent::RemoveEquipmentAbility(FINFEquipmentEntry *EquipmentEntry)
 {
-    ClearAbility(EquipmentEntry->GrantedHandles.GrantedAbility);
+    for (auto HandleIt = EquipmentEntry->GrantedHandles.GrantedAbilities.CreateIterator(); HandleIt; ++HandleIt)
+    {
+        this->ClearAbility(*HandleIt);
+        HandleIt.RemoveCurrent();
+    }
 }
 
-FGameplayAbilitySpecHandle UINFAbilitySystemComponent::GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry)
+FGameplayAbilitySpecHandle UINFAbilitySystemComponent::GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry, TSubclassOf<UGameplayAbility> AbilityClass)
 {
-    FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(EquipmentEntry->EffectPackage.Ability.AbilityClass.Get());
+    if (!AbilityClass)
+    {
+        return FGameplayAbilitySpecHandle();
+    }
+
+    FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass);
 
     if (UINFGameplayAbility *INFAbility = Cast<UINFGameplayAbility>(AbilitySpec.Ability))
     {
@@ -181,12 +198,23 @@ FGameplayAbilitySpecHandle UINFAbilitySystemComponent::GrantEquipmentAbility(con
     }
 
     // Set BaseDamage property for DamageAbility instances
-    if (auto *DamageAbility = Cast<UDamageAbility>(AbilitySpec.Ability))
+    if (UDamageAbility *DamageAbility = Cast<UDamageAbility>(AbilitySpec.Ability))
     {
         DamageAbility->BaseDamage = EquipmentEntry->EffectPackage.Ability.BaseDamage;
     }
 
-    return GiveAbility(AbilitySpec);
+    return this->GiveAbility(AbilitySpec); // Call GiveAbility on the component instance
+}
+
+bool UINFAbilitySystemComponent::IsTagActive(FGameplayTag TagToCheck) const // Renamed function and parameter
+{
+    if (!TagToCheck.IsValid())
+    {
+        return false;
+    }
+
+    // Check if the ASC has the specified tag active
+    return HasMatchingGameplayTag(TagToCheck);
 }
 
 void UINFAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag &ProjectileTag)

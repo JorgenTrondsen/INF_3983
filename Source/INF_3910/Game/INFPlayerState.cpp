@@ -45,15 +45,12 @@ void AINFPlayerState::ApplyAppearanceData()
     // Try to apply immediately first
     if (AINFCharacter *Character = GetPawn<AINFCharacter>())
     {
-        UE_LOG(LogTemp, Log, TEXT("ApplyAppearanceData: Found valid AINFCharacter: %s. Calling UpdateAppearance."), *GetNameSafe(Character));
         Character->UpdateAppearance(ModelPartSelectionData);
         return;
     }
 
     // If we get here, the pawn isn't ready yet - set up delayed retry
     APawn *Pawn = GetPawn();
-    UE_LOG(LogTemp, Warning, TEXT("ApplyAppearanceData: Could not get AINFCharacter. GetPawn() returned: %s. Will retry..."),
-           Pawn ? *GetNameSafe(Pawn) : TEXT("nullptr"));
 
     // Create a timer to retry applying appearance
     FTimerHandle RetryTimerHandle;
@@ -65,20 +62,14 @@ void AINFPlayerState::ApplyAppearanceData()
                                      {
             if (!WeakThis.IsValid())
             {
-                UE_LOG(LogTemp, Warning, TEXT("Retry failed - PlayerState is no longer valid."));
                 return;
             }
             AINFPlayerState* StrongThis = WeakThis.Get();
             if (AINFCharacter* Character = StrongThis->GetPawn<AINFCharacter>())
             {
-                UE_LOG(LogTemp, Log, TEXT("Retry succeeded - applying appearance to: %s"), *GetNameSafe(Character));
                 Character->UpdateAppearance(StrongThis->ModelPartSelectionData);
-            }
-            else
-            {
-                UE_LOG(LogTemp, Warning, TEXT("Retry failed - still no valid character for PlayerState: %s"), *GetNameSafe(StrongThis));
             } }),
-        1.5f, // Second delay before retry
+        0.5f, // Second delay before retry
         false // Don't loop
     );
 }

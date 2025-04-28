@@ -30,7 +30,7 @@ public:
 	void AddEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
 	void RemoveEquipmentEffects(FINFEquipmentEntry *EquipmentEntry);
 	void AddEquipmentAbility(FINFEquipmentEntry *EquipmentEntry);
-	void RemoveEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry);
+	void RemoveEquipmentAbility(FINFEquipmentEntry *EquipmentEntry);
 
 private:
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;
@@ -38,7 +38,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Projectile Ability")
 	TSubclassOf<UGameplayAbility> DynamicProjectileAbility;
 
-	FGameplayAbilitySpecHandle GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry);
+	// Updated declaration to match the definition
+	FGameplayAbilitySpecHandle GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry, TSubclassOf<UGameplayAbility> AbilityClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	bool IsTagActive(FGameplayTag TagToCheck) const;
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetDynamicProjectile(const FGameplayTag &ProjectileTag);

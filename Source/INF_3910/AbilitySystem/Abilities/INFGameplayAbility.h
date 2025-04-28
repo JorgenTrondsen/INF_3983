@@ -4,6 +4,8 @@
 #include "Abilities/GameplayAbility.h"
 #include "INFGameplayAbility.generated.h"
 
+class UINFAbilitySystemComponent;
+
 /**
  *
  */
@@ -15,24 +17,10 @@ class INF_3910_API UINFGameplayAbility : public UGameplayAbility
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Input")
 	FGameplayTag InputTag;
+
+	virtual void OnGiveAbility(const FGameplayAbilityActorInfo *ActorInfo, const FGameplayAbilitySpec &Spec) override;
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Ability")
+	TObjectPtr<UINFAbilitySystemComponent> OwningASC;
 };
-
-/*
-// INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
-
-#pragma once
-
-#include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
-#include "GASGameplayAbility.generated.h"
- UCLASS()
- class INF_3910_API UGASGameplayAbility : public UGameplayAbility
- {
-	 GENERATED_BODY()
-
- public:
-	 UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Input")
-	 FGameplayTag InputTag;
- };
-
-*/

@@ -14,10 +14,15 @@ struct FEquipmentGrantedHandles
     GENERATED_BODY()
 
     UPROPERTY()
-    FGameplayAbilitySpecHandle GrantedAbility = FGameplayAbilitySpecHandle();
+    TArray<FGameplayAbilitySpecHandle> GrantedAbilities;
 
     UPROPERTY()
     TArray<FActiveGameplayEffectHandle> ActiveEffects = TArray<FActiveGameplayEffectHandle>();
+
+    void AddAbilityHandle(FGameplayAbilitySpecHandle AbilityHandle)
+    {
+        GrantedAbilities.Add(AbilityHandle);
+    }
 
     void AddEffectHandle(FActiveGameplayEffectHandle EffectHandle)
     {
@@ -53,31 +58,31 @@ struct FEquipmentStatEffectGroup : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
- struct FEquipmentAbilityGroup : public FTableRowBase
- {
- 	GENERATED_BODY()
- 
- 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
- 	FGameplayTag AbilityTag = FGameplayTag();
- 
- 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
- 	TSoftClassPtr<UGameplayAbility> AbilityClass = nullptr;
- 
- 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
- 	FGameplayTag ContextTag = FGameplayTag();
+struct FEquipmentAbilityGroup : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    FGameplayTag AbilityTag = FGameplayTag();
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TArray<TSoftClassPtr<UGameplayAbility>> AbilityClasses;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    FGameplayTag ContextTag = FGameplayTag();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     float BaseDamage = 0.f;
- };
- 
- USTRUCT(BlueprintType)
- struct FEquipmentEffectPackage
- {
- 	GENERATED_BODY()
- 
- 	UPROPERTY(BlueprintReadOnly)
- 	TArray<FEquipmentStatEffectGroup> StatEffects = TArray<FEquipmentStatEffectGroup>();
- 
- 	UPROPERTY(BlueprintReadOnly)
- 	FEquipmentAbilityGroup Ability = FEquipmentAbilityGroup();
- };
+};
+
+USTRUCT(BlueprintType)
+struct FEquipmentEffectPackage
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadOnly)
+    TArray<FEquipmentStatEffectGroup> StatEffects = TArray<FEquipmentStatEffectGroup>();
+
+    UPROPERTY(BlueprintReadOnly)
+    FEquipmentAbilityGroup Ability = FEquipmentAbilityGroup();
+};
