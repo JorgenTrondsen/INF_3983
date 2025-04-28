@@ -111,7 +111,7 @@ void FINFInventoryList::AddAbility(const UEquipmentDefinition *EquipmentCDO, FIN
     }
 }
 
-void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage& EffectPackage)
+void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage)
 {
     const FMasterItemDefinition Item = OwnerComponent->GetItemDefinitionByTag(ItemTag);
 
@@ -136,11 +136,20 @@ void FINFInventoryList::RemoveItem(const FINFInventoryEntry &InventoryEntry, int
         {
             Entry.Quantity -= NumItems;
 
-            MarkItemDirty(Entry);
-
-            if (OwnerComponent->GetOwner()->HasAuthority())
+            if (Entry.Quantity > 0)
             {
-                DirtyItemDelegate.Broadcast(Entry);
+                MarkItemDirty(Entry);
+
+                if (OwnerComponent->GetOwner()->HasAuthority())
+                {
+                    DirtyItemDelegate.Broadcast(Entry);
+                }
+            }
+            else
+            {
+                InventoryItemRemovedDelegate.Broadcast(Entry.ItemID);
+                EntryIt.RemoveCurrent();
+                MarkArrayDirty();
             }
             break;
         }
@@ -189,7 +198,12 @@ void FINFInventoryList::SetStats(UEquipmentStatEffects *InStats)
 
 void FINFInventoryList::PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize)
 {
-    // If you can figure out what to do with this go for it. I don't know what it is reliably good for.
+    for (const int32 Index : RemovedIndices)
+    {
+        const FINFInventoryEntry &Entry = Entries[Index];
+
+        InventoryItemRemovedDelegate.Broadcast(Entry.ItemID);
+    }
 }
 
 void FINFInventoryList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize)
@@ -319,7 +333,12 @@ TArray<FINFInventoryEntry> UInventoryComponent::GetInventoryEntries()
     return InventoryList.Entries;
 }
 
-void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage& EffectPackage)
+void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage)
 {
     InventoryList.AddUnEquippedItem(ItemTag, EffectPackage);
+}
+
+bool UInventoryComponent::ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems)
+{
+    return Entry.IsValid() && InventoryList.HasEnough(Entry.ItemTag, NumItems);
 }

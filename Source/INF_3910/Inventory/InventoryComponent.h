@@ -13,7 +13,7 @@ class UInventoryComponent;
 class UEquipmentStatEffects;
 class UItemTypesToTables;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FEquipmentItemUsed, const TSubclassOf<UEquipmentDefinition>& /* Equipment Definition */, const FEquipmentEffectPackage& /* Stat Effects */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FEquipmentItemUsed, const TSubclassOf<UEquipmentDefinition> & /* Equipment Definition */, const FEquipmentEffectPackage & /* Stat Effects */);
 USTRUCT(BlueprintType)
 struct FINFInventoryEntry : public FFastArraySerializerItem
 {
@@ -41,6 +41,7 @@ struct FINFInventoryEntry : public FFastArraySerializerItem
 };
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FDirtyInventoryItemSignature, const FINFInventoryEntry & /* Dirty Item */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FInventoryItemRemovedSignature, const int64 /* Item ID */);
 
 USTRUCT()
 struct FINFInventoryList : public FFastArraySerializer
@@ -62,7 +63,7 @@ struct FINFInventoryList : public FFastArraySerializer
     void SetStats(UEquipmentStatEffects *InStats);
     void RollForStats(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects);
     void AddAbility(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects);
-    void AddUnEquippedItem(const FGameplayTag& ItemTag, const FEquipmentEffectPackage& EffectPackage);
+    void AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage);
 
     // FFastArraySerializer Contract
     void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize);
@@ -75,6 +76,7 @@ struct FINFInventoryList : public FFastArraySerializer
     }
 
     FDirtyInventoryItemSignature DirtyItemDelegate;
+    FInventoryItemRemovedSignature InventoryItemRemovedDelegate;
 
 private:
     friend UInventoryComponent;
@@ -127,7 +129,7 @@ public:
     FMasterItemDefinition GetItemDefinitionByTag(const FGameplayTag &ItemTag) const;
 
     TArray<FINFInventoryEntry> GetInventoryEntries();
-    void AddUnEquippedItemEntry(const FGameplayTag& ItemTag, const FEquipmentEffectPackage& EffectPackage);
+    void AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage);
 
 private:
     UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Stat Effects")
@@ -139,6 +141,8 @@ private:
     UFUNCTION(Server, Reliable)
     void ServerAddItem(const FGameplayTag &ItemTag, int32 NumItems);
 
-    UFUNCTION(Server, Reliable)
+    UFUNCTION(Server, Reliable, WithValidation)
     void ServerUseItem(const FINFInventoryEntry &Entry, int32 NumItems);
+
+    bool ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems);
 };

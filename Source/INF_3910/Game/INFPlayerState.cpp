@@ -42,19 +42,15 @@ void AINFPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutL
 
 void AINFPlayerState::ApplyAppearanceData()
 {
-    // Try to apply immediately first
     if (AINFCharacter *Character = GetPawn<AINFCharacter>())
     {
         Character->UpdateAppearance(ModelPartSelectionData);
         return;
     }
 
-    // If we get here, the pawn isn't ready yet - set up delayed retry
     APawn *Pawn = GetPawn();
 
-    // Create a timer to retry applying appearance
     FTimerHandle RetryTimerHandle;
-    // Use a weak pointer to self in the lambda to prevent potential issues if the PlayerState is destroyed before the timer fires
     TWeakObjectPtr<AINFPlayerState> WeakThis(this);
     GetWorld()->GetTimerManager().SetTimer(
         RetryTimerHandle,
@@ -69,7 +65,7 @@ void AINFPlayerState::ApplyAppearanceData()
             {
                 Character->UpdateAppearance(StrongThis->ModelPartSelectionData);
             } }),
-        0.5f, // Second delay before retry
+        1.5f, // Second delay before retry
         false // Don't loop
     );
 }
@@ -77,8 +73,5 @@ void AINFPlayerState::ApplyAppearanceData()
 void AINFPlayerState::OnRep_ModelPartSelectionData()
 {
     UE_LOG(LogTemp, Log, TEXT("OnRep_ModelPartSelectionData called for PlayerState: %s (Role: %d)"), *GetNameSafe(this), GetLocalRole());
-    // This function is called on clients when the variable replicates.
-    // It's also called on the listen server *acting as a client* after replication.
-    // We call the helper function here to handle the update logic.
     ApplyAppearanceData();
 }

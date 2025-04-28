@@ -18,6 +18,12 @@ void UInventoryWidgetController::BindCallbacksToDependencies()
             {
                 InventoryEntryDelegate.Broadcast(DirtyItem);
             });
+
+        OwningInventory->InventoryList.InventoryItemRemovedDelegate.AddLambda(
+            [this](const int64 ItemID)
+            {
+                OnInventoryItemRemoved.Broadcast(ItemID);
+            });
     }
 }
 
