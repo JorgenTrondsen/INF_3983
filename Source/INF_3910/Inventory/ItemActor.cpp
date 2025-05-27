@@ -1,6 +1,6 @@
-#include "EquipmentActor.h"
+#include "ItemActor.h"
 
-AEquipmentActor::AEquipmentActor()
+AItemActor::AItemActor()
 {
      PrimaryActorTick.bCanEverTick = true;
 

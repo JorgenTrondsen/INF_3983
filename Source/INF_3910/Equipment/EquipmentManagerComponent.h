@@ -8,9 +8,10 @@
 #include "EquipmentManagerComponent.generated.h"
 
 class UINFAbilitySystemComponent;
-class UEquipmentInstance;
+class UItemInstance;
 class UEquipmentDefinition;
 class UEquipmentManagerComponent;
+class UDataTable; // Add this forward declaration
 
 USTRUCT(BlueprintType)
 struct FINFEquipmentEntry : public FFastArraySerializerItem
@@ -34,9 +35,9 @@ struct FINFEquipmentEntry : public FFastArraySerializerItem
         return !EffectPackage.StatEffects.IsEmpty();
     }
     bool HasAbility() const
- 	{
- 		return EffectPackage.Ability.AbilityTag.IsValid();
- 	}
+    {
+        return EffectPackage.Ability.AbilityTag.IsValid();
+    }
 
 private:
     friend UEquipmentManagerComponent;
@@ -46,7 +47,7 @@ private:
     TSubclassOf<UEquipmentDefinition> EquipmentDefinition = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UEquipmentInstance> Instance = nullptr;
+    TObjectPtr<UItemInstance> Instance = nullptr;
 };
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FEquipmentEntrySignature, const FINFEquipmentEntry & /* Equipment Entry */);
@@ -68,10 +69,10 @@ struct FINFEquipmentList : public FFastArraySerializer
     UINFAbilitySystemComponent *GetAbilitySystemComponent();
     void AddEquipmentStats(FINFEquipmentEntry *Entry);
     void RemoveEquipmentStats(FINFEquipmentEntry *Entry);
-    void AddEquipmentAbility(FINFEquipmentEntry* Entry);
- 	void RemoveEquipmentAbility(FINFEquipmentEntry* Entry);
- 	UEquipmentInstance* AddEntry(const TSubclassOf<UEquipmentDefinition>& EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage);
-    void RemoveEntry(UEquipmentInstance *EquipmentInstance);
+    void AddEquipmentAbility(FINFEquipmentEntry *Entry);
+    void RemoveEquipmentAbility(FINFEquipmentEntry *Entry);
+    UItemInstance *AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage, UDataTable *ItemTable); // Added UDataTable* ItemTable
+    void RemoveEntry(UItemInstance *ItemInstance);
 
     // FFastArraySerializer Contract
     void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize);
@@ -115,13 +116,17 @@ public:
     UEquipmentManagerComponent();
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
-    void EquipItem(const TSubclassOf<UEquipmentDefinition>& EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage); 
-    void UnEquipItem(UEquipmentInstance *EquipmentInstance);
+    void EquipItem(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage);
+    void UnEquipItem(UItemInstance *ItemInstance);
+
+    // Add this property to hold the DataTable for item definitions
+    UPROPERTY(EditDefaultsOnly, Category = "Data")
+    TObjectPtr<UDataTable> ItemDefinitionsTable;
 
 private:
     UFUNCTION(Server, Reliable)
-    void ServerEquipItem(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const FEquipmentEffectPackage& EffectPackage); 
+    void ServerEquipItem(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage);
 
     UFUNCTION(Server, Reliable)
-    void ServerUnEquipItem(UEquipmentInstance *EquipmentInstance);
+    void ServerUnEquipItem(UItemInstance *ItemInstance);
 };

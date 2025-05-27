@@ -2,8 +2,10 @@
 #include "AbilitySystemGlobals.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/Equipment/EquipmentDefinition.h"
-#include "INF_3910/Equipment/EquipmentInstance.h"
+#include "INF_3910/Inventory/ItemInstance.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/DataTable.h"             // Add this include
+#include "INF_3910/Inventory/ItemTypes.h" // Add this include for FMasterItemDefinition
 
 UINFAbilitySystemComponent *FINFEquipmentList::GetAbilitySystemComponent()
 {
@@ -13,14 +15,17 @@ UINFAbilitySystemComponent *FINFEquipmentList::GetAbilitySystemComponent()
     return Cast<UINFAbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerComponent->GetOwner()));
 }
 
-UEquipmentInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage)
+UItemInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage, UDataTable *ItemTable) // Added UDataTable* ItemTable
 {
     check(EquipmentDefinition);
     check(OwnerComponent);
     check(OwnerComponent->GetOwner()->HasAuthority());
+    check(ItemTable); // Check that the passed table is valid
 
     const UEquipmentDefinition *EquipmentCDO = GetDefault<UEquipmentDefinition>(EquipmentDefinition);
-    TSubclassOf<UEquipmentInstance> InstanceType = EquipmentCDO->InstanceType;
+
+    // Access the ItemDefinitionsTable from the passed parameter
+    const FMasterItemDefinition *ItemDefRow = ItemTable->FindRow<FMasterItemDefinition>(EquipmentCDO->ItemTag.GetTagName(), TEXT("FINFEquipmentList::AddEntry Context"));
 
     // Cache common tags
     static const FGameplayTag TwoHandTag = FGameplayTag::RequestGameplayTag(FName("Equipment.Slot.TwoHand"));
@@ -101,7 +106,7 @@ UEquipmentInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefi
     NewEntry.SlotTag = ChosenSlotTag;
     NewEntry.EquipmentDefinition = EquipmentDefinition;
     NewEntry.EffectPackage = EffectPackage;
-    NewEntry.Instance = NewObject<UEquipmentInstance>(OwnerComponent->GetOwner(), InstanceType);
+    NewEntry.Instance = NewObject<UItemInstance>(OwnerComponent->GetOwner(), ItemDefRow->InstanceType); // Use InstanceType from ItemDefRow
 
     if (NewEntry.HasStats())
     {
@@ -113,7 +118,7 @@ UEquipmentInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefi
         AddEquipmentAbility(&NewEntry);
     }
 
-    NewEntry.Instance->SpawnEquipmentActors(EquipmentCDO->ActorsToSpawn, ChosenSlotTag);
+    NewEntry.Instance->SpawnItemActors(ItemDefRow->ActorsToSpawn, ChosenSlotTag); // Use ActorsToSpawn from ItemDefRow
     MarkItemDirty(NewEntry);
     EquipmentEntryDelegate.Broadcast(NewEntry);
 
@@ -159,7 +164,7 @@ void FINFEquipmentList::RemoveEquipmentAbility(FINFEquipmentEntry *Entry)
     }
 }
 
-void FINFEquipmentList::RemoveEntry(UEquipmentInstance *EquipmentInstance)
+void FINFEquipmentList::RemoveEntry(UItemInstance *ItemInstance)
 {
     check(OwnerComponent);
 
@@ -167,7 +172,7 @@ void FINFEquipmentList::RemoveEntry(UEquipmentInstance *EquipmentInstance)
     {
         FINFEquipmentEntry &Entry = *EntryIt;
 
-        if (Entry.Instance == EquipmentInstance)
+        if (Entry.Instance == ItemInstance)
         {
             Entry.Instance->DestroySpawnedActors();
             RemoveEquipmentStats(&Entry);
@@ -235,22 +240,22 @@ void UEquipmentManagerComponent::EquipItem(const TSubclassOf<UEquipmentDefinitio
         return;
     }
 
-    if (UEquipmentInstance *Result = EquipmentList.AddEntry(EquipmentDefinition, EffectPackage))
+    if (UItemInstance *Result = EquipmentList.AddEntry(EquipmentDefinition, EffectPackage, this->ItemDefinitionsTable)) // Pass ItemTable
     {
         Result->OnEquipped();
     }
 }
 
-void UEquipmentManagerComponent::UnEquipItem(UEquipmentInstance *EquipmentInstance)
+void UEquipmentManagerComponent::UnEquipItem(UItemInstance *ItemInstance)
 {
     if (!GetOwner()->HasAuthority())
     {
-        ServerUnEquipItem(EquipmentInstance);
+        ServerUnEquipItem(ItemInstance);
         return;
     }
 
-    EquipmentInstance->OnUnEquipped();
-    EquipmentList.RemoveEntry(EquipmentInstance);
+    ItemInstance->OnUnEquipped();
+    EquipmentList.RemoveEntry(ItemInstance);
 }
 
 void UEquipmentManagerComponent::ServerEquipItem_Implementation(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage)
@@ -258,7 +263,7 @@ void UEquipmentManagerComponent::ServerEquipItem_Implementation(TSubclassOf<UEqu
     EquipItem(EquipmentDefinition, EffectPackage);
 }
 
-void UEquipmentManagerComponent::ServerUnEquipItem_Implementation(UEquipmentInstance *EquipmentInstance)
+void UEquipmentManagerComponent::ServerUnEquipItem_Implementation(UItemInstance *ItemInstance)
 {
-    UnEquipItem(EquipmentInstance);
+    UnEquipItem(ItemInstance);
 }

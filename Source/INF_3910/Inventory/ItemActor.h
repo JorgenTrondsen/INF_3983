@@ -2,15 +2,15 @@
 
 #include "GameFramework/Actor.h"
 #include "CoreMinimal.h"
-#include "EquipmentActor.generated.h"
+#include "ItemActor.generated.h"
 
 UCLASS()
-class INF_3910_API AEquipmentActor : public AActor
+class INF_3910_API AItemActor : public AActor
 {
     GENERATED_BODY()
 
 public:
-    AEquipmentActor();
+    AItemActor();
 
 private:
     UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))

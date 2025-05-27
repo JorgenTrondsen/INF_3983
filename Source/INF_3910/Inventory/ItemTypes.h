@@ -6,6 +6,8 @@
 
 class UEquipmentDefinition;
 class UGameplayEffect;
+class UItemInstance;
+struct FItemActorToSpawn;
 
 USTRUCT(BlueprintType)
 struct FEquipmentItemProps
@@ -47,6 +49,12 @@ struct FMasterItemDefinition : public FTableRowBase
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     FText Description = FText();
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSubclassOf<UItemInstance> InstanceType;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TArray<FItemActorToSpawn> ActorsToSpawn;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     FConsumableProps ConsumableProps = FConsumableProps();
