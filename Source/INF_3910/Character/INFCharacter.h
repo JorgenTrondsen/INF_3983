@@ -45,12 +45,14 @@ class INF_3910_API AINFCharacter : public ACharacter, public IAbilitySystemInter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction *LookAction;
 
-	// Add the Customization Data Asset property
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Customization", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCustomizationData> CustomizationData;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent *FP_Mesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile", meta = (AllowPrivateAccess = "true"))
+	FName ProjectileSpawnSocketName = TEXT("projectile_spawnpoint");
 
 public:
 	AINFCharacter();

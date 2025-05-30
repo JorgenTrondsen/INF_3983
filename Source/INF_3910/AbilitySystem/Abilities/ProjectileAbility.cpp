@@ -16,6 +16,7 @@ void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo *ActorInf
 	Super::OnGiveAbility(ActorInfo, Spec);
 
 	AvatarActorFromInfo = GetAvatarActorFromActorInfo();
+	InstigatorPawnFromInfo = Cast<APawn>(AvatarActorFromInfo);
 
 	if (!ProjectileToSpawnTag.IsValid() || !IsValid(AvatarActorFromInfo))
 		return;
@@ -28,21 +29,26 @@ void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo *ActorInf
 
 void UProjectileAbility::SpawnProjectile()
 {
-
-	if (!IsValid(CurrentProjectileParams.ProjectileClass))
+	if (!IsValid(AvatarActorFromInfo) || !IsValid(CurrentProjectileParams.ProjectileClass))
 		return;
 
 	if (const USceneComponent *SpawnPointComp = IINFAbilitySystemInterface::Execute_GetDynamicSpawnPoint(AvatarActorFromInfo))
 	{
 		const FVector SpawnPoint = SpawnPointComp->GetComponentLocation();
-		const FVector TargetLocation = AvatarActorFromInfo->GetActorForwardVector() * 10000;
-		const FRotator TargetRotation = (TargetLocation - SpawnPoint).Rotation();
+
+		FVector EyeLocation;
+		FRotator AimRotation;
+		AvatarActorFromInfo->GetActorEyesViewPoint(EyeLocation, AimRotation);
+
+		const FVector AimDirection = AimRotation.Vector();
+		const FVector FarTargetPoint = EyeLocation + AimDirection * 10000.f;
+		const FRotator ProjectileRotation = (FarTargetPoint - SpawnPoint).Rotation();
 
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SpawnPoint);
-		SpawnTransform.SetRotation(TargetRotation.Quaternion());
+		SpawnTransform.SetRotation(ProjectileRotation.Quaternion());
 
-		if (AProjectileBase *SpawnedProjectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(CurrentProjectileParams.ProjectileClass, SpawnTransform, AvatarActorFromInfo))
+		if (AProjectileBase *SpawnedProjectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(CurrentProjectileParams.ProjectileClass, SpawnTransform, AvatarActorFromInfo, InstigatorPawnFromInfo))
 		{
 			SpawnedProjectile->SetProjectileParams(CurrentProjectileParams);
 

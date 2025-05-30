@@ -45,8 +45,8 @@ AINFCharacter::AINFCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(("ProjectileSpawnPoint"));
-	DynamicProjectileSpawnPoint->SetupAttachment(GetRootComponent());
+	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ProjectileSpawnPoint"));
+	DynamicProjectileSpawnPoint->SetupAttachment(GetMesh(), ProjectileSpawnSocketName);
 
 	FP_Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
 	FP_Mesh->SetupAttachment(GetMesh());

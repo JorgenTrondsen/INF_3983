@@ -26,6 +26,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<AActor> AvatarActorFromInfo;
 
+	UPROPERTY()
+	TObjectPtr<APawn> InstigatorPawnFromInfo;
+
 	FProjectileParams CurrentProjectileParams;
 
 	UFUNCTION(BlueprintCallable)
