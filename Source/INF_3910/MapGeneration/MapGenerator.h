@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "INF_3910/Inventory/ItemActor.h"
 
 #include "MapGenerator.generated.h"
 
@@ -68,6 +69,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution", meta = (ToolTip = "Trees and bushes - spawn only on plains"))
 	TArray<TSubclassOf<AActor>> VegetationAssets;
+	
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution", meta = (ToolTip = "Weapons"))
+	TArray<TSubclassOf<AActor>> WeaponAssets;
 
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
@@ -75,6 +79,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	int32 NumAssets = 2500;
+	
+	
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	int32 NumWeapons = 50;
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	float MinAssetSpacing = 200.0f;

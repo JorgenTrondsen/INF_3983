@@ -404,7 +404,13 @@ void AMapGenerator::SpawnAssets()
 		TArray<TSubclassOf<AActor>>* AvailableAssets = nullptr;
 		float PlacementProb = AssetPlacementProb;
 
-		if (DistanceFromCenter <= PlateauRadius)
+		if (i < NumWeapons)
+		{
+			AvailableAssets = &WeaponAssets;
+			PlacementProb = 1;
+		}
+
+		else if (DistanceFromCenter <= PlateauRadius)
 		{
 			AvailableAssets = &RockAssets; // Switch this with the building
 			PlacementProb *= 0;
@@ -464,53 +470,6 @@ void AMapGenerator::SpawnAssets()
             SpawnedAsset->SetActorScale3D(FVector(SizeFactor));
             SpawnedLocations.Add(SpawnLocation);
         }
-
-
-		// // find Z position by tracing down, like in playerstart generation
-		// FVector StartPos = FVector(X, Y, 10000.0f);
-		// FVector EndPos = FVector(X, Y, -10000.0f);
-		// FHitResult HitResult;
-		// FCollisionQueryParams QueryParams;
-		// // QueryParams.AddIgnoredActor(this); // ignore collision with the map_generator actor (higly unlikely)
-		// FVector SpawnLocation;
-
-		// if (World->LineTraceSingleByChannel(HitResult, StartPos, EndPos, ECC_Visibility, QueryParams))
-		// {
-		// 	SpawnLocation = FVector(X, Y, 100.0f + GetActorLocation().Z); // Use same height as your SimpleNoise
-		// }
-		// else
-		// {	
-		// 	if (GEngine)
-		// 	{
-		// 		GEngine->AddOnScreenDebugMessage(-1,
-		// 										 35.0f,
-		// 										 FColor::Orange,
-		// 										 FString::Printf(TEXT("Using fallback height for asset")));
-		// 	}
-		// }
-
-		// // might add spacing between assets
-
-		// // select asset based on seed
-		// int32 AssetIndex = RandomStream.RandRange(0, AssetClasses.Num() - 1);
-		// TSubclassOf<AActor> AssetClass = AssetClasses[AssetIndex];
-
-		// // randomize rotation and scale
-		// FRotator Rotation(0, RandomStream.FRandRange(0.0f, 360.0f), 0);
-		// float SizeFactor = RandomStream.FRandRange(0.8f, 1.2f);
-
-		// // spawn the asset
-		// FActorSpawnParameters SpawnParams;
-		// SpawnParams.Owner = this;
-
-		// if (AActor *SpawnedAsset = World->SpawnActor<AActor>(AssetClass, SpawnLocation, Rotation, SpawnParams))
-		// {
-		// 	SpawnedAsset->SetActorScale3D(FVector(Scale));
-		// 	SpawnedLocations.Add(SpawnLocation);
-
-		// 	// optionally attach to the procedural mesh
-		// 	// SpawnedAsset->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-		// }
 	}
 	UE_LOG(LogTemp, Log, TEXT("Spawned %d assets with seed %d"), SpawnedLocations.Num(), MapSeed);
 }
