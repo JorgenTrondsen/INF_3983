@@ -4,84 +4,77 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-// #include "PCGGraph.h"
+
 #include "MapGenerator.generated.h"
 
-
 class UProceduralMeshComponent;
-
-
-
+class UMaterialInterface;
+/**
+ * Procedural map generator that creates terrain with a central plateau,
+ * sloped mountains, and surrounding plains. Supports seeded generation
+ * for deterministic multiplayer maps and automatic asset distribution.
+*/
 UCLASS()
 class INF_3910_API AMapGenerator : public AActor
 {
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this actor's properties
+	// === CONSTRUCTOR & OVERRIDES ===
 	AMapGenerator();
-
-	
-
-protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere)
-	UMaterialInterface* Material;
-
-
-public:	
-	// Called after all components are initialized
     virtual void PostInitializeComponents() override;
-
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// function to enable replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-
-	// Function to generate map
+	// === MAIN API ===
 	UFUNCTION(BlueprintCallable, Category="Map Generation")
-	void GenerateMap(int32 PlayerCount);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Map Generation")
-	float BaseSize = 500.f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Map Generation")
-	float ScaleFactor = 100.f;
-	
+	void GenerateMap();
 
 	UFUNCTION(BlueprintCallable, Category="Player Starts Generation")
-	void GeneratePlayerStarts(int32 NumStarts, FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right);
+	void GeneratePlayerStarts(FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right);
 
-	// size of mesh
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	int XSize = 100; // Number of squares along X axis
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	int YSize = 100; // Number of squares along Y axis
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	float ZMultiplier = 1000.0f; 
+	void SpawnAssets();
 
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	float NoiseScale = 0.1f; 
+	// === TERRAIN GENERATION SETTINGS ===
+	UPROPERTY(EditAnywhere, Category = "Terrain Generation", Meta = (ClampMin = 0))
+	int XSize = 1000; // Number of squares along X axis
 
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0.000001))
-	float Scale = 100.0f;
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0.000001))
-	float UVScale = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "Terrain Generation", Meta = (ClampMin = 0))
+	int YSize = 1000; // Number of squares along Y axis
+
+	UPROPERTY(EditAnywhere, Category = "Terrain Generation", Meta = (ClampMin = 0.000001))
+	float Scale = 50.0f;
 	
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	float BaseHeight = 1000.0f;
+	float BaseHeight = 10000.0f;
 	
+	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
+	float ZMultiplier = 800.0f; 
 
-	// Asset distribution
+	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
+	float NoiseScale = 0.02f; 
+	
+	// === SEED SETTINGS ===
+	UPROPERTY(EditAnywhere, Category = "Terrain Generation")
+	bool bUseCustomSeed = true;
+	
+	UPROPERTY(EditAnywhere, Category="Terrain Generation", Meta = (EditCondition = "bUseCustomSeed"))
+	int32 CustomSeed = 12345; // used if bUseCustomSeed is true
+
+	// === ASSET DISTRIBUTION ===
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution", meta = (ToolTip = "Rocks - spawn on all terrains"))
+	TArray<TSubclassOf<AActor>> RockAssets;
+
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution", meta = (ToolTip = "Trees and bushes - spawn only on plains"))
+	TArray<TSubclassOf<AActor>> VegetationAssets;
+
+
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	TArray<TSubclassOf<AActor>> AssetClasses;
 	
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
-	int32 NumAssets = 100;
+	int32 NumAssets = 2500;
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	float MinAssetSpacing = 200.0f;
@@ -90,55 +83,67 @@ public:
 	float AssetPlacementProb = 0.7f;
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
-	float MountainAssetDensity = 0.3f; // should be lower density on mountains
+	float MountainAssetDensity = 0.2f; // should be lower density on mountains
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	float PlainsAssetDensity = 0.8f; // should be higher density on plains
 
-	void SpawnAssets();
+	// === RENDERING ===
+	UPROPERTY(EditAnywhere, Category = "Rendering")
+	UMaterialInterface* Material;
 
+	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0.000001))
+	float UVScale = 0.1f;
+	
 private:
+	// === COMPONENTS ===
 	UPROPERTY(EditAnywhere, Category="Procedural Mesh Component")
 	UProceduralMeshComponent* ProceduralMesh;
 
+	// === MESH DATA ===
 	TArray<FVector> Vertices;
 	TArray<int32> Triangles;
 	TArray<FVector2D> UV0;
+	TArray<FColor> Colors;
 
-	void CreateVertices();
+	// === COLOR FUNCTION ===
+	uint8* GetRGB(float DistanceFromCenter, float PlateauRadius, float MountainRadius);
 
-	void CreateTriangles();
-
-	UPROPERTY()
-	bool bUseAsyncCooking = true;
-
-	// replicated seed for map generation
+	// === STATE VARIABLES ===
 	UPROPERTY(ReplicatedUsing=OnRep_MapSeed)
 	int32 MapSeed;
 
-	// add the option to use custom seed
-	UPROPERTY(EditAnywhere, Category="Map Generation")
-	bool bUseCustomSeed = true;
-
-	UPROPERTY(EditAnywhere, Category="Map Generation", Meta = (EditCondition = "bUseCustomSeed"))
-	int32 CustomSeed = 12345; // used if bUseCustomSeed is true
-
-	// seed based noise generation, replaces the use of perlin noise
-	float GenerateSeedBasedNoise(float X, float Y);
-
-	// flag to track if we have generated the mesh
+	UPROPERTY()
+	bool bUseAsyncCooking = true;
+	
 	bool bHasGeneratedMesh = false;
+	
+	// === CORE GENERATION FUNCTIONS ===
+	void GenerateMesh();
+	void CreateVertices();
+	void CreateTriangles();
 
-	// function for clients to generate the map upon receiving the seed
+	// === TERRAIN CALCULATION FUNCTIONS ===
+	UFUNCTION()
+	void CalculateTerrainParameters(float& OutCenterX,
+									float& OutCenterY,
+									float& OutMaxRadius,
+									float& OutPlateauRadius,
+									float& OutMountainRadius,
+									float& OutPlainsHeightFactor) const;
+	
+	UFUNCTION()
+	float CalculateTerrainHeightAtPosition(float WorldX, float WorldY) const;
+
+	// === NOISE GENERATION FUNCTIONS ===
+	float GenerateSeedBasedNoise(float X, float Y) const;
+	int32 HashCombine(int32 Seed, int32 Value) const;
+	
+	// === REPLICATION FUNCTIONS ===¨
 	UFUNCTION()
 	void OnRep_MapSeed();
-
-	// function to generate the mesh
-	void GenerateMesh();
-
-	// helper function for noise generation
-	int32 HashCombine(int32 Seed, int32 Value) const;
-
+	
+	// === EXPERIMENTAL FUNCTIONS AND VARIABLES ===
 	float SimpleNoise(float X, float Y);
 	
 	UPROPERTY(EditAnywhere, Category="Simple Noise")

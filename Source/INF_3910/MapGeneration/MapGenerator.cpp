@@ -12,12 +12,14 @@
 #include "Engine/Engine.h"
 #include "Engine/GameEngine.h"
 #include "EngineUtils.h"
+#include "GameFramework/Actor.h"
 #include "GameFramework/PlayerStart.h"
 #include "HAL/Platform.h"
 // #include "Helpers/PCGHelpers.h"
 #include "LandscapeProxy.h"
 #include "Logging/LogMacros.h"
 #include "Logging/LogVerbosity.h"
+#include "Math/Color.h"
 #include "Math/MathFwd.h"
 #include "Landscape.h"
 #include "Math/TransformCalculus2D.h"
@@ -68,7 +70,7 @@ void AMapGenerator::GenerateMesh()
 	CreateVertices();
 	CreateTriangles();
 
-	ProceduralMesh->CreateMeshSection(0, Vertices, Triangles, TArray<FVector>(), UV0, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
+	ProceduralMesh->CreateMeshSection(0, Vertices, Triangles, TArray<FVector>(), UV0, Colors, TArray<FProcMeshTangent>(), true);
 	ProceduralMesh->SetMaterial(0, Material);
 
 	// Set up collision
@@ -85,35 +87,10 @@ void AMapGenerator::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	// // server initializes the seed
-	// if(HasAuthority())
-	// {
-	// 	// generate random seed if custom seed is not enabled
-	// 	if(!bUseCustomSeed)
-	// 	{
-	// 		MapSeed = FMath::Rand();
-	// 	}
-	// 	else
-	// 	{
-	// 		MapSeed = CustomSeed;
-	// 	}
+	// calling generate map, which calls generate player starts
+	// this is done such that the PIE player start is deleted before the mesh is generated
+	GenerateMap();
 
-	// 	// generate the mesh on the server
-	// 	// Generate the player starts on the server
-	// }
-	GenerateMap(4);
-	// SpawnAssets();
-
-	// if (GEngine)
-	// {
-	// 	GEngine->AddOnScreenDebugMessage(-1,
-	// 		35.0f,
-	// 		FColor::Green,
-	// 		FString::Printf(TEXT("PostInitializeComponents: Generating mesh with seed: %d "), MapSeed)
-	// 	);
-	// }
-
-	// GenerateMesh();
 	UE_LOG(LogTemp, Log, TEXT("MapGenerator: PostInitializeComponents - Generating Early"));
 }
 
@@ -204,17 +181,17 @@ void AMapGenerator::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AMapGenerator::GenerateMap(int32 PlayerCount)
+void AMapGenerator::GenerateMap()
 {
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1,
 										 15.0f,
 										 FColor::Yellow,
-										 FString::Printf(TEXT("Generating map based on %d players"), PlayerCount));
+										 FString::Printf(TEXT("Generating map based on 4 players")));
 	}
 
-	// Calculate center point of our grid
+	// // Calculate center point of our grid
 	float CenterX = XSize * Scale / 2.0f;
 	float CenterY = YSize * Scale / 2.0f;
 
@@ -235,10 +212,10 @@ void AMapGenerator::GenerateMap(int32 PlayerCount)
 	FVector Right = Center + FVector(SpawnOffset, 0, 0);
 
 	// generate the player starts
-	GeneratePlayerStarts(PlayerCount, Center, Top, Bottom, Left, Right);
+	GeneratePlayerStarts(Center, Top, Bottom, Left, Right);
 }
 
-float AMapGenerator::GenerateSeedBasedNoise(float X, float Y)
+float AMapGenerator::GenerateSeedBasedNoise(float X, float Y) const
 {
 	// Create a deterministic hash function based on coordinates and seed
 	auto Hash = [this](int32 X, int32 Y) -> float
@@ -316,35 +293,15 @@ int32 AMapGenerator::HashCombine(int32 Seed, int32 Value) const
 }
 
 // method to generate the player starts and add them to the map
-void AMapGenerator::GeneratePlayerStarts(int32 NumStarts, FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right)
+void AMapGenerator::GeneratePlayerStarts(FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right)
 {
-
+	
 	// array to store all locations of player starts
 	TArray<FVector> PlayerStarts;
-
-	// add all positions of the playerstarts to the array
-	if (NumStarts == 1)
-	{
-		PlayerStarts.Add(Center);
-	}
-	else if (NumStarts == 2)
-	{
-		PlayerStarts.Add(Top);
-		PlayerStarts.Add(Bottom);
-	}
-	else if (NumStarts == 3)
-	{
-		PlayerStarts.Add(Bottom);
-		PlayerStarts.Add(Left);
-		PlayerStarts.Add(Right);
-	}
-	else
-	{
-		PlayerStarts.Add(Top);
-		PlayerStarts.Add(Bottom);
-		PlayerStarts.Add(Left);
-		PlayerStarts.Add(Right);
-	}
+	PlayerStarts.Add(Top);
+	PlayerStarts.Add(Bottom);
+	PlayerStarts.Add(Left);
+	PlayerStarts.Add(Right);
 
 	// get context of the map
 	UWorld *World = GetWorld();
@@ -354,162 +311,78 @@ void AMapGenerator::GeneratePlayerStarts(int32 NumStarts, FVector Center, FVecto
 		return;
 	}
 
-	// remove the existing PIE player starts to use the ones we generate
+	// Remove the existing PIE player starts before adding the created ones
 	for (TActorIterator<APlayerStart> It(World); It; ++It)
 	{
 		APlayerStart *ExistingStart = *It;
 		if (ExistingStart->GetName().Contains("PlayerStartPIE"))
 		{
 			ExistingStart->Destroy();
-			UE_LOG(LogTemp, Log, TEXT("Removed existing PIE PlayerStart: %s"), *ExistingStart->GetName());
 		}
 	}
+	// Create player starts actors
+    int32 Index = 0;
+    for (const FVector& Location : PlayerStarts)
+    {
+        // Calculate the exact terrain height at this position
+        float WorldX = Location.X - GetActorLocation().X;
+        float WorldY = Location.Y - GetActorLocation().Y;
+        
+        // Use the helper function to get exact terrain height
+        float TerrainHeight = CalculateTerrainHeightAtPosition(WorldX, WorldY);
+        
+        // Set spawn location with safety margin above terrain
+        FVector SpawnLocation = Location;
+        float SafetyMargin = 300.0f; // Adjust as needed
+        SpawnLocation.Z = GetActorLocation().Z + TerrainHeight + SafetyMargin;
 
-	// create player starts actors
-	int32 Index = 0;
-	for (const FVector &Location : PlayerStarts)
-	{
-		// find the proper height for the player start by tracing down
-		FVector StartPos = Location;
-		StartPos.Z = 1000.0f; // start trace from above
+        // Spawn parameters
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = this;
 
-		FVector EndPos = Location;
-		EndPos.Z = -1000.0f; // end trace below
+        // Spawn the player start
+        APlayerStart* NewPlayerStart = World->SpawnActor<APlayerStart>(
+            APlayerStart::StaticClass(), 
+            SpawnLocation, 
+            FRotator::ZeroRotator, 
+            SpawnParams
+        );
 
-		FHitResult HitResult;
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(this);
+        if (NewPlayerStart)
+        {
+            // Name and tag the player start correctly
+            FString PlayerStartName = FString::Printf(TEXT("CustomPlayerStart_%d"), Index);
+            NewPlayerStart->SetActorLabel(PlayerStartName);
 
-		// adjust the Z position based on terrain height
-		FVector SpawnLocation = Location;
+            // This is critical: Tag the player starts so GameMode can find them
+            NewPlayerStart->PlayerStartTag = FName(TEXT("Player"));
 
-		// trace to find ground position
-		if (World->LineTraceSingleByChannel(HitResult, StartPos, EndPos, ECC_Visibility, QueryParams))
-		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1,
-												 35.0f,
-												 FColor::Green,
-												 FString::Printf(TEXT("Colliding with mesh")));
-			}
-			SpawnLocation.Z = HitResult.Location.Z + 100.f; // add some offset to avoid clipping
-		}
-		else
-		{
-			// this is used in case the line trace fails
+            // Add a debug sphere to visualize the player start
+            DrawDebugSphere(World, SpawnLocation, 50.0f, 16, FColor::Green, true, -1, 0, 2.0f);
 
-			// Fallback - use terrain height formula to calculate an approximate height
-			float DeltaX = Location.X - GetActorLocation().X - XSize * Scale / 2.0f;
-			float DeltaY = Location.Y - GetActorLocation().Y - YSize * Scale / 2.0f;
-			float DistanceFromCenter = FMath::Sqrt(DeltaX * DeltaX + DeltaY * DeltaY);
-			float MaxRadius = FMath::Min(XSize, YSize) * Scale / 2.0f;
-			float MountainRadius = MaxRadius * 0.4f;
-			float PlainsStartHeight = 0.2f;
-
-			// Calculate rough height using same formula as terrain
-			float HeightFactor = 0.0f;
-			if (DistanceFromCenter <= MountainRadius)
-			{
-				float MountainNormalizedDistance = DistanceFromCenter / MountainRadius;
-				HeightFactor = FMath::Pow(1.0f - MountainNormalizedDistance, 3.0f);
-				HeightFactor = FMath::Max(HeightFactor, PlainsStartHeight);
-			}
-			else
-			{
-				float PlainDistance = (DistanceFromCenter - MountainRadius) / (MaxRadius - MountainRadius);
-				HeightFactor = PlainsStartHeight * (1.0f - PlainDistance);
-			}
-
-			// Apply the height
-			SpawnLocation.Z = GetActorLocation().Z + (BaseHeight * HeightFactor) + 100.0f;
-
-			// for flat terrain
-			// SpawnLocation.Z = GetActorLocation().Z + 1000.0f;
-		}
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-
-		// spawn the player start
-		APlayerStart *NewPlayerStart = World->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-
-		if (NewPlayerStart)
-		{
-			// Name and tag the player start correctly
-			FString PlayerStartName = FString::Printf(TEXT("CustomPlayerStart_%d"), Index);
-			NewPlayerStart->SetActorLabel(PlayerStartName);
-
-			// This is critical: Tag the player starts so GameMode can find them
-			NewPlayerStart->PlayerStartTag = FName(TEXT("Player"));
-
-			// Add a debug sphere to visualize the player start
-			DrawDebugSphere(World, SpawnLocation, 50.0f, 16, FColor::Green, true, -1, 0, 2.0f);
-
-			UE_LOG(LogTemp, Log, TEXT("Spawned %s at: %s"), *PlayerStartName, *SpawnLocation.ToString());
-			Index++;
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Failed to spawn PlayerStart at: %s"), *SpawnLocation.ToString());
-		}
-	}
-
-	// // loop through the array and create player start spawn actors
-	// for (const FVector& Location : PlayerStarts)
-	// {
-	// 	FActorSpawnParameters SpawnParams;
-	// 	SpawnParams.Owner = this;
-
-	// 	// spawn the player start at the computed locationh
-	// 	APlayerStart* NewPlayerStart = World->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), Location, FRotator::ZeroRotator, SpawnParams);
-	// 	if (NewPlayerStart)
-	// 	{
-	// 		UE_LOG(LogTemp, Log, TEXT("Spawned PlayerStart at: %s"), *Location.ToString());
-	// 	}
-	// 	else
-	// 	{
-	// 		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn PlayerStart at: %s"), *Location.ToString());
-	// 	}
-	//	}
+            UE_LOG(LogTemp, Log, TEXT("Spawned %s at: %s (Terrain: %.2f)"), 
+                   *PlayerStartName, *SpawnLocation.ToString(), TerrainHeight);
+            Index++;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to spawn PlayerStart at: %s"), *SpawnLocation.ToString());
+        }
+    }
 }
 
 void AMapGenerator::SpawnAssets()
 {
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1,
-										 35.0f,
-										 FColor::Green,
-										 FString::Printf(TEXT("Trying to spawn assets")));
-	}
-	if (AssetClasses.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No assets selected to spawn"));
-		return;
-	}
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1,
-										 35.0f,
-										 FColor::Purple,
-										 FString::Printf(TEXT("AssetsClasses has element(s) in it")));
-	}
-
 	UWorld *World = GetWorld();
 	if (!World)
 		return;
 
-	// calculate map properties
-	float CenterX = XSize * Scale / 2.0f;
-	float CenterY = YSize * Scale / 2.0f;
-	float MaxRadius = FMath::Min(CenterX, CenterY);
-	float MountainRadius = MaxRadius * 0.4f;
+	// Get terrain paramters
+	float CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor;
+    CalculateTerrainParameters(CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor);
 
 	FRandomStream RandomStream(MapSeed);
-
-	// Track spawned locations to maintain minimum spacing
 	TArray<FVector> SpawnedLocations;
 
 	for (int32 i = 0; i < NumAssets; i++)
@@ -527,74 +400,117 @@ void AMapGenerator::SpawnAssets()
 		if (DistanceFromCenter > MaxRadius)
 			continue;
 
-		// apply different probabilities based on terrain (mountain or plains)
-
+		// Apply different probabilities based on terrain (mountain or plains)
+		TArray<TSubclassOf<AActor>>* AvailableAssets = nullptr;
 		float PlacementProb = AssetPlacementProb;
 
-		if (DistanceFromCenter < MountainRadius)
+		if (DistanceFromCenter <= PlateauRadius)
+		{
+			AvailableAssets = &RockAssets; // Switch this with the building
+			PlacementProb *= 0;
+		}
+		else if (DistanceFromCenter <= MountainRadius)
+		{
+			AvailableAssets = &RockAssets;
 			PlacementProb *= MountainAssetDensity;
+		}
 		else
+		{
+			// Plains - randomy choose between rocks and vegetation
+			if (RandomStream.RandRange(1, 10) <= 3)
+			{
+				AvailableAssets = &RockAssets;
+			}
+			else
+			{
+				AvailableAssets = &VegetationAssets;
+			}
+			
 			PlacementProb *= PlainsAssetDensity;
+		}
 
-		// seed-based random to decide if we place asset
+		// Skip if no assets available for this terrain
+		if (!AvailableAssets || AvailableAssets->Num() == 0)
+			continue;
+
+		// Check placement probability
 		if (RandomStream.FRand() > PlacementProb)
 			continue;
 
-		// find Z position by tracing down, like in playerstart generation
-		FVector StartPos = FVector(X, Y, 10000.0f);
-		FVector EndPos = FVector(X, Y, -10000.0f);
-		FHitResult HitResult;
-		FCollisionQueryParams QueryParams;
-		// QueryParams.AddIgnoredActor(this); // ignore collision with the map_generator actor (higly unlikely)
-		FVector SpawnLocation;
+		// Calculate spawn heigh, previously used linetracing
+		float WorldX = X - GetActorLocation().X;
+        float WorldY = Y - GetActorLocation().Y;
+        float TerrainHeight = CalculateTerrainHeightAtPosition(WorldX, WorldY);
+        FVector SpawnLocation = FVector(X, Y, GetActorLocation().Z + TerrainHeight);
 
-		if (!World->LineTraceSingleByChannel(HitResult, StartPos, EndPos, ECC_Visibility, QueryParams))
-		{
-			SpawnLocation = FVector(X, Y, 100.0f + GetActorLocation().Z); // Use same height as your SimpleNoise
+		// Select random asset from available array
+        int32 AssetIndex = RandomStream.RandRange(0, AvailableAssets->Num() - 1);
+        TSubclassOf<AActor> AssetClass = (*AvailableAssets)[AssetIndex];
 
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1,
-												 35.0f,
-												 FColor::Orange,
-												 FString::Printf(TEXT("Using fallback height for asset")));
-			}
-			// continue; // skip if no valid position found
-		}
+		// Spawn the asset
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = this;
+        FRotator Rotation(0, RandomStream.FRandRange(0.0f, 360.0f), 0);
+        
+		float SizeFactor;
+		// Rocks on the mountain should be smaller
+		if (AvailableAssets == &RockAssets && DistanceFromCenter <= MountainRadius)
+			SizeFactor = RandomStream.FRandRange(0.4f, 0.6f);
 		else
-		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1,
-												 35.0f,
-												 FColor::Purple,
-												 FString::Printf(TEXT("Using collision height for asset")));
-			}
-			SpawnLocation = HitResult.Location;
-		}
+			SizeFactor = RandomStream.FRandRange(0.8f, 1.2f);
 
-		// might add spacing between assets
+		if (AActor* SpawnedAsset = World->SpawnActor<AActor>(AssetClass, SpawnLocation, Rotation, SpawnParams))
+        {
+            SpawnedAsset->SetActorScale3D(FVector(SizeFactor));
+            SpawnedLocations.Add(SpawnLocation);
+        }
 
-		// select asset based on seed
-		int32 AssetIndex = RandomStream.RandRange(0, AssetClasses.Num() - 1);
-		TSubclassOf<AActor> AssetClass = AssetClasses[AssetIndex];
 
-		// randomize rotation and scale
-		FRotator Rotation(0, RandomStream.FRandRange(0.0f, 360.0f), 0);
-		float SizeFactor = RandomStream.FRandRange(0.8f, 1.2f);
+		// // find Z position by tracing down, like in playerstart generation
+		// FVector StartPos = FVector(X, Y, 10000.0f);
+		// FVector EndPos = FVector(X, Y, -10000.0f);
+		// FHitResult HitResult;
+		// FCollisionQueryParams QueryParams;
+		// // QueryParams.AddIgnoredActor(this); // ignore collision with the map_generator actor (higly unlikely)
+		// FVector SpawnLocation;
 
-		// spawn the asset
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
+		// if (World->LineTraceSingleByChannel(HitResult, StartPos, EndPos, ECC_Visibility, QueryParams))
+		// {
+		// 	SpawnLocation = FVector(X, Y, 100.0f + GetActorLocation().Z); // Use same height as your SimpleNoise
+		// }
+		// else
+		// {	
+		// 	if (GEngine)
+		// 	{
+		// 		GEngine->AddOnScreenDebugMessage(-1,
+		// 										 35.0f,
+		// 										 FColor::Orange,
+		// 										 FString::Printf(TEXT("Using fallback height for asset")));
+		// 	}
+		// }
 
-		if (AActor *SpawnedAsset = World->SpawnActor<AActor>(AssetClass, SpawnLocation, Rotation, SpawnParams))
-		{
-			SpawnedAsset->SetActorScale3D(FVector(ScaleFactor));
-			SpawnedLocations.Add(SpawnLocation);
+		// // might add spacing between assets
 
-			// optionally attach to the procedural mesh
-			// SpawnedAsset->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-		}
+		// // select asset based on seed
+		// int32 AssetIndex = RandomStream.RandRange(0, AssetClasses.Num() - 1);
+		// TSubclassOf<AActor> AssetClass = AssetClasses[AssetIndex];
+
+		// // randomize rotation and scale
+		// FRotator Rotation(0, RandomStream.FRandRange(0.0f, 360.0f), 0);
+		// float SizeFactor = RandomStream.FRandRange(0.8f, 1.2f);
+
+		// // spawn the asset
+		// FActorSpawnParameters SpawnParams;
+		// SpawnParams.Owner = this;
+
+		// if (AActor *SpawnedAsset = World->SpawnActor<AActor>(AssetClass, SpawnLocation, Rotation, SpawnParams))
+		// {
+		// 	SpawnedAsset->SetActorScale3D(FVector(Scale));
+		// 	SpawnedLocations.Add(SpawnLocation);
+
+		// 	// optionally attach to the procedural mesh
+		// 	// SpawnedAsset->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+		// }
 	}
 	UE_LOG(LogTemp, Log, TEXT("Spawned %d assets with seed %d"), SpawnedLocations.Num(), MapSeed);
 }
@@ -609,34 +525,140 @@ float AMapGenerator::SimpleNoise(float X, float Y)
 	float YOffset = FMath::Sin(Y * SimpleFrequency) * SimpleAmplitude;
 
 	// float Z = 100.0 + FMath::PerlinNoise2D(FVector2D(X, Y));
-	float Z = 100.0;
+	float Z = 1.0;
 
 	return Z;
 }
 
+void AMapGenerator::CalculateTerrainParameters(float& OutCenterX,
+											float& OutCenterY,
+											float& OutMaxRadius,
+											float& OutPlateauRadius,
+											float& OutMountainRadius,
+											float& OutPlainsHeightFactor) const
+{
+	// Calculate center point of our grid
+    OutCenterX = XSize * Scale / 2.0f;
+    OutCenterY = YSize * Scale / 2.0f;
+    OutMaxRadius = FMath::Min(OutCenterX, OutCenterY);
+    
+    float MountainPeakHeight = BaseHeight;
+    OutPlateauRadius = OutMaxRadius * 0.1f;
+    OutMountainRadius = OutMaxRadius * 0.45f;
+    
+    // Calculate slope parameters
+    const float SlopeAngleDegrees = 25.0f;
+    const float SlopeAngleRadians = FMath::DegreesToRadians(SlopeAngleDegrees);
+    float SlopeDistance = OutMountainRadius - OutPlateauRadius;
+    float VerticalDrop = SlopeDistance * FMath::Tan(SlopeAngleRadians);
+    float CalculatedPlainsHeight = MountainPeakHeight - VerticalDrop;
+    OutPlainsHeightFactor = FMath::Max(CalculatedPlainsHeight / MountainPeakHeight, 0.1f);
+}
+
+float AMapGenerator::CalculateTerrainHeightAtPosition(float WorldX, float WorldY) const
+{
+    float CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor;
+    CalculateTerrainParameters(CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor);
+    
+    // Calculate distance from center
+    float DeltaX = WorldX - CenterX;
+    float DeltaY = WorldY - CenterY;
+    float DistanceFromCenter = FMath::Sqrt(DeltaX * DeltaX + DeltaY * DeltaY);
+    
+    float HeightFactor = 0.0f;
+    float NoiseIntensity = 1.0f;
+    
+    // Your existing terrain zone logic
+    if (DistanceFromCenter <= PlateauRadius)
+    {
+        HeightFactor = 1.0f;
+        NoiseIntensity = 0.0f;
+    }
+    else if (DistanceFromCenter <= MountainRadius)
+    {
+        float CurrentSlopeDistance = DistanceFromCenter - PlateauRadius;
+        float SlopeRange = MountainRadius - PlateauRadius;
+        float SlopeProgress = CurrentSlopeDistance / SlopeRange;
+        HeightFactor = FMath::Lerp(1.0f, PlainsHeightFactor, SlopeProgress);
+        
+        // Gradually introduce noise
+        float NoiseTransitionDistance = PlateauRadius * 0.2f;
+        if (CurrentSlopeDistance < NoiseTransitionDistance)
+        {
+            float NoiseProgress = CurrentSlopeDistance / NoiseTransitionDistance;
+            NoiseIntensity = FMath::SmoothStep(0.0f, 1.0f, NoiseProgress);
+        }
+        else
+        {
+            NoiseIntensity = 1.0f;
+        }
+    }
+    else
+    {
+        HeightFactor = PlainsHeightFactor;
+        NoiseIntensity = 1.0f;
+    }
+    
+    // Calculate noise at this position
+    float NoiseX = WorldX / Scale;
+    float NoiseY = WorldY / Scale;
+    float NoiseHeight = GenerateSeedBasedNoise(NoiseX * NoiseScale, NoiseY * NoiseScale);
+    
+    // Return the calculated height
+    return (BaseHeight * HeightFactor) + (NoiseHeight * ZMultiplier * NoiseIntensity * FMath::Max(HeightFactor, 0.2f));
+}
+
+uint8* AMapGenerator::GetRGB(float DistanceFromCenter, float PlateauRadius, float MountainRadius)
+{
+	uint8* RGB = (uint8*)malloc(sizeof(uint8) * 3);
+
+	float PlateauWeight = 0.0f;
+	float SlopeWeight = 0.0f;
+	float PlainsWeight = 0.0f;
+	
+	if (DistanceFromCenter <= PlateauRadius)
+	{
+		PlateauWeight = 1.0f;
+	}
+	else if (DistanceFromCenter <= MountainRadius)
+	{
+		float Progress = (DistanceFromCenter - PlateauRadius) / (MountainRadius - PlateauRadius);
+		PlateauWeight = 1.0f - Progress;
+		SlopeWeight = Progress;
+	}
+	else 
+	{
+		float PlainsTransitionRadius = MountainRadius * 1.2f;
+		if (DistanceFromCenter <= PlainsTransitionRadius)
+		{
+			float Progress = (DistanceFromCenter - MountainRadius) / (PlainsTransitionRadius - MountainRadius);
+			SlopeWeight = 1.0f - Progress;
+			PlainsWeight = Progress;
+		}
+		else
+		{
+			PlainsWeight = 1.0f;
+		}
+	}
+	// Encode weights in vertex color (R=Plateau, G=Slope, B=Plains)
+	RGB[0] = FMath::Clamp(PlateauWeight * 255.0f, 0.0f, 255.0f);
+	RGB[1] = FMath::Clamp(SlopeWeight * 255.0f, 0.0f, 255.0f);
+	RGB[2] = FMath::Clamp(PlainsWeight * 255.0f, 0.0f, 255.0f);
+	
+	return RGB;
+}
+
 void AMapGenerator::CreateVertices()
 {
-
 	Vertices.Empty();
 	UV0.Empty();
+	Colors.Empty(); // Add vertex colors
 
-	// Calculate center point of our grid
-	float CenterX = XSize * Scale / 2.0f;
-	float CenterY = YSize * Scale / 2.0f;
-
-	// Calculate maximum radius (use whichever is smaller to ensure circle fits within rectangle)
-	float MaxRadius = FMath::Min(CenterX, CenterY);
-
-	// parameters for mountain shape
-	float MountainPeakHeight = BaseHeight;	 // Height at the very center
-	float MountainExponent = 3.0f;			 // Controls steepness (higher = steeper peak)
-	float MountainRadius = MaxRadius * 0.4f; // Where the mountain base ends and plains begin
-
-	float PlainsStartHeight = 0.2f;
-
-	// width of the transition area between mountain and plains
-	float TransitionWidth = MountainRadius * 0.1f;
-
+	// Get calculated parameters
+    float CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor;
+    CalculateTerrainParameters(CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor);
+    
+    float MountainPeakHeight = BaseHeight;
 	// Generate the rectangular grid
 	for (int X = 0; X <= XSize; ++X)
 	{
@@ -653,106 +675,31 @@ void AMapGenerator::CreateVertices()
 
 			float NormalizedDistance = FMath::Min(DistanceFromCenter / MaxRadius, 1.0f);
 
-			// Calculate height factor:
-			float HeightFactor = 0.0f;
-
-			if (DistanceFromCenter <= MountainRadius - TransitionWidth)
+			float Z;
+			if (DistanceFromCenter <= MaxRadius)
 			{
-				// inside the mountain area
-				float MountainNormalizedDistance = DistanceFromCenter / MountainRadius;
-				// Power function for steep dropoff
-				HeightFactor = FMath::Pow(1.0f - MountainNormalizedDistance, MountainExponent);
-
-				HeightFactor = FMath::Max(HeightFactor, PlainsStartHeight);
+				Z = CalculateTerrainHeightAtPosition(WorldX, WorldY);
 			}
-			else if (DistanceFromCenter <= MountainRadius + TransitionWidth)
-			{
-				// In the transition zone - blend between mountain and plains
-				float TransitionFactor = (DistanceFromCenter - (MountainRadius - TransitionWidth)) / (2.0f * TransitionWidth);
-				TransitionFactor = FMath::Clamp(TransitionFactor, 0.0f, 1.0f);
-
-				// Calculate both heights and blend between them
-				float MountainHeight = PlainsStartHeight; // Use the minimum height from mountain
-
-				float PlainDistance = (DistanceFromCenter - MountainRadius) / (MaxRadius - MountainRadius);
-				float PlainHeight = PlainsStartHeight * (1.0f - PlainDistance);
-
-				// Smoothly blend using a cosine interpolation for extra smoothness
-				HeightFactor = FMath::Lerp(MountainHeight, PlainHeight, TransitionFactor);
-			}
-
+			// Coordinates outside of the circle is set to a really low number
 			else
 			{
-				// outside mountain area - gentle plains
-				float PlainDistance = (DistanceFromCenter - MountainRadius) / (MaxRadius - MountainRadius);
-				// small heihgt for plains that gradually decreases to edge
-				HeightFactor = PlainsStartHeight * (1.0f - PlainDistance);
+				Z = -5000.0f;
 			}
 
-			float NoiseHeight = GenerateSeedBasedNoise(X * NoiseScale, Y * NoiseScale);
+			uint8* RGB = GetRGB(DistanceFromCenter, PlateauRadius, MountainRadius);
+			Colors.Add(FColor(RGB[0], RGB[1], RGB[2], 255));
+			free(RGB);
 
-			// Combine the height factor with the noise and apply the multiplier
-			// float BaseHeight = 1000.0f;
-			float Z = (MountainPeakHeight * HeightFactor) + (NoiseHeight * ZMultiplier * FMath::Max(HeightFactor, 0.2f));
-
-			// Apply circular mask:
-			// 1. If inside the circle, use the calculated height
-			// 2. If outside but close, create a slope downward (optional)
-			// 3. If far outside, set very low (effectively removing from view)
-			float Falloff = 50.0f; // Width of the edge slope
-			if (DistanceFromCenter > MaxRadius)
-			{
-				float DistanceOutside = DistanceFromCenter - MaxRadius;
-
-				if (DistanceOutside < Falloff)
-				{
-					// Create a slope at the edge
-					float EdgeFactor = DistanceOutside / Falloff;
-					Z = Z * (1.0f - EdgeFactor) - 500.0f * EdgeFactor;
-				}
-				else
-				{
-					// Set vertices far outside the circle to a very low position
-					Z = -5000.0f;
-				}
-			}
-
-			// float Z = SimpleNoise(WorldX, WorldY);
 			Vertices.Add(FVector(WorldX, WorldY, Z));
 			UV0.Add(FVector2D(X * UVScale, Y * UVScale));
-
-			// Debug output for a few vertices only
-			// if (X % 10 == 0 && Y % 10 == 0)
-			// {
-			//     GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow,
-			//         FString::Printf(TEXT("Vertex (%d,%d): Z=%f, Distance=%f"), X, Y, Z, DistanceFromCenter));
-			// }
 		}
 	}
-	// ProceduralMesh->CreateMeshSection(0, Vertices, Triangles, TArray<FVector>(), UV0, TArray<FColor>(), TArray<FProcMeshTangent>(), true);
-
-	// for rectangular mesh
-	// for (int X = 0; X <= XSize; ++X)
-	// {
-	// 	for (int Y = 0; Y <= YSize; ++Y)
-	// 	{
-	// 		float Z = FMath::PerlinNoise2D(FVector2D(X * NoiseScale + 0.1, Y * NoiseScale + 0.1)) * ZMultiplier;
-	// 		GEngine->AddOnScreenDebugMessage(-1, 999.0f, FColor::Yellow, FString::Printf(TEXT("Z: %f"), Z));
-	// 		Vertices.Add(FVector(X * Scale, Y * Scale, Z));
-	// 		UV0.Add(FVector2D(X * UVScale, Y * UVScale));
-
-	// 		// DrawDebugSphere(GetWorld(), FVector(X * Scale, Y * Scale, 0), 25.0f, 16, FColor::Red, true, -1.0f, 0U, 0.0f);
-	// 	}
-	// }
 }
 
 void AMapGenerator::CreateTriangles()
 {
 	Triangles.Empty();
-
-	// for rectangular mesh
 	int Vertex = 0;
-
 	for (int X = 0; X < XSize; ++X)
 	{
 		for (int Y = 0; Y < YSize; ++Y)
@@ -762,20 +709,9 @@ void AMapGenerator::CreateTriangles()
 			Triangles.Add(Vertex + 1);
 			Triangles.Add(Vertex + YSize + 1);
 
-			// Underside
-			// Triangles.Add(Vertex);
-			// Triangles.Add(Vertex + YSize + 1);
-			// Triangles.Add(Vertex + 1);
-
-			// Overside
 			Triangles.Add(Vertex + 1);
 			Triangles.Add(Vertex + YSize + 2);
 			Triangles.Add(Vertex + YSize + 1);
-
-			// Underside
-			// Triangles.Add(Vertex + 1);
-			// Triangles.Add(Vertex + YSize + 1);
-			// Triangles.Add(Vertex + YSize + 2);
 
 			++Vertex;
 		}
