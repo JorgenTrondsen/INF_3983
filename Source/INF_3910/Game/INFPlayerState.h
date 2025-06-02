@@ -33,9 +33,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_ModelPartSelectionData, Category = "Character Customization")
 	FModelPartSelectionData ModelPartSelectionData;
 
-	UFUNCTION(BlueprintCallable)
-	void ApplyAppearanceData();
-
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UINFAbilitySystemComponent> INFAbilitySystemComp;

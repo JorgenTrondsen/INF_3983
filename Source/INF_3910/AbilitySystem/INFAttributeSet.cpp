@@ -1,6 +1,8 @@
 #include "INFAttributeSet.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
+#include "INFGameplayTags.h"        // Added for gameplay tags
+#include "AbilitySystemComponent.h" // Added for UAbilitySystemComponent
 
 void UINFAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
@@ -35,9 +37,23 @@ void UINFAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 void UINFAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData &Data)
 {
     const float LocalDamage = GetIncomingDamage();
+    const float CurrentHealth = GetHealth();
     SetIncomingDamage(0.f);
 
-    SetHealth(FMath::Clamp(GetHealth() - LocalDamage, 0.f, GetMaxHealth()));
+    SetHealth(FMath::Clamp(CurrentHealth - LocalDamage, 0.f, GetMaxHealth()));
+
+    if ((CurrentHealth - LocalDamage) <= 0.f)
+    {
+        if (Data.Target.AbilityActorInfo.IsValid() && Data.Target.AbilityActorInfo->AbilitySystemComponent.IsValid())
+        {
+            UAbilitySystemComponent *TargetASC = Data.Target.AbilityActorInfo->AbilitySystemComponent.Get();
+
+            FGameplayTagContainer TagContainer;
+            TagContainer.AddTag(INFGameplayTags::Player::State_Dead);
+
+            TargetASC->TryActivateAbilitiesByTag(TagContainer);
+        }
+    }
 }
 
 void UINFAttributeSet::OnRep_Health(const FGameplayAttributeData &OldHealth)

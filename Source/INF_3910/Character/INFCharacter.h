@@ -51,6 +51,9 @@ class INF_3910_API AINFCharacter : public ACharacter, public IAbilitySystemInter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent *FP_Mesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent *FP_Camera;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile", meta = (AllowPrivateAccess = "true"))
 	FName ProjectileSpawnSocketName = TEXT("projectile_spawnpoint");
 
@@ -94,6 +97,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Custom Values|Character Info")
 	FGameplayTag CharacterTag;
 
+	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
+	bool bIsDead;
+
 	void InitAbilityActorInfo();
 	void InitClassDefaults();
 	void BindCallbacksToDependencies();
@@ -104,4 +110,14 @@ private:
 public:
 	FORCEINLINE class USpringArmComponent *GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent *GetFollowCamera() const { return FollowCamera; }
+
+	UFUNCTION()
+	virtual void OnRep_IsDead();
+	void SetDeadState(bool bNewIsDead);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+
+protected:
+	void ApplyDeadSettings();
+	void ApplyAliveSettings();
 };

@@ -6,8 +6,8 @@
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
-#include "INF_3910/Game/INFPlayerState.h"                       // Include PlayerState
-#include "INF_3910/Character/Customization/SaveCustomization.h" // Include SaveGame class
+#include "INF_3910/Game/INFPlayerState.h"
+#include "INF_3910/Character/Customization/SaveCustomization.h"
 
 UCharacterClassInfo *AINFGameMode::GetCharacterClassDefaultInfo() const
 {
@@ -28,19 +28,7 @@ void AINFGameMode::PostLogin(APlayerController *NewPlayer)
         if (USaveCustomization *LoadedGame = Cast<USaveCustomization>(UGameplayStatics::LoadGameFromSlot(TEXT("CustomizationSaveSlot"), 0)))
         {
             PlayerState->ModelPartSelectionData = LoadedGame->SavedModelPartSelectionData;
-            // Call ApplyAppearanceData here after setting the data on the server
-            PlayerState->ApplyAppearanceData();
-
-            UE_LOG(LogTemp, Log, TEXT("Loaded customization for player %s from slot CustomizationSaveSlot and initiated appearance update."), *NewPlayer->GetName());
         }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Could not load customization for player %s from slot CustomizationSaveSlot. Using defaults."), *NewPlayer->GetName());
-        }
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("PostLogin: Could not get AINFPlayerState for player %s"), *NewPlayer->GetName());
     }
 }
 

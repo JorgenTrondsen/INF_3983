@@ -48,9 +48,17 @@ AINFCharacter::AINFCharacter()
 	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ProjectileSpawnPoint"));
 	DynamicProjectileSpawnPoint->SetupAttachment(GetMesh(), ProjectileSpawnSocketName);
 
+	GetMesh()->SetOwnerNoSee(true);
+
 	FP_Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
 	FP_Mesh->SetupAttachment(GetMesh());
 	FP_Mesh->SetLeaderPoseComponent(GetMesh());
+	FP_Mesh->SetOnlyOwnerSee(true);
+	FP_Mesh->SetCastShadow(false);
+
+	FP_Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FP_Camera->SetupAttachment(FP_Mesh, TEXT("bone_EXP_C1_Neck1Socket"));
+	FP_Camera->bUsePawnControlRotation = true;
 }
 
 void AINFCharacter::BeginPlay()
@@ -151,6 +159,11 @@ void AINFCharacter::PossessedBy(AController *NewController)
 	Super::PossessedBy(NewController);
 
 	InitAbilityActorInfo();
+
+	if (AINFPlayerState *PS = GetPlayerState<AINFPlayerState>())
+	{
+		UpdateAppearance(PS->ModelPartSelectionData);
+	}
 }
 
 void AINFCharacter::OnRep_PlayerState()
@@ -158,6 +171,11 @@ void AINFCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	InitAbilityActorInfo();
+
+	if (AINFPlayerState *PS = GetPlayerState<AINFPlayerState>())
+	{
+		UpdateAppearance(PS->ModelPartSelectionData);
+	}
 }
 
 UAbilitySystemComponent *AINFCharacter::GetAbilitySystemComponent() const
@@ -222,5 +240,69 @@ void AINFCharacter::BroadcastInitialValues()
 	{
 		OnHealthChanged(INFAttributes->GetHealth(), INFAttributes->GetMaxHealth());
 		OnStaminaChanged(INFAttributes->GetStamina(), INFAttributes->GetMaxStamina());
+	}
+}
+
+void AINFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AINFCharacter, bIsDead);
+}
+
+void AINFCharacter::ApplyDeadSettings()
+{
+	if (APlayerController *PC = Cast<APlayerController>(GetController()))
+	{
+		DisableInput(PC);
+	}
+
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->WakeAllRigidBodies();
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+}
+
+void AINFCharacter::ApplyAliveSettings()
+{
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Block); // Consider using ECR_Pawn for more standard character collision
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+	GetMesh()->SetAllBodiesSimulatePhysics(false);
+	GetMesh()->SetSimulatePhysics(false);
+
+	const FVector DefaultRelativeLocation = FVector(0.f, 0.f, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+	const FRotator DefaultRelativeRotation = FRotator(0.f, 0.f, 0.f);
+	GetMesh()->SetRelativeLocationAndRotation(DefaultRelativeLocation, DefaultRelativeRotation);
+
+	if (APlayerController *PC = Cast<APlayerController>(GetController()))
+	{
+		EnableInput(PC);
+	}
+}
+
+void AINFCharacter::OnRep_IsDead()
+{
+	if (bIsDead)
+	{
+		ApplyDeadSettings();
+	}
+	else
+	{
+		ApplyAliveSettings();
+		BroadcastInitialValues();
+	}
+}
+
+void AINFCharacter::SetDeadState(bool bNewIsDead)
+{
+	if (HasAuthority())
+	{
+		bIsDead = bNewIsDead;
+		OnRep_IsDead();
 	}
 }

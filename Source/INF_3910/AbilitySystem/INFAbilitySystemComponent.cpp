@@ -14,8 +14,8 @@ void UINFAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<
         if (const UINFGameplayAbility *INFAbility = Cast<UINFGameplayAbility>(AbilitySpec.Ability))
         {
             AbilitySpec.DynamicAbilityTags.AddTag(INFAbility->InputTag);
-            GiveAbility(AbilitySpec);
         }
+        GiveAbility(AbilitySpec);
     }
 }
 
