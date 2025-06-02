@@ -252,7 +252,7 @@ void APOI::OnCaptureCompleted(APawn* NewController)
     CaptureProgress = 1.0f;
     
     // Award capture bonus
-    AwardPoints(NewController, CaptureBonus);
+    // AwardPoints(NewController, CaptureBonus);
     
     // Use display name
     FString PlayerName = GetPlayerDisplayName(NewController);

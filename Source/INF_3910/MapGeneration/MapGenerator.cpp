@@ -2,6 +2,7 @@
 #include "MapGenerator.h"
 #include "CollisionQueryParams.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Containers/Array.h"
 #include "CoreGlobals.h"
 #include "DrawDebugHelpers.h"
@@ -241,18 +242,35 @@ void AMapGenerator::SpawnPOI()
 	float WorldY = CenterY - GetActorLocation().Y;
 	float TerrainHeight = CalculateTerrainHeightAtPosition(WorldX, WorldY);
 
-	FVector POILocation = FVector(CenterX, CenterY, GetActorLocation().Z + TerrainHeight + 100.0f);
+	FVector POILocation = FVector(CenterX, CenterY, GetActorLocation().Z + TerrainHeight);
 
 	// Spawn the POI
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 
 	SpawnedPOI = World->SpawnActor<APOI>(POIClass, POILocation, FRotator::ZeroRotator, SpawnParams);
-
+	
 	if (SpawnedPOI)
 	{
 		// Set the capture radius to match the plateau radius
 		SpawnedPOI->SetCaptureRadius(PlateauRadius);
+
+		if (UStaticMeshComponent* MeshComponent = SpawnedPOI->FindComponentByClass<UStaticMeshComponent>())
+		{
+			FVector BoxExtent;
+            FVector Origin;
+            MeshComponent->GetLocalBounds(Origin, BoxExtent);
+            
+            // Find the largest dimension of the mesh
+            float LargestDimension = FMath::Max3(BoxExtent.X, BoxExtent.Y, (const double)0) * 2.0f; // *2 because BoxExtent is half-size
+            
+            // Calculate scale factor to make the mesh occupy a certain proportion of the plateau
+            float DesiredSize = PlateauRadius * 2; // * 2 due to radius
+            float ScaleFactor = DesiredSize / LargestDimension;
+			MeshComponent->SetRelativeScale3D(FVector(ScaleFactor));
+			UE_LOG(LogTemp, Log, TEXT("POI mesh scaled to %f based on plateau radius %f"), 
+                  ScaleFactor, PlateauRadius);
+		}
 		UE_LOG(LogTemp, Log, TEXT("POI spawned at plateau center: %s"), *POILocation.ToString());
 	}
 	else
