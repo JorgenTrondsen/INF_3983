@@ -226,6 +226,10 @@ void AINFCharacter::BindCallbacksToDependencies()
 {
 	if (IsValid(INFAbilitySystemComp) && IsValid(INFAttributes))
 	{
+		// Clear existing delegates first to prevent multiple bindings from recreated characters
+		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetHealthAttribute()).Clear();
+		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetStaminaAttribute()).Clear();
+
 		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetHealthAttribute()).AddLambda([this](const FOnAttributeChangeData &Data)
 																													 { OnHealthChanged(Data.NewValue, INFAttributes->GetMaxHealth()); });
 
@@ -269,7 +273,7 @@ void AINFCharacter::ApplyDeadSettings()
 void AINFCharacter::ApplyAliveSettings()
 {
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Block); // Consider using ECR_Pawn for more standard character collision
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Block);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
 	GetMesh()->SetAllBodiesSimulatePhysics(false);
@@ -294,7 +298,6 @@ void AINFCharacter::OnRep_IsDead()
 	else
 	{
 		ApplyAliveSettings();
-		BroadcastInitialValues();
 	}
 }
 
