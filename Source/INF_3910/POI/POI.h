@@ -103,6 +103,14 @@ public:
     UFUNCTION(BlueprintCallable, Category = "POI")
     FString GetControllerDisplayName() const;
 	
+    // === CAPTURE RADIUS MANAGEMENT
+    UFUNCTION(BlueprintCallable, Category = "POI")
+    void SetCaptureRadius(float NewRadius);
+
+    UFUNCTION(BlueprintCallable, Category = "POI")
+    float GetCaptureRadius() const { return CaptureRadius; }
+
+
 private:
 	// === INTERNAL STATE ===
     TArray<APawn*> PlayersInZone;

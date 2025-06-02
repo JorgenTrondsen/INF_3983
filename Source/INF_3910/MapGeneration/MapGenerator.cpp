@@ -252,6 +252,8 @@ void AMapGenerator::SpawnPOI()
 
 	if (SpawnedPOI)
     {
+		// Set the capture radius to match the plateau radius
+		SpawnedPOI->SetCaptureRadius(PlateauRadius);
         UE_LOG(LogTemp, Log, TEXT("POI spawned at plateau center: %s"), *POILocation.ToString());
     }
 	else
@@ -378,7 +380,7 @@ void AMapGenerator::GeneratePlayerStarts(FVector Center, FVector Top, FVector Bo
         
         // Set spawn location with safety margin above terrain
         FVector SpawnLocation = Location;
-        float SafetyMargin = 300.0f; // Adjust as needed
+        float SafetyMargin = 500.0f; // Adjust as needed
         SpawnLocation.Z = GetActorLocation().Z + TerrainHeight + SafetyMargin;
 
         // Spawn parameters

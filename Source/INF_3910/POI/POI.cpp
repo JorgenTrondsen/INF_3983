@@ -299,3 +299,14 @@ FString APOI::GetControllerDisplayName() const
     }
     return TEXT("None");
 }
+
+void APOI::SetCaptureRadius(float NewRadius)
+{
+    CaptureRadius = NewRadius;
+    
+    if (CaptureZone)
+    {
+        CaptureZone->SetSphereRadius(CaptureRadius);
+        UE_LOG(LogTemp, Log, TEXT("POI capture radius updated to: %.1f"), CaptureRadius);
+    }
+}
