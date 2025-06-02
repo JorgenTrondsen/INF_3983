@@ -36,42 +36,83 @@ void UPOIStatusWidget::SetPOI(APOI* InPOI)
 
 void UPOIStatusWidget::UpdatePOIDisplay()
 {
-    if (!CurrentPOI)
+       if (!CurrentPOI)
         return;
 
-    // Update POI State
+    // Get the owning player for player-specific display
+    APawn* LocalPlayer = GetOwningPlayerPawn();
     EPOIState CurrentState = CurrentPOI->GetPOIState();
-    FString StateText = FString::Printf(TEXT("POI Status: %s"), *GetStateDisplayText(CurrentState));
     
+    // Determine player-specific color and text
+    FLinearColor StateColor = FLinearColor::White;
+    FString StateText = TEXT("POI Status: Neutral");
+    
+    switch (CurrentState)
+    {
+        case EPOIState::Neutral:
+            StateColor = FLinearColor::White;
+            StateText = TEXT("POI Status: Neutral");
+            break;
+            
+        case EPOIState::Capturing:
+            if (LocalPlayer == CurrentPOI->GetCapturingPlayer())
+            {
+                // YOU are capturing - GREEN/YELLOW
+                StateColor = FLinearColor::Yellow;
+                StateText = FString::Printf(TEXT("POI Status: You're Capturing (%.1f%%)"), 
+                           CurrentPOI->GetCaptureProgress() * 100.0f);
+            }
+            else
+            {
+                // ENEMY is capturing - RED
+                StateColor = FLinearColor::Red;
+                StateText = FString::Printf(TEXT("POI Status: Enemy Capturing (%.1f%%)"), 
+                           CurrentPOI->GetCaptureProgress() * 100.0f);
+            }
+            break;
+            
+        case EPOIState::Controlled:
+            if (LocalPlayer == CurrentPOI->GetControllingPlayer())
+            {
+                StateColor = FLinearColor::Green;
+                StateText = TEXT("POI Status: You Control This POI");
+            }
+            else
+            {
+                StateColor = FLinearColor::Red;
+                StateText = TEXT("POI Status: Enemy Controlled");
+            }
+            break;
+            
+        case EPOIState::Contested:
+            StateColor = FLinearColor::Red;
+            StateText = TEXT("POI Status: Contested");
+            break;
+    }
+
+    // Apply the player-specific color and text
     if (POIStateText)
     {
         POIStateText->SetText(FText::FromString(StateText));
-        POIStateText->SetColorAndOpacity(GetStateColor(CurrentState));
+        POIStateText->SetColorAndOpacity(StateColor);
     }
 
-    // Update Capture Progress
+    // Update progress bar with same color logic
     if (CaptureProgressBar)
     {
         float Progress = CurrentPOI->GetCaptureProgress();
         CaptureProgressBar->SetPercent(Progress);
-        
-        // Change color based on state
-        FLinearColor BarColor = GetStateColor(CurrentState);
-        CaptureProgressBar->SetFillColorAndOpacity(BarColor);
+        CaptureProgressBar->SetFillColorAndOpacity(StateColor);
     }
 
-    // Update Controlling Player
+    // Rest of your existing code...
     if (ControllingPlayerText)
     {
-        APawn* Controller = CurrentPOI->GetControllingPlayer();
-        FString ControllerText = Controller ? 
-            FString::Printf(TEXT("Controlled by: %s"), *Controller->GetName()) :
-            TEXT("Controlled by: None");
-        
+        FString ControllerName = CurrentPOI->GetControllerDisplayName();
+        FString ControllerText = FString::Printf(TEXT("Controlled by: %s"), *ControllerName);
         ControllingPlayerText->SetText(FText::FromString(ControllerText));
     }
 
-    // Update Players in Zone
     if (PlayersInZoneText)
     {
         int32 PlayerCount = CurrentPOI->GetPlayersInZone();

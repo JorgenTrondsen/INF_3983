@@ -76,8 +76,10 @@ void APOI::OnCaptureZoneBeginOverlap(UPrimitiveComponent* OverlappedComponent,
             PlayersInZone.AddUnique(Player);
             PlayersInZoneCount = PlayersInZone.Num();
             
+            // Use display name
+            FString PlayerName = GetPlayerDisplayName(Player);
             UE_LOG(LogTemp, Log, TEXT("Player %s entered POI zone. Total players: %d"), 
-                   *Player->GetName(), PlayersInZoneCount);
+                   *PlayerName, PlayersInZoneCount);
         }
     }
 }
@@ -92,8 +94,10 @@ void APOI::OnCaptureZoneEndOverlap(UPrimitiveComponent* OverlappedComponent,
         PlayersInZone.Remove(Player);
         PlayersInZoneCount = PlayersInZone.Num();
         
+        // Use display name
+        FString PlayerName = GetPlayerDisplayName(Player);
         UE_LOG(LogTemp, Log, TEXT("Player %s left POI zone. Total players: %d"), 
-               *Player->GetName(), PlayersInZoneCount);
+               *PlayerName, PlayersInZoneCount);
 
         // If the controlling player left, lose control immediately
         if (Player == ControllingPlayer)
@@ -192,10 +196,12 @@ void APOI::AwardPoints(APawn* Player, int32 Points)
         return;
 
     // Add points to player's score
-    Player->GetPlayerState()->SetScore(Player->GetPlayerState()->GetScore() + Points); // could use addscore
+    Player->GetPlayerState()->SetScore(Player->GetPlayerState()->GetScore() + Points);
     
+    // Use display name instead of pawn name
+    FString PlayerName = GetPlayerDisplayName(Player);
     UE_LOG(LogTemp, Log, TEXT("Awarded %d points to %s (Total: %.0f)"), 
-           Points, *Player->GetName(), Player->GetPlayerState()->GetScore());
+           Points, *PlayerName, Player->GetPlayerState()->GetScore());
 }
 
 void APOI::UpdateVisualState()
@@ -217,13 +223,13 @@ void APOI::UpdateVisualState()
                 DisplayColor = FColor::Yellow;
                 StateText = FString::Printf(TEXT("Capturing (%.1f%%) - %s"), 
                            CaptureProgress * 100.0f, 
-                           CapturingPlayer ? *CapturingPlayer->GetName() : TEXT("Unknown"));
+                           CapturingPlayer ? *GetPlayerDisplayName(CapturingPlayer) : TEXT("Unknown"));
                 break;
                 
             case EPOIState::Controlled:
                 DisplayColor = FColor::Green;
                 StateText = FString::Printf(TEXT("Controlled by %s"), 
-                           ControllingPlayer ? *ControllingPlayer->GetName() : TEXT("Unknown"));
+                           ControllingPlayer ? *GetPlayerDisplayName(ControllingPlayer) : TEXT("Unknown"));
                 break;
                 
             case EPOIState::Contested:
@@ -232,7 +238,6 @@ void APOI::UpdateVisualState()
                 break;
         }
         
-        // Debug display (remove in final build)
         GEngine->AddOnScreenDebugMessage(-1, 0.1f, DisplayColor, 
             FString::Printf(TEXT("POI: %s"), *StateText));
     }
@@ -249,9 +254,10 @@ void APOI::OnCaptureCompleted(APawn* NewController)
     // Award capture bonus
     AwardPoints(NewController, CaptureBonus);
     
-    UE_LOG(LogTemp, Warning, TEXT("POI captured by %s!"), *NewController->GetName());
+    // Use display name
+    FString PlayerName = GetPlayerDisplayName(NewController);
+    UE_LOG(LogTemp, Warning, TEXT("POI captured by %s!"), *PlayerName);
     
-    // Reset score timer
     LastScoreTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -259,11 +265,37 @@ void APOI::OnControlLost()
 {
     if (ControllingPlayer)
     {
-        UE_LOG(LogTemp, Warning, TEXT("%s lost control of POI"), *ControllingPlayer->GetName());
+        FString PlayerName = GetPlayerDisplayName(ControllingPlayer);
+        UE_LOG(LogTemp, Warning, TEXT("%s lost control of POI"), *PlayerName);
     }
     
     ControllingPlayer = nullptr;
     CaptureProgress = 0.0f;
+}
+
+
+FString APOI::GetPlayerDisplayName(APawn* Player) const 
+{
+    if (!Player || !Player->GetPlayerState())
+        return TEXT("Unknown Player");
+
+    // Try to get the player's display name (EIK username)
+    FString DisplayName = Player->GetPlayerState()->GetPlayerName();
     
-    // State will be updated in UpdatePOIState()
+    // If display name is empty or default, fall back to pawn name
+    if (DisplayName.IsEmpty() || DisplayName == TEXT("Player"))
+    {
+        return Player->GetName();
+    }
+    
+    return DisplayName;
+}
+
+FString APOI::GetControllerDisplayName() const
+{
+    if (ControllingPlayer)
+    {
+        return GetPlayerDisplayName(ControllingPlayer);
+    }
+    return TEXT("None");
 }

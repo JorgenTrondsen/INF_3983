@@ -92,10 +92,16 @@ public:
     APawn* GetControllingPlayer() const { return ControllingPlayer; }
 
     UFUNCTION(BlueprintCallable, Category = "POI")
+    APawn* GetCapturingPlayer() const { return CapturingPlayer; }
+
+    UFUNCTION(BlueprintCallable, Category = "POI")
     float GetCaptureProgress() const { return CaptureProgress; }
 
     UFUNCTION(BlueprintCallable, Category = "POI")
     int32 GetPlayersInZone() const { return PlayersInZoneCount; }
+
+    UFUNCTION(BlueprintCallable, Category = "POI")
+    FString GetControllerDisplayName() const;
 	
 private:
 	// === INTERNAL STATE ===
@@ -110,5 +116,7 @@ private:
     void UpdateVisualState();
     void OnCaptureCompleted(APawn* NewController);
     void OnControlLost();
+
+    FString GetPlayerDisplayName(APawn* Player) const;
 };
 
