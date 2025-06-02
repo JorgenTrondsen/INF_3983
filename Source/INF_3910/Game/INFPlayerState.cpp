@@ -1,10 +1,10 @@
 #include "INFPlayerState.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
-#include "Net/UnrealNetwork.h"               // Include for replication
-#include "INF_3910/Character/INFCharacter.h" // Include for character access
-#include "GameFramework/Pawn.h"              // Include for GetPawn
-#include "TimerManager.h"                    // Include for TimerManager
+#include "Net/UnrealNetwork.h"
+#include "INF_3910/Character/INFCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "INF_3910/Character/Customization/SaveCustomization.h"
 
 AINFPlayerState::AINFPlayerState()
 {
@@ -16,6 +16,8 @@ AINFPlayerState::AINFPlayerState()
     INFAbilitySystemComp->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
     INFAttributes = CreateDefaultSubobject<UINFAttributeSet>(TEXT("AttributeSet"));
+
+    ModelPartSelectionData = Cast<USaveCustomization>(UGameplayStatics::LoadGameFromSlot(TEXT("CustomizationSaveSlot"), 0))->SavedModelPartSelectionData;
 }
 
 UAbilitySystemComponent *AINFPlayerState::GetAbilitySystemComponent() const
