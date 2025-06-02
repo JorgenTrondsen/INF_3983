@@ -131,6 +131,8 @@ public:
     TArray<FINFInventoryEntry> GetInventoryEntries();
     void AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage);
 
+    void ClearAllInventoryItems();
+
 private:
     UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Stat Effects")
     TObjectPtr<UEquipmentStatEffects> StatEffects;
@@ -145,4 +147,7 @@ private:
     void ServerUseItem(const FINFInventoryEntry &Entry, int32 NumItems);
 
     bool ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems);
+
+    UFUNCTION(Server, Reliable)
+    void ServerClearAllInventoryItems();
 };

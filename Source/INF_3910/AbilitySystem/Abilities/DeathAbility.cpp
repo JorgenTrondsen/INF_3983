@@ -14,6 +14,9 @@
 #include "GameFramework/PlayerStart.h"
 #include "EngineUtils.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
+#include "INF_3910/Game/INFPlayerController.h"
+#include "INF_3910/Equipment/EquipmentManagerComponent.h"
+#include "INF_3910/Inventory/InventoryComponent.h"
 
 UDeathAbility::UDeathAbility()
 {
@@ -36,12 +39,13 @@ void UDeathAbility::RespawnPlayer()
     {
         if (AINFCharacter *Character = Cast<AINFCharacter>(ActorInfo->AvatarActor.Get()))
         {
+            TArray<AActor *> PlayerStarts;
+            UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStarts);
+
             AActor *PlayerStart = nullptr;
-            for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+            if (PlayerStarts.Num() > 0)
             {
-                PlayerStart = *It;
-                // might want to add logic here to pick a specific player start
-                break;
+                PlayerStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
             }
 
             if (PlayerStart)
@@ -56,8 +60,23 @@ void UDeathAbility::RespawnPlayer()
                     ASC->SetNumericAttributeBase(AS->GetHealthAttribute(), AS->GetMaxHealth());
                 }
             }
-
             Character->SetDeadState(false);
+
+            if (AController *Controller = Character->GetController())
+            {
+                if (AINFPlayerController *PC = Cast<AINFPlayerController>(Controller))
+                {
+                    if (UEquipmentManagerComponent *EquipmentManager = PC->GetEquipmentComponent())
+                    {
+                        EquipmentManager->ClearAllEquipment();
+                    }
+
+                    if (UInventoryComponent *InventoryManager = PC->GetInventoryComponent())
+                    {
+                        InventoryManager->ClearAllInventoryItems();
+                    }
+                }
+            }
         }
     }
 }

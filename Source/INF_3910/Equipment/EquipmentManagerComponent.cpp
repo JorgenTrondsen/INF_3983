@@ -258,6 +258,29 @@ void UEquipmentManagerComponent::UnEquipItem(UItemInstance *ItemInstance)
     EquipmentList.RemoveEntry(ItemInstance);
 }
 
+void UEquipmentManagerComponent::ClearAllEquipment()
+{
+    if (!GetOwner()->HasAuthority())
+    {
+        ServerClearAllEquipment();
+        return;
+    }
+
+    TArray<UItemInstance *> InstancesToUnEquip;
+    for (const FINFEquipmentEntry &Entry : EquipmentList.GetEntries())
+    {
+        if (Entry.Instance)
+        {
+            InstancesToUnEquip.Add(Entry.Instance);
+        }
+    }
+
+    for (UItemInstance *Instance : InstancesToUnEquip)
+    {
+        UnEquipItem(Instance);
+    }
+}
+
 void UEquipmentManagerComponent::ServerEquipItem_Implementation(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage)
 {
     EquipItem(EquipmentDefinition, EffectPackage);
@@ -266,4 +289,9 @@ void UEquipmentManagerComponent::ServerEquipItem_Implementation(TSubclassOf<UEqu
 void UEquipmentManagerComponent::ServerUnEquipItem_Implementation(UItemInstance *ItemInstance)
 {
     UnEquipItem(ItemInstance);
+}
+
+void UEquipmentManagerComponent::ServerClearAllEquipment_Implementation()
+{
+    ClearAllEquipment();
 }

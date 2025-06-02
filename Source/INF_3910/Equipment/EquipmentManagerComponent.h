@@ -71,8 +71,11 @@ struct FINFEquipmentList : public FFastArraySerializer
     void RemoveEquipmentStats(FINFEquipmentEntry *Entry);
     void AddEquipmentAbility(FINFEquipmentEntry *Entry);
     void RemoveEquipmentAbility(FINFEquipmentEntry *Entry);
-    UItemInstance *AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage, UDataTable *ItemTable); // Added UDataTable* ItemTable
+    UItemInstance *AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage, UDataTable *ItemTable);
     void RemoveEntry(UItemInstance *ItemInstance);
+
+    // Add this getter
+    const TArray<FINFEquipmentEntry> &GetEntries() const { return Entries; }
 
     // FFastArraySerializer Contract
     void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize);
@@ -88,6 +91,8 @@ struct FINFEquipmentList : public FFastArraySerializer
     FOnUnEquippedEntry UnEquippedEntryDelegate;
 
 private:
+    friend UEquipmentManagerComponent; // Already a friend
+
     UPROPERTY()
     TArray<FINFEquipmentEntry> Entries;
 
@@ -123,10 +128,17 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Data")
     TObjectPtr<UDataTable> ItemDefinitionsTable;
 
+    // Add this
+    void ClearAllEquipment();
+
 private:
     UFUNCTION(Server, Reliable)
     void ServerEquipItem(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage);
 
     UFUNCTION(Server, Reliable)
     void ServerUnEquipItem(UItemInstance *ItemInstance);
+
+    // Add this
+    UFUNCTION(Server, Reliable)
+    void ServerClearAllEquipment();
 };

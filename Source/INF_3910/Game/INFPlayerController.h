@@ -26,8 +26,9 @@ public:
 	AINFPlayerController();
 
 	virtual void SetupInputComponent() override;
-
 	/* Implement Inventory Interface */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UInventoryComponent *GetInventoryComponent();
 	virtual UInventoryComponent *GetInventoryComponent_Implementation() override;
 
 	/* Implement INFAbilitySystemInterface */
@@ -36,9 +37,11 @@ public:
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 
 	UInventoryWidgetController *GetInventoryWidgetController();
-
 	UFUNCTION(BlueprintCallable)
 	void CreateInventoryWidget();
+
+	UFUNCTION(BlueprintPure)
+	UEquipmentManagerComponent *GetEquipmentComponent() const { return EquipmentComponent; }
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 

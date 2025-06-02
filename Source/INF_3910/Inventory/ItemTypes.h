@@ -7,7 +7,19 @@
 class UEquipmentDefinition;
 class UGameplayEffect;
 class UItemInstance;
-struct FItemActorToSpawn;
+class AItemActor;
+
+USTRUCT(BlueprintType)
+struct FItemActorToSpawn
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditDefaultsOnly)
+    TSoftClassPtr<AItemActor> EquipmentClass = nullptr;
+
+    UPROPERTY(EditDefaultsOnly)
+    TMap<FGameplayTag, FName> SlotAttachmentMap;
+};
 
 USTRUCT(BlueprintType)
 struct FEquipmentItemProps

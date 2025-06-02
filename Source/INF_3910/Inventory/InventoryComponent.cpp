@@ -338,7 +338,34 @@ void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag, co
     InventoryList.AddUnEquippedItem(ItemTag, EffectPackage);
 }
 
+void UInventoryComponent::ClearAllInventoryItems()
+{
+    AActor *Owner = GetOwner();
+    if (!IsValid(Owner))
+        return;
+
+    if (!Owner->HasAuthority())
+    {
+        ServerClearAllInventoryItems();
+        return;
+    }
+
+    TArray<FINFInventoryEntry> CurrentEntries = GetInventoryEntries(); // Gets a copy
+    for (const FINFInventoryEntry &Entry : CurrentEntries)
+    {
+        if (Entry.IsValid())
+        {
+            InventoryList.RemoveItem(Entry, Entry.Quantity);
+        }
+    }
+}
+
 bool UInventoryComponent::ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems)
 {
     return Entry.IsValid() && InventoryList.HasEnough(Entry.ItemTag, NumItems);
+}
+
+void UInventoryComponent::ServerClearAllInventoryItems_Implementation()
+{
+    ClearAllInventoryItems();
 }
