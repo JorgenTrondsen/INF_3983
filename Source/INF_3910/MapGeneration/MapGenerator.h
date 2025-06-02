@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "INF_3910/Inventory/ItemActor.h"
+#include "INF_3910/POI/POI.h"
 
 #include "MapGenerator.generated.h"
 
@@ -102,6 +103,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0.000001))
 	float UVScale = 0.1f;
+
+	// === POI SETTINGS ===
+	UPROPERTY(EditAnywhere, Category = "POI")
+    bool bSpawnPOI = true;
+
+    UPROPERTY(EditAnywhere, Category = "POI")
+    TSubclassOf<APOI> POIClass;
+
+    UPROPERTY(EditAnywhere, Category = "POI")
+    float POIClearanceRadius = 800.0f; // Keep assets away from POI
 	
 private:
 	// === COMPONENTS ===
@@ -159,4 +170,11 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category="Simple Noise")
 	float SimpleAmplitude = 1000;
+
+	// Referance to spawned POI
+	UPROPERTY()
+    APOI* SpawnedPOI = nullptr;
+
+    // POI spawning function
+    void SpawnPOI();
 };

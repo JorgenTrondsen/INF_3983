@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "INF_3910/Interfaces/InventoryInterface.h"
 #include "INF_3910/Interfaces/INFAbilitySystemInterface.h"
+#include "INF_3910/UI/POIStatusWidget.h"
+#include "INF_3910/UI/PlayerScoreWidget.h"
 #include "INFPlayerController.generated.h"
 
 class UEquipmentManagerComponent;
@@ -45,10 +47,27 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void CreatePOIWidgets();
+
 protected:
 	virtual void BeginPlay() override;
 	void AbilityInputPressed(FGameplayTag InputTag);
 	void AbilityInputReleased(FGameplayTag InputTag);
+
+	// Widget classes
+    UPROPERTY(EditAnywhere, Category = "UI|POI")
+    TSubclassOf<class UPOIStatusWidget> POIStatusWidgetClass;
+
+    UPROPERTY(EditAnywhere, Category = "UI|POI")
+    TSubclassOf<class UPlayerScoreWidget> PlayerScoreWidgetClass;
+
+    // Widget instances
+    UPROPERTY(BlueprintReadOnly, Category = "UI|POI")
+    class UPOIStatusWidget* POIStatusWidget;
+
+    UPROPERTY(BlueprintReadOnly, Category = "UI|POI")
+    class UPlayerScoreWidget* PlayerScoreWidget;
 
 private:
 	UPROPERTY()
@@ -77,4 +96,7 @@ private:
 
 	UINFAbilitySystemComponent *GetINFAbilitySystemComponent();
 	void BindCallbacksToDependencies();
+
+	// Helper function to find POI in level
+    void FindAndConnectPOI();
 };

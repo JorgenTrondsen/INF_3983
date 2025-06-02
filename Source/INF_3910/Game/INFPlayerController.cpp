@@ -9,6 +9,8 @@
 #include "INF_3910/UI/INFUserWidget.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/Equipment/EquipmentManagerComponent.h"
+#include "INF_3910/POI/POI.h"
+#include "Kismet/GameplayStatics.h"
 
 AINFPlayerController::AINFPlayerController()
 {
@@ -35,6 +37,10 @@ void AINFPlayerController::BeginPlay()
     Super::BeginPlay();
 
     BindCallbacksToDependencies();
+
+    // Add delay to ensure level is fully loaded
+    FTimerHandle POIWidgetTimer;
+    GetWorldTimerManager().SetTimer(POIWidgetTimer, this, &AINFPlayerController::CreatePOIWidgets, 2.0f, false);
 }
 
 void AINFPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -135,5 +141,71 @@ void AINFPlayerController::CreateInventoryWidget()
         InventoryWidget->SetWidgetController(GetInventoryWidgetController());
         InventoryWidgetController->BroadcastInitialValues();
         InventoryWidget->AddToViewport();
+    }
+}
+
+void AINFPlayerController::CreatePOIWidgets()
+{
+    // Only create widgets if we're the local player controller
+    if (!IsLocalPlayerController())
+        return;
+
+    // Create POI Status Widget
+    if (POIStatusWidgetClass && !POIStatusWidget)
+    {
+        POIStatusWidget = CreateWidget<UPOIStatusWidget>(this, POIStatusWidgetClass);
+        if (POIStatusWidget)
+        {
+            POIStatusWidget->AddToViewport(1); // Z-order 1 (on top)
+            FindAndConnectPOI();
+            UE_LOG(LogTemp, Log, TEXT("POI Status Widget created for player: %s"), *GetName());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to create POI Status Widget"));
+        }
+    }
+
+    // Create Player Score Widget
+    if (PlayerScoreWidgetClass && !PlayerScoreWidget)
+    {
+        PlayerScoreWidget = CreateWidget<UPlayerScoreWidget>(this, PlayerScoreWidgetClass);
+        if (PlayerScoreWidget)
+        {
+            PlayerScoreWidget->AddToViewport(0); // Z-order 0 (behind POI widget)
+            UE_LOG(LogTemp, Log, TEXT("Player Score Widget created for player: %s"), *GetName());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to create Player Score Widget"));
+        }
+    }
+}
+
+void AINFPlayerController::FindAndConnectPOI()
+{
+    if (!POIStatusWidget)
+        return;
+
+    // Find POI in the world
+    TArray<AActor*> FoundPOIs;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APOI::StaticClass(), FoundPOIs);
+    
+    if (FoundPOIs.Num() > 0)
+    {
+        APOI* GamePOI = Cast<APOI>(FoundPOIs[0]);
+        if (GamePOI)
+        {
+            POIStatusWidget->SetPOI(GamePOI);
+            UE_LOG(LogTemp, Log, TEXT("PlayerController connected to POI: %s"), *GamePOI->GetName());
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("PlayerController could not find POI in level"));
+        
+        // Retry after a delay (POI might not be spawned yet)
+        FTimerHandle RetryTimer;
+        GetWorldTimerManager().SetTimer(RetryTimer, this, &AINFPlayerController::FindAndConnectPOI, 2.0f, false);
     }
 }

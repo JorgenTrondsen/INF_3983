@@ -28,6 +28,7 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "Net/UnrealNetwork.h"
 #include "Templates/SubclassOf.h"
+#include "Traits/IsContiguousContainer.h"
 #include "UObject/CoreNet.h"
 #include <cmath>
 #include <cstdlib>
@@ -213,6 +214,50 @@ void AMapGenerator::GenerateMap()
 
 	// generate the player starts
 	GeneratePlayerStarts(Center, Top, Bottom, Left, Right);
+
+	if (bSpawnPOI)
+	{
+		SpawnPOI();
+	}
+}
+
+void AMapGenerator::SpawnPOI()
+{
+	if (!POIClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No POI class selected in MapGenerator!"));
+        return;
+    }
+	UWorld* World = GetWorld();
+    if (!World)
+        return;
+
+	// Get terrain parameters
+    float CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor;
+    CalculateTerrainParameters(CenterX, CenterY, MaxRadius, PlateauRadius, MountainRadius, PlainsHeightFactor);
+
+    // Place POI at center of plateau
+    float WorldX = CenterX - GetActorLocation().X;
+    float WorldY = CenterY - GetActorLocation().Y;
+    float TerrainHeight = CalculateTerrainHeightAtPosition(WorldX, WorldY);
+
+	FVector POILocation = FVector(CenterX, CenterY, GetActorLocation().Z + TerrainHeight + 100.0f);
+
+    // Spawn the POI
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = this;
+
+    SpawnedPOI = World->SpawnActor<APOI>(POIClass, POILocation, FRotator::ZeroRotator, SpawnParams);
+
+
+	if (SpawnedPOI)
+    {
+        UE_LOG(LogTemp, Log, TEXT("POI spawned at plateau center: %s"), *POILocation.ToString());
+    }
+	else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to spawn POI!"));
+    }
 }
 
 float AMapGenerator::GenerateSeedBasedNoise(float X, float Y) const
@@ -399,6 +444,15 @@ void AMapGenerator::SpawnAssets()
 		// only spawn assets in the circluar map
 		if (DistanceFromCenter > MaxRadius)
 			continue;
+
+		if (bSpawnPOI && SpawnedPOI)
+		{
+			float DistanceToPOI = FVector::Dist2D(FVector(X, Y, 0), SpawnedPOI->GetActorLocation());
+			if (DistanceToPOI < POIClearanceRadius)
+			{
+				continue;
+			}
+		}
 
 		// Apply different probabilities based on terrain (mountain or plains)
 		TArray<TSubclassOf<AActor>>* AvailableAssets = nullptr;
