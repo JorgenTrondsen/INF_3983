@@ -15,25 +15,25 @@ class UMaterialInterface;
  * Procedural map generator that creates terrain with a central plateau,
  * sloped mountains, and surrounding plains. Supports seeded generation
  * for deterministic multiplayer maps and automatic asset distribution.
-*/
+ */
 UCLASS()
 class INF_3910_API AMapGenerator : public AActor
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// === CONSTRUCTOR & OVERRIDES ===
 	AMapGenerator();
 	virtual void BeginPlay() override;
-    virtual void PostInitializeComponents() override;
+	virtual void PostInitializeComponents() override;
 	virtual void Tick(float DeltaTime) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
 	// === MAIN API ===
-	UFUNCTION(BlueprintCallable, Category="Map Generation")
+	UFUNCTION(BlueprintCallable, Category = "Map Generation")
 	void GenerateMap();
 
-	UFUNCTION(BlueprintCallable, Category="Player Starts Generation")
+	UFUNCTION(BlueprintCallable, Category = "Player Starts Generation")
 	void GeneratePlayerStarts(FVector Center, FVector Top, FVector Bottom, FVector Left, FVector Right);
 
 	void SpawnAssets();
@@ -47,21 +47,21 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Terrain Generation", Meta = (ClampMin = 0.000001))
 	float Scale = 50.0f;
-	
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	float BaseHeight = 10000.0f;
-	
-	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	float ZMultiplier = 800.0f; 
 
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
-	float NoiseScale = 0.02f; 
-	
+	float BaseHeight = 10000.0f;
+
+	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
+	float ZMultiplier = 800.0f;
+
+	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0))
+	float NoiseScale = 0.02f;
+
 	// === SEED SETTINGS ===
 	UPROPERTY(EditAnywhere, Category = "Terrain Generation")
 	bool bUseCustomSeed = true;
-	
-	UPROPERTY(EditAnywhere, Category="Terrain Generation", Meta = (EditCondition = "bUseCustomSeed"))
+
+	UPROPERTY(EditAnywhere, Category = "Terrain Generation", Meta = (EditCondition = "bUseCustomSeed"))
 	int32 CustomSeed = 12345; // used if bUseCustomSeed is true
 
 	// === ASSET DISTRIBUTION ===
@@ -70,25 +70,22 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution", meta = (ToolTip = "Trees and bushes - spawn only on plains"))
 	TArray<TSubclassOf<AActor>> VegetationAssets;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution", meta = (ToolTip = "Weapons"))
 	TArray<TSubclassOf<AActor>> WeaponAssets;
 
-
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	TArray<TSubclassOf<AActor>> AssetClasses;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
-	int32 NumAssets = 2500;
+	int32 NumAssets = 9000;
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
-	float AssetScaleMin = 0.4f;
+	float AssetScaleMin = 0.5f;
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	float AssetScaleMax = 3.0f;
-	
 
-	
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
-	int32 NumWeapons = 50;
+	int32 NumWeapons = 500;
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	float MinAssetSpacing = 200.0f;
@@ -97,32 +94,32 @@ public:
 	float AssetPlacementProb = 0.7f;
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
-	float MountainAssetDensity = 0.2f; // should be lower density on mountains
+	float MountainAssetDensity = 0.6f; // should be lower density on mountains
 
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	float PlainsAssetDensity = 0.8f; // should be higher density on plains
 
 	// === RENDERING ===
 	UPROPERTY(EditAnywhere, Category = "Rendering")
-	UMaterialInterface* Material;
+	UMaterialInterface *Material;
 
 	UPROPERTY(EditAnywhere, Meta = (ClampMin = 0.000001))
 	float UVScale = 0.1f;
 
 	// === POI SETTINGS ===
 	UPROPERTY(EditAnywhere, Category = "POI")
-    bool bSpawnPOI = true;
+	bool bSpawnPOI = true;
 
-    UPROPERTY(EditAnywhere, Category = "POI")
-    TSubclassOf<APOI> POIClass;
+	UPROPERTY(EditAnywhere, Category = "POI")
+	TSubclassOf<APOI> POIClass;
 
-    UPROPERTY(EditAnywhere, Category = "POI")
-    float POIClearanceRadius = 800.0f; // Keep assets away from POI
-	
+	UPROPERTY(EditAnywhere, Category = "POI")
+	float POIClearanceRadius = 800.0f; // Keep assets away from POI
+
 private:
 	// === COMPONENTS ===
-	UPROPERTY(EditAnywhere, Category="Procedural Mesh Component")
-	UProceduralMeshComponent* ProceduralMesh;
+	UPROPERTY(EditAnywhere, Category = "Procedural Mesh Component")
+	UProceduralMeshComponent *ProceduralMesh;
 
 	// === MESH DATA ===
 	TArray<FVector> Vertices;
@@ -131,17 +128,17 @@ private:
 	TArray<FColor> Colors;
 
 	// === COLOR FUNCTION ===
-	uint8* GetRGB(float DistanceFromCenter, float PlateauRadius, float MountainRadius);
+	uint8 *GetRGB(float DistanceFromCenter, float PlateauRadius, float MountainRadius);
 
 	// === STATE VARIABLES ===
-	UPROPERTY(ReplicatedUsing=OnRep_MapSeed)
+	UPROPERTY(ReplicatedUsing = OnRep_MapSeed)
 	int32 MapSeed;
 
 	UPROPERTY()
 	bool bUseAsyncCooking = true;
-	
+
 	bool bHasGeneratedMesh = false;
-	
+
 	// === CORE GENERATION FUNCTIONS ===
 	void GenerateMesh();
 	void CreateVertices();
@@ -149,28 +146,28 @@ private:
 
 	// === TERRAIN CALCULATION FUNCTIONS ===
 	UFUNCTION()
-	void CalculateTerrainParameters(float& OutCenterX,
-									float& OutCenterY,
-									float& OutMaxRadius,
-									float& OutPlateauRadius,
-									float& OutMountainRadius,
-									float& OutPlainsHeightFactor) const;
-	
+	void CalculateTerrainParameters(float &OutCenterX,
+									float &OutCenterY,
+									float &OutMaxRadius,
+									float &OutPlateauRadius,
+									float &OutMountainRadius,
+									float &OutPlainsHeightFactor) const;
+
 	UFUNCTION()
 	float CalculateTerrainHeightAtPosition(float WorldX, float WorldY) const;
 
 	// === NOISE GENERATION FUNCTIONS ===
 	float GenerateSeedBasedNoise(float X, float Y) const;
 	int32 HashCombine(int32 Seed, int32 Value) const;
-	
+
 	// === REPLICATION FUNCTIONS ===¨
 	UFUNCTION()
 	void OnRep_MapSeed();
-	
+
 	// Referance to spawned POI
 	UPROPERTY()
-    APOI* SpawnedPOI = nullptr;
+	APOI *SpawnedPOI = nullptr;
 
-    // POI spawning function
-    void SpawnPOI();
+	// POI spawning function
+	void SpawnPOI();
 };

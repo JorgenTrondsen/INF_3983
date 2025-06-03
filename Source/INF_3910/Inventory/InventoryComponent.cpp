@@ -296,8 +296,6 @@ void UInventoryComponent::UseItem(const FINFInventoryEntry &Entry, int32 NumItem
                 OwnerASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
                 InventoryList.RemoveItem(Entry);
-
-                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Magenta, FString::Printf(TEXT("Server Item Used: %s"), *Item.ItemTag.ToString()));
             }
             if (IsValid(Item.EquipmentItemProps.EquipmentClass))
             {

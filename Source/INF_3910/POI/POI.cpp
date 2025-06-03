@@ -1,6 +1,5 @@
 // INF_3910 by Jørgen Trondsen, Marcus Ryan and Adrian Moen
 
-
 #include "POI.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
@@ -8,17 +7,17 @@
 // Sets default values
 APOI::APOI()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
-	// Create root component
+    // Create root component
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
-	// Create building mesh
+    // Create building mesh
     BuildingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BuildingMesh"));
     BuildingMesh->SetupAttachment(RootComponent);
 
-	// Create capture zone
+    // Create capture zone
     CaptureZone = CreateDefaultSubobject<USphereComponent>(TEXT("CaptureZone"));
     CaptureZone->SetupAttachment(RootComponent);
     CaptureZone->SetSphereRadius(CaptureRadius);
@@ -27,7 +26,7 @@ APOI::APOI()
     CaptureZone->SetVisibility(false);
     CaptureZone->SetHiddenInGame(true);
 
-	// Bind collision events
+    // Bind collision events
     CaptureZone->OnComponentBeginOverlap.AddDynamic(this, &APOI::OnCaptureZoneBeginOverlap);
     CaptureZone->OnComponentEndOverlap.AddDynamic(this, &APOI::OnCaptureZoneEndOverlap);
 }
@@ -35,71 +34,69 @@ APOI::APOI()
 // Called when the game starts or when spawned
 void APOI::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	// Update capture zone radius
+    // Update capture zone radius
     CaptureZone->SetSphereRadius(CaptureRadius);
-    
+
     UE_LOG(LogTemp, Log, TEXT("POI initialized at: %s"), *GetActorLocation().ToString());
-	
 }
 
 // Called every frame
 void APOI::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
-	UpdatePOIState();
-	UpdateCaptureProgress(DeltaTime);
-	UpdateVisualState();
+    UpdatePOIState();
+    UpdateCaptureProgress(DeltaTime);
 
-	// Award points to controlling player
-	if (CurrentState == EPOIState::Controlled && ControllingPlayer)
-	{
-		float CurrentTime = GetWorld()->GetTimeSeconds();
-		if (CurrentTime - LastScoreTime >= 1.0f)
-		{
-			AwardPoints(ControllingPlayer, PointsPerSecond);
-			LastScoreTime = CurrentTime;
-		}
-	}
+    // Award points to controlling player
+    if (CurrentState == EPOIState::Controlled && ControllingPlayer)
+    {
+        float CurrentTime = GetWorld()->GetTimeSeconds();
+        if (CurrentTime - LastScoreTime >= 1.0f)
+        {
+            AwardPoints(ControllingPlayer, PointsPerSecond);
+            LastScoreTime = CurrentTime;
+        }
+    }
 }
 
-void APOI::OnCaptureZoneBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
-									 AActor* OtherActor,
-                                     UPrimitiveComponent* OtherComp,
-									 int32 OtherBodyIndex,
+void APOI::OnCaptureZoneBeginOverlap(UPrimitiveComponent *OverlappedComponent,
+                                     AActor *OtherActor,
+                                     UPrimitiveComponent *OtherComp,
+                                     int32 OtherBodyIndex,
                                      bool bFromSweep,
-									 const FHitResult& SweepResult)
+                                     const FHitResult &SweepResult)
 {
-    if (APawn* Player = Cast<APawn>(OtherActor))
+    if (APawn *Player = Cast<APawn>(OtherActor))
     {
         if (Player->IsPlayerControlled())
         {
             PlayersInZone.AddUnique(Player);
             PlayersInZoneCount = PlayersInZone.Num();
-            
+
             // Use display name
             FString PlayerName = GetPlayerDisplayName(Player);
-            UE_LOG(LogTemp, Log, TEXT("Player %s entered POI zone. Total players: %d"), 
+            UE_LOG(LogTemp, Log, TEXT("Player %s entered POI zone. Total players: %d"),
                    *PlayerName, PlayersInZoneCount);
         }
     }
 }
 
-void APOI::OnCaptureZoneEndOverlap(UPrimitiveComponent* OverlappedComponent,
-								   AActor* OtherActor,
-                                   UPrimitiveComponent* OtherComp,
-								   int32 OtherBodyIndex)
+void APOI::OnCaptureZoneEndOverlap(UPrimitiveComponent *OverlappedComponent,
+                                   AActor *OtherActor,
+                                   UPrimitiveComponent *OtherComp,
+                                   int32 OtherBodyIndex)
 {
-    if (APawn* Player = Cast<APawn>(OtherActor))
+    if (APawn *Player = Cast<APawn>(OtherActor))
     {
         PlayersInZone.Remove(Player);
         PlayersInZoneCount = PlayersInZone.Num();
-        
+
         // Use display name
         FString PlayerName = GetPlayerDisplayName(Player);
-        UE_LOG(LogTemp, Log, TEXT("Player %s left POI zone. Total players: %d"), 
+        UE_LOG(LogTemp, Log, TEXT("Player %s left POI zone. Total players: %d"),
                *PlayerName, PlayersInZoneCount);
 
         // If the controlling player left, lose control immediately
@@ -120,7 +117,8 @@ void APOI::OnCaptureZoneEndOverlap(UPrimitiveComponent* OverlappedComponent,
 void APOI::UpdatePOIState()
 {
     // Clean up invalid players
-    PlayersInZone.RemoveAll([](APawn* Player) { return !IsValid(Player) || !Player->IsPlayerControlled(); });
+    PlayersInZone.RemoveAll([](APawn *Player)
+                            { return !IsValid(Player) || !Player->IsPlayerControlled(); });
     PlayersInZoneCount = PlayersInZone.Num();
 
     // Update current state based on player count and situation
@@ -129,7 +127,7 @@ void APOI::UpdatePOIState()
         // No players in zone
         CurrentState = EPOIState::Neutral;
         CapturingPlayer = nullptr;
-        
+
         // If there was a controller, they lose control
         if (ControllingPlayer)
         {
@@ -138,8 +136,8 @@ void APOI::UpdatePOIState()
     }
     else if (PlayersInZoneCount == 1)
     {
-        APawn* SolePlayer = PlayersInZone[0];
-        
+        APawn *SolePlayer = PlayersInZone[0];
+
         if (SolePlayer == ControllingPlayer)
         {
             // Controlling player is alone in zone
@@ -164,103 +162,64 @@ void APOI::UpdateCaptureProgress(float DeltaTime)
 {
     switch (CurrentState)
     {
-        case EPOIState::Neutral:
-            // Slowly decay capture progress toward neutral
-            CaptureProgress = FMath::Max(0.0f, CaptureProgress - (DeltaTime / CaptureTime) * 0.5f);
-            break;
-            
-        case EPOIState::Capturing:
-            if (CapturingPlayer)
+    case EPOIState::Neutral:
+        // Slowly decay capture progress toward neutral
+        CaptureProgress = FMath::Max(0.0f, CaptureProgress - (DeltaTime / CaptureTime) * 0.5f);
+        break;
+
+    case EPOIState::Capturing:
+        if (CapturingPlayer)
+        {
+            // Progress toward new controller
+            CaptureProgress = FMath::Min(1.0f, CaptureProgress + (DeltaTime / CaptureTime));
+
+            if (CaptureProgress >= 1.0f)
             {
-                // Progress toward new controller
-                CaptureProgress = FMath::Min(1.0f, CaptureProgress + (DeltaTime / CaptureTime));
-                
-                if (CaptureProgress >= 1.0f)
-                {
-                    OnCaptureCompleted(CapturingPlayer);
-                }
+                OnCaptureCompleted(CapturingPlayer);
             }
-            break;
-            
-        case EPOIState::Controlled:
-            // Maintain full capture progress
-            CaptureProgress = 1.0f;
-            break;
-            
-        case EPOIState::Contested:
-            // No progress when contested - freeze current progress
-            break;
+        }
+        break;
+
+    case EPOIState::Controlled:
+        // Maintain full capture progress
+        CaptureProgress = 1.0f;
+        break;
+
+    case EPOIState::Contested:
+        // No progress when contested - freeze current progress
+        break;
     }
 }
 
-void APOI::AwardPoints(APawn* Player, int32 Points)
+void APOI::AwardPoints(APawn *Player, int32 Points)
 {
     if (!Player || !Player->GetPlayerState())
         return;
 
     // Add points to player's score
     Player->GetPlayerState()->SetScore(Player->GetPlayerState()->GetScore() + Points);
-    
+
     // Use display name instead of pawn name
     FString PlayerName = GetPlayerDisplayName(Player);
-    UE_LOG(LogTemp, Log, TEXT("Awarded %d points to %s (Total: %.0f)"), 
+    UE_LOG(LogTemp, Log, TEXT("Awarded %d points to %s (Total: %.0f)"),
            Points, *PlayerName, Player->GetPlayerState()->GetScore());
 }
 
-void APOI::UpdateVisualState()
+void APOI::OnCaptureCompleted(APawn *NewController)
 {
-    // Visual feedback for players
-    if (GEngine)
-    {
-        FColor DisplayColor = FColor::White;
-        FString StateText = TEXT("Neutral");
-        
-        switch (CurrentState)
-        {
-            case EPOIState::Neutral:
-                DisplayColor = FColor::White;
-                StateText = TEXT("Neutral");
-                break;
-                
-            case EPOIState::Capturing:
-                DisplayColor = FColor::Yellow;
-                StateText = FString::Printf(TEXT("Capturing (%.1f%%) - %s"), 
-                           CaptureProgress * 100.0f, 
-                           CapturingPlayer ? *GetPlayerDisplayName(CapturingPlayer) : TEXT("Unknown"));
-                break;
-                
-            case EPOIState::Controlled:
-                DisplayColor = FColor::Green;
-                StateText = FString::Printf(TEXT("Controlled by %s"), 
-                           ControllingPlayer ? *GetPlayerDisplayName(ControllingPlayer) : TEXT("Unknown"));
-                break;
-                
-            case EPOIState::Contested:
-                DisplayColor = FColor::Red;
-                StateText = FString::Printf(TEXT("Contested (%d players)"), PlayersInZoneCount);
-                break;
-        }
-        
-        // GEngine->AddOnScreenDebugMessage(-1, 0.1f, DisplayColor, 
-        //     FString::Printf(TEXT("POI: %s"), *StateText));
-    }
-}
-
-void APOI::OnCaptureCompleted(APawn* NewController)
-{
-    APawn* PreviousController = ControllingPlayer;
+    APawn *PreviousController = ControllingPlayer;
     ControllingPlayer = NewController;
     CapturingPlayer = nullptr;
     CurrentState = EPOIState::Controlled;
     CaptureProgress = 1.0f;
-    
+
     // Award capture bonus
     // AwardPoints(NewController, CaptureBonus);
-    
+
     // Use display name
     FString PlayerName = GetPlayerDisplayName(NewController);
     UE_LOG(LogTemp, Warning, TEXT("POI captured by %s!"), *PlayerName);
-    
+
     LastScoreTime = GetWorld()->GetTimeSeconds();
 }
 
@@ -271,26 +230,25 @@ void APOI::OnControlLost()
         FString PlayerName = GetPlayerDisplayName(ControllingPlayer);
         UE_LOG(LogTemp, Warning, TEXT("%s lost control of POI"), *PlayerName);
     }
-    
+
     ControllingPlayer = nullptr;
     CaptureProgress = 0.0f;
 }
 
-
-FString APOI::GetPlayerDisplayName(APawn* Player) const 
+FString APOI::GetPlayerDisplayName(APawn *Player) const
 {
     if (!Player || !Player->GetPlayerState())
         return TEXT("Unknown Player");
 
     // Try to get the player's display name (EIK username)
     FString DisplayName = Player->GetPlayerState()->GetPlayerName();
-    
+
     // If display name is empty or default, fall back to pawn name
     if (DisplayName.IsEmpty() || DisplayName == TEXT("Player"))
     {
         return Player->GetName();
     }
-    
+
     return DisplayName;
 }
 
@@ -306,7 +264,7 @@ FString APOI::GetControllerDisplayName() const
 void APOI::SetCaptureRadius(float NewRadius)
 {
     CaptureRadius = NewRadius;
-    
+
     if (CaptureZone)
     {
         CaptureZone->SetSphereRadius(CaptureRadius);

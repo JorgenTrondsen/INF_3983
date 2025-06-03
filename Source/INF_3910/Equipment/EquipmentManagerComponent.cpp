@@ -122,10 +122,6 @@ UItemInstance *FINFEquipmentList::AddEntry(const TSubclassOf<UEquipmentDefinitio
     MarkItemDirty(NewEntry);
     EquipmentEntryDelegate.Broadcast(NewEntry);
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
-                                     FString::Printf(TEXT("Equipped Item: %s in slot: %s"),
-                                                     *NewEntry.EntryTag.ToString(), *ChosenSlotTag.ToString()));
-
     return NewEntry.Instance;
 }
 
@@ -190,9 +186,6 @@ void FINFEquipmentList::PreReplicatedRemove(const TArrayView<int32> RemovedIndic
         FINFEquipmentEntry &Entry = Entries[Index];
 
         EquipmentEntryDelegate.Broadcast(Entry);
-
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
-                                         FString::Printf(TEXT("UnEquipped Item: %s"), *Entry.EntryTag.ToString()));
     }
 }
 
@@ -203,9 +196,6 @@ void FINFEquipmentList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, 
         FINFEquipmentEntry &Entry = Entries[Index];
 
         EquipmentEntryDelegate.Broadcast(Entry);
-
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
-                                         FString::Printf(TEXT("Equipped Item: %s"), *Entry.EntryTag.ToString()));
     }
 }
 
