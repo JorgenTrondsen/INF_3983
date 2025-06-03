@@ -162,15 +162,6 @@ private:
 	UFUNCTION()
 	void OnRep_MapSeed();
 	
-	// === EXPERIMENTAL FUNCTIONS AND VARIABLES ===
-	float SimpleNoise(float X, float Y);
-	
-	UPROPERTY(EditAnywhere, Category="Simple Noise")
-	float SimpleFrequency = 0.02f;
-	
-	UPROPERTY(EditAnywhere, Category="Simple Noise")
-	float SimpleAmplitude = 1000;
-
 	// Referance to spawned POI
 	UPROPERTY()
     APOI* SpawnedPOI = nullptr;

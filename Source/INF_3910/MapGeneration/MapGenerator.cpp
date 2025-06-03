@@ -117,38 +117,11 @@ void AMapGenerator::BeginPlay()
 
 				// Override the replicated seed with our session seed
 				MapSeed = StoredSeed;
-
-				// if (GEngine)
-				// {
-				// 	GEngine->AddOnScreenDebugMessage(-1,
-				// 									 35.0f,
-				// 									 FColor::Green,
-				// 									 FString::Printf(TEXT("Generating map with this seed %d"), MapSeed));
-				// }
-
 				GenerateMesh();
 				SpawnAssets();
 			}
 		}
-		else
-		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1,
-												 35.0f,
-												 FColor::Green,
-												 FString::Printf(TEXT("could not cast game instance, seed:"), MapSeed));
-			}
-		}
 	}
-	// if (GEngine)
-	// {
-	// 	GEngine->AddOnScreenDebugMessage(-1,
-	// 									 35.0f,
-	// 									 FColor::Green,
-	// 									 FString::Printf(TEXT("Generating map with this seed %d"), MapSeed));
-	// }
-
 	// Just log mesh status
 	bool HasMeshData = (Vertices.Num() > 0);
 	bool HasCollision = ProceduralMesh->GetBodySetup() != nullptr;
@@ -161,14 +134,6 @@ void AMapGenerator::OnRep_MapSeed()
 {
 	if (!HasAuthority())
 	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1,
-											 35.0f,
-											 FColor::Green,
-											 FString::Printf(TEXT("OnRep_MapSeed: Calling GenerateMesh with seed"), MapSeed));
-		}
-
 		UE_LOG(LogTemp, Warning, TEXT("Client received MapSeed: %d"), MapSeed);
 		// Always regenerate the mesh when we get a new seed
 		bHasGeneratedMesh = false;
@@ -544,21 +509,6 @@ void AMapGenerator::SpawnAssets()
 		}
 	}
 	UE_LOG(LogTemp, Log, TEXT("Spawned %d assets with seed %d"), SpawnedLocations.Num(), MapSeed);
-}
-
-float AMapGenerator::SimpleNoise(float X, float Y)
-{
-
-	// float frequency = 0.02f;
-	// float amplitude = 1000;
-
-	float XOffset = FMath::Sin(X * SimpleFrequency) * SimpleAmplitude;
-	float YOffset = FMath::Sin(Y * SimpleFrequency) * SimpleAmplitude;
-
-	// float Z = 100.0 + FMath::PerlinNoise2D(FVector2D(X, Y));
-	float Z = 1.0;
-
-	return Z;
 }
 
 void AMapGenerator::CalculateTerrainParameters(float &OutCenterX,
