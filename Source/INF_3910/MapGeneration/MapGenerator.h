@@ -80,7 +80,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	int32 NumAssets = 2500;
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	float AssetScaleMin = 0.4f;
+	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	float AssetScaleMax = 3.0f;
 	
+
 	
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	int32 NumWeapons = 50;

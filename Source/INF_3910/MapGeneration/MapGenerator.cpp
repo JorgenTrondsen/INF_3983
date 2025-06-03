@@ -496,8 +496,10 @@ void AMapGenerator::SpawnAssets()
 		// Rocks on the mountain should be smaller
 		if (AvailableAssets == &RockAssets && DistanceFromCenter <= MountainRadius)
 			SizeFactor = RandomStream.FRandRange(0.4f, 0.6f);
+		else if (AvailableAssets != &WeaponAssets)
+			SizeFactor = RandomStream.FRandRange(AssetScaleMin, AssetScaleMax);
 		else
-			SizeFactor = RandomStream.FRandRange(0.8f, 1.2f);
+		 	SizeFactor = 1.0f;
 		if (AActor *SpawnedAsset = World->SpawnActor<AActor>(AssetClass, SpawnLocation, Rotation, SpawnParams))
 		{
 			SpawnedAsset->SetActorScale3D(FVector(SizeFactor));
