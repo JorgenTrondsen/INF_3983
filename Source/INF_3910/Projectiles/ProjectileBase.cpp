@@ -25,7 +25,6 @@ AProjectileBase::AProjectileBase()
 	OverlapSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	OverlapSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	OverlapSphere->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
-	OverlapSphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	OverlapSphere->SetupAttachment(GetRootComponent());
 }
 
