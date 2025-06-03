@@ -118,13 +118,13 @@ void AMapGenerator::BeginPlay()
 				// Override the replicated seed with our session seed
 				MapSeed = StoredSeed;
 
-				if (GEngine)
-				{
-					GEngine->AddOnScreenDebugMessage(-1,
-													 35.0f,
-													 FColor::Green,
-													 FString::Printf(TEXT("Generating map with this seed %d"), MapSeed));
-				}
+				// if (GEngine)
+				// {
+				// 	GEngine->AddOnScreenDebugMessage(-1,
+				// 									 35.0f,
+				// 									 FColor::Green,
+				// 									 FString::Printf(TEXT("Generating map with this seed %d"), MapSeed));
+				// }
 
 				GenerateMesh();
 				SpawnAssets();
@@ -141,13 +141,13 @@ void AMapGenerator::BeginPlay()
 			}
 		}
 	}
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1,
-										 35.0f,
-										 FColor::Green,
-										 FString::Printf(TEXT("Generating map with this seed %d"), MapSeed));
-	}
+	// if (GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1,
+	// 									 35.0f,
+	// 									 FColor::Green,
+	// 									 FString::Printf(TEXT("Generating map with this seed %d"), MapSeed));
+	// }
 
 	// Just log mesh status
 	bool HasMeshData = (Vertices.Num() > 0);
@@ -185,14 +185,6 @@ void AMapGenerator::Tick(float DeltaTime)
 
 void AMapGenerator::GenerateMap()
 {
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1,
-										 15.0f,
-										 FColor::Yellow,
-										 FString::Printf(TEXT("Generating map based on 4 players")));
-	}
-
 	// // Calculate center point of our grid
 	float CenterX = XSize * Scale / 2.0f;
 	float CenterY = YSize * Scale / 2.0f;
@@ -420,9 +412,6 @@ void AMapGenerator::GeneratePlayerStarts(FVector Center, FVector Top, FVector Bo
 			// This is critical: Tag the player starts so GameMode can find them
 			NewPlayerStart->PlayerStartTag = FName(TEXT("Player"));
 
-			// Add a debug sphere to visualize the player start
-			DrawDebugSphere(World, SpawnLocation, 50.0f, 16, FColor::Green, true, -1, 0, 2.0f);
-
 			UE_LOG(LogTemp, Log, TEXT("Spawned %s at: %s (Terrain: %.2f)"),
 				   *PlayerStartName, *SpawnLocation.ToString(), TerrainHeight);
 			Index++;
@@ -481,10 +470,12 @@ void AMapGenerator::SpawnAssets()
 		// Apply different probabilities based on terrain (mountain or plains)
 		TArray<TSubclassOf<AActor>> *AvailableAssets = nullptr;
 		float PlacementProb = AssetPlacementProb;
+		float WeaponsMargin = 0.0f;
 
 		if (i < NumWeapons)
 		{
 			AvailableAssets = &WeaponAssets;
+			WeaponsMargin = 50.0f;
 			PlacementProb = 1;
 		}
 
@@ -525,7 +516,7 @@ void AMapGenerator::SpawnAssets()
 		float WorldX = X - GetActorLocation().X;
 		float WorldY = Y - GetActorLocation().Y;
 		float TerrainHeight = CalculateTerrainHeightAtPosition(WorldX, WorldY);
-		FVector SpawnLocation = FVector(X, Y, GetActorLocation().Z + TerrainHeight);
+		FVector SpawnLocation = FVector(X, Y, GetActorLocation().Z + TerrainHeight + WeaponsMargin);
 
 		// Select random asset from available array
 		int32 AssetIndex = RandomStream.RandRange(0, AvailableAssets->Num() - 1);

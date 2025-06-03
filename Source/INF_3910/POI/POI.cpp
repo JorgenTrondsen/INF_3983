@@ -23,6 +23,9 @@ APOI::APOI()
     CaptureZone->SetupAttachment(RootComponent);
     CaptureZone->SetSphereRadius(CaptureRadius);
     CaptureZone->SetCollisionProfileName(TEXT("Trigger"));
+    // Hide the visualization of the capture zone
+    CaptureZone->SetVisibility(false);
+    CaptureZone->SetHiddenInGame(true);
 
 	// Bind collision events
     CaptureZone->OnComponentBeginOverlap.AddDynamic(this, &APOI::OnCaptureZoneBeginOverlap);
@@ -238,8 +241,8 @@ void APOI::UpdateVisualState()
                 break;
         }
         
-        GEngine->AddOnScreenDebugMessage(-1, 0.1f, DisplayColor, 
-            FString::Printf(TEXT("POI: %s"), *StateText));
+        // GEngine->AddOnScreenDebugMessage(-1, 0.1f, DisplayColor, 
+        //     FString::Printf(TEXT("POI: %s"), *StateText));
     }
 }
 
