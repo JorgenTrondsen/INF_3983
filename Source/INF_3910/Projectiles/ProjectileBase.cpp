@@ -20,12 +20,14 @@ AProjectileBase::AProjectileBase()
 	ProjectileMesh->SetIsReplicated(true);
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("MovementComponent");
-
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>("OverlapSphere");
 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	OverlapSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	OverlapSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	OverlapSphere->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
+	OverlapSphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	OverlapSphere->SetupAttachment(GetRootComponent());
+	OverlapSphere->bHiddenInGame = false;
 }
 
 void AProjectileBase::SetProjectileParams(const FProjectileParams &Params)
@@ -57,14 +59,13 @@ void AProjectileBase::BeginPlay()
 void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor,
 										   UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-	if (OtherActor == GetOwner())
+	if (OtherActor && OtherActor->GetOwner() == GetOwner())
 		return;
 
 	if (UAbilitySystemComponent *TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor))
 	{
 		DamageEffectInfo.TargetASC = TargetASC;
 		UINFAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
-
-		Destroy();
 	}
+	Destroy();
 }
