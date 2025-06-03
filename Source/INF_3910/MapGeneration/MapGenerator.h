@@ -77,26 +77,26 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
 	TArray<TSubclassOf<AActor>> AssetClasses;
 
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	int32 NumAssets = 9000;
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	float AssetScaleMin = 0.5f;
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	float AssetScaleMax = 3.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	int32 NumWeapons = 500;
 
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	float MinAssetSpacing = 200.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	float AssetPlacementProb = 0.7f;
 
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	float MountainAssetDensity = 0.6f; // should be lower density on mountains
 
-	UPROPERTY(EditAnywhere, Category = "Asset Distribution")
+	UPROPERTY(Category = "Asset Distribution")
 	float PlainsAssetDensity = 0.8f; // should be higher density on plains
 
 	// === RENDERING ===
