@@ -1,5 +1,6 @@
 #include "AttackAnimData.h"
 
+// Retrieves attack animation montages based on character race, gender, and weapon type
 TArray<UAnimMontage *> UAttackAnimData::GetAttackMontages(const FString &Race, const FString &Gender, const FString &WeaponType) const
 {
     TArray<UAnimMontage *> Result;

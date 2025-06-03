@@ -5,6 +5,7 @@
 #include "Engine/StreamableManager.h"
 #include "INF_3910/Equipment/EquipmentManagerComponent.h"
 
+// Grants a collection of abilities to the character and assigns input tags
 void UINFAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)
 {
     for (const TSubclassOf<UGameplayAbility> &Ability : AbilitiesToGrant)
@@ -19,6 +20,7 @@ void UINFAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<
     }
 }
 
+// Grants passive abilities to the character and activates them immediately
 void UINFAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &PassivesToGrant)
 {
     for (const TSubclassOf<UGameplayAbility> &Ability : PassivesToGrant)
@@ -28,6 +30,7 @@ void UINFAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubc
     }
 }
 
+// Initializes the character's default attributes using a gameplay effect
 void UINFAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf<UGameplayEffect> &AttributeEffect)
 {
     checkf(AttributeEffect, TEXT("No valid default attributes for this characer %s"), *GetAvatarActor()->GetName());
@@ -37,6 +40,7 @@ void UINFAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf<U
     ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 }
 
+// Handles input press events for abilities with matching input tags
 void UINFAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
 {
     if (!InputTag.IsValid())
@@ -59,6 +63,7 @@ void UINFAbilitySystemComponent::AbilityInputPressed(FGameplayTag InputTag)
     }
 }
 
+// Handles input release events for abilities with matching input tags
 void UINFAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
 {
     if (!InputTag.IsValid())
@@ -74,6 +79,7 @@ void UINFAbilitySystemComponent::AbilityInputReleased(FGameplayTag InputTag)
     }
 }
 
+// Sets the projectile type for the dynamic projectile ability
 void UINFAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag &ProjectileTag)
 {
     if (!ProjectileTag.IsValid())
@@ -103,6 +109,7 @@ void UINFAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag &Projec
     }
 }
 
+// Applies gameplay effects from equipped items to the character
 void UINFAbilitySystemComponent::AddEquipmentEffects(FINFEquipmentEntry *EquipmentEntry)
 {
     FStreamableManager &Manager = UAssetManager::GetStreamableManager();
@@ -133,6 +140,7 @@ void UINFAbilitySystemComponent::AddEquipmentEffects(FINFEquipmentEntry *Equipme
     }
 }
 
+// Removes all gameplay effects granted by a specific equipment item
 void UINFAbilitySystemComponent::RemoveEquipmentEffects(FINFEquipmentEntry *EquipmentEntry)
 {
     for (auto HandleIt = EquipmentEntry->GrantedHandles.ActiveEffects.CreateIterator(); HandleIt; ++HandleIt)
@@ -142,6 +150,7 @@ void UINFAbilitySystemComponent::RemoveEquipmentEffects(FINFEquipmentEntry *Equi
     }
 }
 
+// Grants abilities from equipped items to the character
 void UINFAbilitySystemComponent::AddEquipmentAbility(FINFEquipmentEntry *EquipmentEntry)
 {
     FStreamableManager &Manager = UAssetManager::GetStreamableManager();
@@ -151,8 +160,8 @@ void UINFAbilitySystemComponent::AddEquipmentAbility(FINFEquipmentEntry *Equipme
     {
         if (IsValid(AbilityClassPtr.Get()))
         {
-            FGameplayAbilitySpecHandle GrantedHandle = GrantEquipmentAbility(EquipmentEntry, AbilityClassPtr.Get()); // Pass the specific class
-            EquipmentEntry->GrantedHandles.AddAbilityHandle(GrantedHandle);                                          // Add the handle to the array
+            FGameplayAbilitySpecHandle GrantedHandle = GrantEquipmentAbility(EquipmentEntry, AbilityClassPtr.Get());
+            EquipmentEntry->GrantedHandles.AddAbilityHandle(GrantedHandle);
         }
         else
         {
@@ -169,6 +178,7 @@ void UINFAbilitySystemComponent::AddEquipmentAbility(FINFEquipmentEntry *Equipme
     }
 }
 
+// Removes all abilities granted by a specific equipment item
 void UINFAbilitySystemComponent::RemoveEquipmentAbility(FINFEquipmentEntry *EquipmentEntry)
 {
     for (auto HandleIt = EquipmentEntry->GrantedHandles.GrantedAbilities.CreateIterator(); HandleIt; ++HandleIt)
@@ -178,6 +188,7 @@ void UINFAbilitySystemComponent::RemoveEquipmentAbility(FINFEquipmentEntry *Equi
     }
 }
 
+// Grants a single ability from equipment and configures it based on equipment properties
 FGameplayAbilitySpecHandle UINFAbilitySystemComponent::GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry, TSubclassOf<UGameplayAbility> AbilityClass)
 {
     if (!AbilityClass)
@@ -197,15 +208,15 @@ FGameplayAbilitySpecHandle UINFAbilitySystemComponent::GrantEquipmentAbility(con
         ProjectileAbility->ProjectileToSpawnTag = EquipmentEntry->EffectPackage.Ability.ContextTag;
     }
 
-    // Set BaseDamage property for DamageAbility instances
     if (UDamageAbility *DamageAbility = Cast<UDamageAbility>(AbilitySpec.Ability))
     {
         DamageAbility->BaseDamage = EquipmentEntry->EffectPackage.Ability.BaseDamage;
     }
 
-    return this->GiveAbility(AbilitySpec); // Call GiveAbility on the component instance
+    return this->GiveAbility(AbilitySpec);
 }
 
+// Checks if a specific gameplay tag is currently active on this ability system component
 bool UINFAbilitySystemComponent::IsTagActive(FGameplayTag TagToCheck) const // Renamed function and parameter
 {
     if (!TagToCheck.IsValid())
@@ -213,10 +224,10 @@ bool UINFAbilitySystemComponent::IsTagActive(FGameplayTag TagToCheck) const // R
         return false;
     }
 
-    // Check if the ASC has the specified tag active
     return HasMatchingGameplayTag(TagToCheck);
 }
 
+// Server RPC implementation for setting dynamic projectile across network
 void UINFAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag &ProjectileTag)
 {
     SetDynamicProjectile(ProjectileTag);

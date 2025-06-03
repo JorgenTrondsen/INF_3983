@@ -5,9 +5,7 @@
 #include "INF_3910/Character/Customization/CustomizationTypes.h"
 #include "CustomizationLibrary.generated.h"
 
-/**
- * Blueprint Function Library to expose FModelPartSelectionData functions to blueprints
- */
+// Blueprint Function Library to expose FModelPartSelectionData functions to blueprints
 UCLASS()
 class INF_3910_API UCustomizationLibrary : public UBlueprintFunctionLibrary
 {

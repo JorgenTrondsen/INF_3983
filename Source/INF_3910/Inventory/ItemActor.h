@@ -2,7 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h" // Added for FGameplayTag
+#include "GameplayTagContainer.h"
 #include "ItemActor.generated.h"
 
 UCLASS()
@@ -13,7 +13,6 @@ class INF_3910_API AItemActor : public AActor
 public:
     AItemActor();
 
-    // The Gameplay Tag that identifies this item in the data tables/inventory system
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
     FGameplayTag ItemTag;
 

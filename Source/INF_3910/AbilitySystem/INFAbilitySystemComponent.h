@@ -38,7 +38,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Projectile Ability")
 	TSubclassOf<UGameplayAbility> DynamicProjectileAbility;
 
-	// Updated declaration to match the definition
 	FGameplayAbilitySpecHandle GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry, TSubclassOf<UGameplayAbility> AbilityClass);
 
 	UFUNCTION(BlueprintCallable, Category = "Abilities")

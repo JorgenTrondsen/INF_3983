@@ -6,6 +6,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
 
+// Constructor - Initialize projectile components and collision settings
 AProjectileBase::AProjectileBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -20,6 +21,7 @@ AProjectileBase::AProjectileBase()
 	ProjectileMesh->SetIsReplicated(true);
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("MovementComponent");
+
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>("OverlapSphere");
 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	OverlapSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -28,6 +30,7 @@ AProjectileBase::AProjectileBase()
 	OverlapSphere->SetupAttachment(GetRootComponent());
 }
 
+// Configure projectile properties from parameter struct
 void AProjectileBase::SetProjectileParams(const FProjectileParams &Params)
 {
 	if (IsValid(ProjectileMesh))
@@ -44,6 +47,7 @@ void AProjectileBase::SetProjectileParams(const FProjectileParams &Params)
 	}
 }
 
+// Setup overlap detection on server authority
 void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -54,6 +58,7 @@ void AProjectileBase::BeginPlay()
 	}
 }
 
+// Handle projectile collision with targets and apply damage
 void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor,
 										   UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {

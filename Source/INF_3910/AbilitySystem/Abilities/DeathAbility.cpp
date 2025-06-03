@@ -1,27 +1,18 @@
 #include "DeathAbility.h"
 #include "INF_3910/Character/INFCharacter.h"
-#include "INF_3910/Game/INFGameMode.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
-#include "INF_3910/AbilitySystem/INFGameplayTags.h"
-#include "AbilitySystemComponent.h"
-#include "GameplayCueManager.h"
-#include "GameFramework/PlayerController.h"
-#include "Kismet/GameplayStatics.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "INF_3910/Character/INFCharacter.h"
-#include "GameFramework/PlayerStart.h"
-#include "EngineUtils.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
 #include "INF_3910/Game/INFPlayerController.h"
 #include "INF_3910/Equipment/EquipmentManagerComponent.h"
 #include "INF_3910/Inventory/InventoryComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerStart.h"
 
 UDeathAbility::UDeathAbility()
 {
 }
 
+// Sets the character's dead state to true when called
 void UDeathAbility::KillPlayer()
 {
     if (const FGameplayAbilityActorInfo *ActorInfo = GetCurrentActorInfo())
@@ -33,6 +24,7 @@ void UDeathAbility::KillPlayer()
     }
 }
 
+// Respawns the player at a random PlayerStart location, restores health, and clears equipment/inventory
 void UDeathAbility::RespawnPlayer()
 {
     if (const FGameplayAbilityActorInfo *ActorInfo = GetCurrentActorInfo())

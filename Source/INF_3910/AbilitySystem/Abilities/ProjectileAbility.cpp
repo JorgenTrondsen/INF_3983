@@ -6,11 +6,13 @@
 #include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
 #include "INF_3910/AbilitySystem/AbilityTypes.h"
 
+// Constructor that sets the instancing policy to per-actor
 UProjectileAbility::UProjectileAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+// Initialize ability when granted to an actor and cache projectile parameters
 void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo *ActorInfo, const FGameplayAbilitySpec &Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
@@ -27,6 +29,7 @@ void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo *ActorInf
 	}
 }
 
+// Spawn a projectile at the dynamic spawn point with proper aim direction
 void UProjectileAbility::SpawnProjectile()
 {
 	if (!IsValid(AvatarActorFromInfo) || !IsValid(CurrentProjectileParams.ProjectileClass))

@@ -1,9 +1,10 @@
 #include "INFAttributeSet.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
-#include "INFGameplayTags.h"        // Added for gameplay tags
-#include "AbilitySystemComponent.h" // Added for UAbilitySystemComponent
+#include "INFGameplayTags.h"
+#include "AbilitySystemComponent.h"
 
+// Sets up network replication for attributes
 void UINFAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -14,6 +15,7 @@ void UINFAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &Out
     DOREPLIFETIME_CONDITION_NOTIFY(UINFAttributeSet, MaxStamina, COND_None, REPNOTIFY_Always);
 }
 
+// Called after a gameplay effect modifies an attribute
 void UINFAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData &Data)
 {
     Super::PostGameplayEffectExecute(Data);
@@ -34,6 +36,7 @@ void UINFAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
     }
 }
 
+// Processes incoming damage and triggers death when health reaches zero
 void UINFAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData &Data)
 {
     const float LocalDamage = GetIncomingDamage();
@@ -56,21 +59,19 @@ void UINFAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData
     }
 }
 
+// Network replication notification for attribute changes
 void UINFAttributeSet::OnRep_Health(const FGameplayAttributeData &OldHealth)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UINFAttributeSet, Health, OldHealth);
 }
-
 void UINFAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData &OldMaxHealth)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UINFAttributeSet, MaxHealth, OldMaxHealth);
 }
-
 void UINFAttributeSet::OnRep_Stamina(const FGameplayAttributeData &OldStamina)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UINFAttributeSet, Stamina, OldStamina);
 }
-
 void UINFAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData &OldMaxStamina)
 {
     GAMEPLAYATTRIBUTE_REPNOTIFY(UINFAttributeSet, MaxStamina, OldMaxStamina);

@@ -9,6 +9,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "INF_3910/AbilitySystem/INFGameplayTags.h"
 
+// Retrieves character class default info from the game mode
 UCharacterClassInfo *UINFAbilitySystemLibrary::GetCharacterClassDefaultInfo(const UObject *WorldContextObject)
 {
 	if (const AINFGameMode *INFGameMode = Cast<AINFGameMode>(UGameplayStatics::GetGameMode(WorldContextObject)))
@@ -19,6 +20,7 @@ UCharacterClassInfo *UINFAbilitySystemLibrary::GetCharacterClassDefaultInfo(cons
 	return nullptr;
 }
 
+// Retrieves projectile info from the game mode
 UProjectileInfo *UINFAbilitySystemLibrary::GetProjectileInfo(const UObject *WorldContextObject)
 {
 	if (const AINFGameMode *INFGameMode = Cast<AINFGameMode>(UGameplayStatics::GetGameMode(WorldContextObject)))
@@ -29,6 +31,7 @@ UProjectileInfo *UINFAbilitySystemLibrary::GetProjectileInfo(const UObject *Worl
 	return nullptr;
 }
 
+// Applies a damage effect to the target using the ability system
 void UINFAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectInfo &DamageEffectInfo)
 {
 	FGameplayEffectContextHandle ContextHandle = DamageEffectInfo.SourceASC->MakeEffectContext();

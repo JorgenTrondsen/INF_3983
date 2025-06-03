@@ -1,38 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "MapGenerator.h"
-#include "CollisionQueryParams.h"
 #include "Components/SceneComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Containers/Array.h"
-#include "CoreGlobals.h"
-#include "DrawDebugHelpers.h"
-// #include "Elements/PCGAttributeNoise.h"
-#include "Engine/EngineTypes.h"
-#include "Engine/HitResult.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
-#include "Engine/GameEngine.h"
-#include "EngineUtils.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerStart.h"
-#include "HAL/Platform.h"
-// #include "Helpers/PCGHelpers.h"
-#include "LandscapeProxy.h"
-#include "Logging/LogMacros.h"
-#include "Logging/LogVerbosity.h"
-#include "Math/Color.h"
-#include "Math/MathFwd.h"
-#include "Landscape.h"
-#include "Math/TransformCalculus2D.h"
 #include "Math/UnrealMathUtility.h"
 #include "ProceduralMeshComponent.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "Net/UnrealNetwork.h"
-#include "Templates/SubclassOf.h"
-#include "Traits/IsContiguousContainer.h"
 #include "UObject/CoreNet.h"
-#include <cmath>
-#include <cstdlib>
+#include "EngineUtils.h"
 #include "INF_3910/Game/INFGameInstance.h"
 
 void AMapGenerator::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -206,27 +183,27 @@ void AMapGenerator::SpawnPOI()
 	SpawnParams.Owner = this;
 
 	SpawnedPOI = World->SpawnActor<APOI>(POIClass, POILocation, FRotator::ZeroRotator, SpawnParams);
-	
+
 	if (SpawnedPOI)
 	{
 		// Set the capture radius to match the plateau radius
 		SpawnedPOI->SetCaptureRadius(PlateauRadius);
 
-		if (UStaticMeshComponent* MeshComponent = SpawnedPOI->FindComponentByClass<UStaticMeshComponent>())
+		if (UStaticMeshComponent *MeshComponent = SpawnedPOI->FindComponentByClass<UStaticMeshComponent>())
 		{
 			FVector BoxExtent;
-            FVector Origin;
-            MeshComponent->GetLocalBounds(Origin, BoxExtent);
-            
-            // Find the largest dimension of the mesh
-            float LargestDimension = FMath::Max3(BoxExtent.X, BoxExtent.Y, (const double)0) * 2.0f; // *2 because BoxExtent is half-size
-            
-            // Calculate scale factor to make the mesh occupy a certain proportion of the plateau
-            float DesiredSize = PlateauRadius * 2; // * 2 due to radius
-            float ScaleFactor = DesiredSize / LargestDimension;
+			FVector Origin;
+			MeshComponent->GetLocalBounds(Origin, BoxExtent);
+
+			// Find the largest dimension of the mesh
+			float LargestDimension = FMath::Max3(BoxExtent.X, BoxExtent.Y, (const double)0) * 2.0f; // *2 because BoxExtent is half-size
+
+			// Calculate scale factor to make the mesh occupy a certain proportion of the plateau
+			float DesiredSize = PlateauRadius * 2; // * 2 due to radius
+			float ScaleFactor = DesiredSize / LargestDimension;
 			MeshComponent->SetRelativeScale3D(FVector(ScaleFactor));
-			UE_LOG(LogTemp, Log, TEXT("POI mesh scaled to %f based on plateau radius %f"), 
-                  ScaleFactor, PlateauRadius);
+			UE_LOG(LogTemp, Log, TEXT("POI mesh scaled to %f based on plateau radius %f"),
+				   ScaleFactor, PlateauRadius);
 		}
 		UE_LOG(LogTemp, Log, TEXT("POI spawned at plateau center: %s"), *POILocation.ToString());
 	}
@@ -367,12 +344,15 @@ void AMapGenerator::GeneratePlayerStarts(FVector Center, FVector Top, FVector Bo
 			SpawnLocation,
 			FRotator::ZeroRotator,
 			SpawnParams);
-
 		if (NewPlayerStart)
 		{
 			// Name and tag the player start correctly
 			FString PlayerStartName = FString::Printf(TEXT("CustomPlayerStart_%d"), Index);
+
+#if WITH_EDITOR
+			// SetActorLabel is only available in editor builds
 			NewPlayerStart->SetActorLabel(PlayerStartName);
+#endif
 
 			// This is critical: Tag the player starts so GameMode can find them
 			NewPlayerStart->PlayerStartTag = FName(TEXT("Player"));
@@ -499,7 +479,7 @@ void AMapGenerator::SpawnAssets()
 		else if (AvailableAssets != &WeaponAssets)
 			SizeFactor = RandomStream.FRandRange(AssetScaleMin, AssetScaleMax);
 		else
-		 	SizeFactor = 1.0f;
+			SizeFactor = 1.0f;
 		if (AActor *SpawnedAsset = World->SpawnActor<AActor>(AssetClass, SpawnLocation, Rotation, SpawnParams))
 		{
 			SpawnedAsset->SetActorScale3D(FVector(SizeFactor));

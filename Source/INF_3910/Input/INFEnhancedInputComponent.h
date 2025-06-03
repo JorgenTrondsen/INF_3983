@@ -15,6 +15,7 @@ class INF_3910_API UINFEnhancedInputComponent : public UEnhancedInputComponent
 	GENERATED_BODY()
 
 public:
+	// Binds ability input actions from config to pressed and released function callbacks
 	template <class UserClass, typename PressedFuncType, typename ReleasedFuncType>
 	void BindAbilityActions(UINFInputConfig *InputConfig, UserClass *Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc);
 };

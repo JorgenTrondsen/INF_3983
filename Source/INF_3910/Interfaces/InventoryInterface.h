@@ -5,7 +5,7 @@
 #include "InventoryInterface.generated.h"
 
 class UInventoryComponent;
-// This class does not need to be modified.
+
 UINTERFACE(MinimalAPI)
 class UInventoryInterface : public UInterface
 {

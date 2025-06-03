@@ -10,11 +10,13 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/PlayerState.h"
 
+// Constructor that initializes default interaction distance
 UInteractAbility::UInteractAbility()
 {
     InteractionDistance = 150.0f;
 }
 
+// Main function that handles the interaction logic with items in the world
 void UInteractAbility::PerformInteraction()
 {
     AActor *OwningActor = GetAvatarActorFromActorInfo();
@@ -36,6 +38,7 @@ void UInteractAbility::PerformInteraction()
     }
 }
 
+// Performs a line trace from the player's view to detect items within interaction range
 AItemActor *UInteractAbility::PerformLineTrace(AActor *OwningActor)
 {
     APlayerController *PC = Cast<APlayerController>(OwningActor->GetInstigatorController());
@@ -64,6 +67,7 @@ AItemActor *UInteractAbility::PerformLineTrace(AActor *OwningActor)
     return nullptr;
 }
 
+// Retrieves the inventory component from the player controller
 UInventoryComponent *UInteractAbility::GetInventoryComponentFromActor(AActor *Actor)
 {
     if (!Actor)

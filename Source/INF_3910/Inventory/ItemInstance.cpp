@@ -13,6 +13,7 @@ void UItemInstance::OnUnEquipped()
 {
 }
 
+// Spawns item actors and attaches them to the character's mesh
 void UItemInstance::SpawnItemActors(const TArray<FItemActorToSpawn> &ActorsToSpawn, const FGameplayTag &SlotTag)
 {
     if (ACharacter *OwningCharacter = GetCharacter())
@@ -22,7 +23,6 @@ void UItemInstance::SpawnItemActors(const TArray<FItemActorToSpawn> &ActorsToSpa
 
         for (const FItemActorToSpawn &ActorToSpawn : ActorsToSpawn)
         {
-            // Determine the attachment socket based on the slot tag
             FName AttachSocket;
             if (const FName *MappedSocket = ActorToSpawn.SlotAttachmentMap.Find(SlotTag))
             {
@@ -66,6 +66,7 @@ void UItemInstance::SpawnItemActors(const TArray<FItemActorToSpawn> &ActorsToSpa
     }
 }
 
+// Destroys all spawned actors associated with this item instance
 void UItemInstance::DestroySpawnedActors()
 {
     for (AActor *Actor : SpawnedActors)
@@ -74,6 +75,7 @@ void UItemInstance::DestroySpawnedActors()
     }
 }
 
+// Gets the character that owns this item instance
 ACharacter *UItemInstance::GetCharacter()
 {
     if (const APlayerController *PlayerController = Cast<APlayerController>(GetOuter()))

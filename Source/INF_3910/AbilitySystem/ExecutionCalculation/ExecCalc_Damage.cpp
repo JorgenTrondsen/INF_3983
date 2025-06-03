@@ -9,6 +9,7 @@ struct INFDamageStatics
 	// Target Captures
 	DECLARE_ATTRIBUTE_CAPTUREDEF(IncomingDamage);
 
+	// Constructor initializes attribute capture definitions
 	INFDamageStatics()
 	{
 		// Source Defines
@@ -18,12 +19,14 @@ struct INFDamageStatics
 	}
 };
 
+// Returns singleton instance of damage statics
 static const INFDamageStatics &DamageStatics()
 {
 	static INFDamageStatics DStatics;
 	return DStatics;
 }
 
+// Constructor sets up relevant attributes to capture
 UExecCalc_Damage::UExecCalc_Damage()
 {
 	// Source Captures
@@ -32,12 +35,12 @@ UExecCalc_Damage::UExecCalc_Damage()
 	RelevantAttributesToCapture.Add(DamageStatics().IncomingDamageDef);
 }
 
+// Executes damage calculation and applies to target
 void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters &ExecutionParams,
 											  FGameplayEffectCustomExecutionOutput &OutExecutionOutput) const
 {
 	const FGameplayEffectSpec &EffectSpec = ExecutionParams.GetOwningSpec();
 
-	// Get raw damage value
 	float Damage = EffectSpec.GetSetByCallerMagnitude(INFGameplayTags::Combat::Data_Damage);
 	Damage = FMath::Max<float>(Damage, 0.f);
 

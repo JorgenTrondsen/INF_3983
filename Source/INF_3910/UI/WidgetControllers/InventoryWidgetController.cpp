@@ -2,11 +2,13 @@
 #include "INF_3910/Inventory/InventoryComponent.h"
 #include "INF_3910/Interfaces/InventoryInterface.h"
 
+// Sets the owning actor for this widget controller
 void UInventoryWidgetController::SetOwningActor(AActor *InOwner)
 {
     OwningActor = InOwner;
 }
 
+// Binds delegates to inventory component for handling inventory changes
 void UInventoryWidgetController::BindCallbacksToDependencies()
 {
     OwningInventory = IInventoryInterface::Execute_GetInventoryComponent(OwningActor);
@@ -27,6 +29,7 @@ void UInventoryWidgetController::BindCallbacksToDependencies()
     }
 }
 
+// Broadcasts all existing inventory entries to initialize the UI
 void UInventoryWidgetController::BroadcastInitialValues()
 {
     if (IsValid(OwningInventory))

@@ -12,6 +12,7 @@
 #include "INF_3910/POI/POI.h"
 #include "Kismet/GameplayStatics.h"
 
+// Constructor to initialize components and replication settings
 AINFPlayerController::AINFPlayerController()
 {
     bReplicates = true;
@@ -22,6 +23,7 @@ AINFPlayerController::AINFPlayerController()
     EquipmentComponent = CreateDefaultSubobject<UEquipmentManagerComponent>("EquipmentComponent");
 }
 
+// Set up input bindings for ability system actions
 void AINFPlayerController::SetupInputComponent()
 {
     Super::SetupInputComponent();
@@ -32,6 +34,7 @@ void AINFPlayerController::SetupInputComponent()
     }
 }
 
+// Initialize player controller and create UI widgets with delay
 void AINFPlayerController::BeginPlay()
 {
     Super::BeginPlay();
@@ -43,6 +46,7 @@ void AINFPlayerController::BeginPlay()
     GetWorldTimerManager().SetTimer(POIWidgetTimer, this, &AINFPlayerController::CreatePOIWidgets, 2.0f, false);
 }
 
+// Configure network replication properties
 void AINFPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -50,6 +54,7 @@ void AINFPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> 
     DOREPLIFETIME(AINFPlayerController, InventoryComponent);
 }
 
+// Handle ability input press events
 void AINFPlayerController::AbilityInputPressed(FGameplayTag InputTag)
 {
     if (IsValid(GetINFAbilitySystemComponent()))
@@ -58,6 +63,7 @@ void AINFPlayerController::AbilityInputPressed(FGameplayTag InputTag)
     }
 }
 
+// Handle ability input release events
 void AINFPlayerController::AbilityInputReleased(FGameplayTag InputTag)
 {
     if (IsValid(GetINFAbilitySystemComponent()))
@@ -66,6 +72,7 @@ void AINFPlayerController::AbilityInputReleased(FGameplayTag InputTag)
     }
 }
 
+// Get the ability system component from player state
 UINFAbilitySystemComponent *AINFPlayerController::GetINFAbilitySystemComponent()
 {
     if (!IsValid(INFAbilitySystemComp))
@@ -79,6 +86,7 @@ UINFAbilitySystemComponent *AINFPlayerController::GetINFAbilitySystemComponent()
     return INFAbilitySystemComp;
 }
 
+// Bind callbacks between inventory and equipment components
 void AINFPlayerController::BindCallbacksToDependencies()
 {
     if (IsValid(InventoryComponent) && IsValid(EquipmentComponent))
@@ -103,11 +111,13 @@ void AINFPlayerController::BindCallbacksToDependencies()
     }
 }
 
+// Blueprint implementable function to get inventory component
 UInventoryComponent *AINFPlayerController::GetInventoryComponent_Implementation()
 {
     return InventoryComponent;
 }
 
+// Set dynamic projectile on ability system component
 void AINFPlayerController::SetDynamicProjectile_Implementation(const FGameplayTag &ProjectileTag)
 {
     if (IsValid(INFAbilitySystemComp))
@@ -116,11 +126,13 @@ void AINFPlayerController::SetDynamicProjectile_Implementation(const FGameplayTa
     }
 }
 
+// Get ability system component from possessed pawn
 UAbilitySystemComponent *AINFPlayerController::GetAbilitySystemComponent() const
 {
     return UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn());
 }
 
+// Get or create inventory widget controller
 UInventoryWidgetController *AINFPlayerController::GetInventoryWidgetController()
 {
     if (!IsValid(InventoryWidgetController))
@@ -133,6 +145,7 @@ UInventoryWidgetController *AINFPlayerController::GetInventoryWidgetController()
     return InventoryWidgetController;
 }
 
+// Create and setup inventory widget with controller binding
 void AINFPlayerController::CreateInventoryWidget()
 {
     if (UUserWidget *Widget = CreateWidget<UINFUserWidget>(this, InventoryWidgetClass))
@@ -144,6 +157,7 @@ void AINFPlayerController::CreateInventoryWidget()
     }
 }
 
+// Create POI status and player score widgets for local player
 void AINFPlayerController::CreatePOIWidgets()
 {
     // Only create widgets if we're the local player controller
@@ -182,18 +196,19 @@ void AINFPlayerController::CreatePOIWidgets()
     }
 }
 
+// Find POI actor in world and connect it to status widget
 void AINFPlayerController::FindAndConnectPOI()
 {
     if (!POIStatusWidget)
         return;
 
     // Find POI in the world
-    TArray<AActor*> FoundPOIs;
+    TArray<AActor *> FoundPOIs;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), APOI::StaticClass(), FoundPOIs);
-    
+
     if (FoundPOIs.Num() > 0)
     {
-        APOI* GamePOI = Cast<APOI>(FoundPOIs[0]);
+        APOI *GamePOI = Cast<APOI>(FoundPOIs[0]);
         if (GamePOI)
         {
             POIStatusWidget->SetPOI(GamePOI);
@@ -203,7 +218,7 @@ void AINFPlayerController::FindAndConnectPOI()
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("PlayerController could not find POI in level"));
-        
+
         // Retry after a delay (POI might not be spawned yet)
         FTimerHandle RetryTimer;
         GetWorldTimerManager().SetTimer(RetryTimer, this, &AINFPlayerController::FindAndConnectPOI, 2.0f, false);

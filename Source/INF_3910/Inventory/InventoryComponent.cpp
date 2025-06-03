@@ -13,6 +13,7 @@ namespace INFGameplayTags::Static
     UE_DEFINE_GAMEPLAY_TAG_STATIC(Category_Equipment, "Item.Equipment");
 }
 
+// Adds an item to the inventory, either stacking or creating a new entry
 void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
 {
     if (ItemTag.MatchesTag(INFGameplayTags::Static::Category_Equipment))
@@ -64,6 +65,7 @@ void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
     MarkItemDirty(NewEntry);
 }
 
+// Rolls random stats for equipment items based on their definition
 void FINFInventoryList::RollForStats(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects)
 {
     int32 StatRollIndex = 0;
@@ -94,6 +96,7 @@ void FINFInventoryList::RollForStats(const UEquipmentDefinition *EquipmentCDO, F
     }
 }
 
+// Adds an ability to an equipment item based on its definition
 void FINFInventoryList::AddAbility(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects)
 {
     const FGameplayTag &AbilityTag = EquipmentCDO->AbilityTag;
@@ -111,6 +114,7 @@ void FINFInventoryList::AddAbility(const UEquipmentDefinition *EquipmentCDO, FIN
     }
 }
 
+// Adds an unequipped item with predefined effect package to the inventory
 void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage)
 {
     const FMasterItemDefinition Item = OwnerComponent->GetItemDefinitionByTag(ItemTag);
@@ -126,6 +130,7 @@ void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag, const FEq
     MarkItemDirty(NewEntry);
 }
 
+// Removes a specified quantity of an item from the inventory
 void FINFInventoryList::RemoveItem(const FINFInventoryEntry &InventoryEntry, int32 NumItems)
 {
     for (auto EntryIt = Entries.CreateIterator(); EntryIt; ++EntryIt)
@@ -156,6 +161,7 @@ void FINFInventoryList::RemoveItem(const FINFInventoryEntry &InventoryEntry, int
     }
 }
 
+// Checks if the inventory has enough of a specific item
 bool FINFInventoryList::HasEnough(const FGameplayTag &ItemTag, int32 NumItems)
 {
     for (auto EntryIt = Entries.CreateIterator(); EntryIt; ++EntryIt)
@@ -174,6 +180,7 @@ bool FINFInventoryList::HasEnough(const FGameplayTag &ItemTag, int32 NumItems)
     return false;
 }
 
+// Generates a unique ID for inventory items with random bit manipulation
 uint64 FINFInventoryList::GenerateID()
 {
     uint64 NewID = ++LastAssignedID;
@@ -191,11 +198,13 @@ uint64 FINFInventoryList::GenerateID()
     return NewID;
 }
 
+// Sets the stat effects reference for the inventory list
 void FINFInventoryList::SetStats(UEquipmentStatEffects *InStats)
 {
     WeakStats = InStats;
 }
 
+// Handles cleanup when inventory entries are removed during replication
 void FINFInventoryList::PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize)
 {
     for (const int32 Index : RemovedIndices)
@@ -206,6 +215,7 @@ void FINFInventoryList::PreReplicatedRemove(const TArrayView<int32> RemovedIndic
     }
 }
 
+// Handles notification when inventory entries are added during replication
 void FINFInventoryList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize)
 {
     for (const int32 Index : AddedIndices)
@@ -216,6 +226,7 @@ void FINFInventoryList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, 
     }
 }
 
+// Handles notification when inventory entries are changed during replication
 void FINFInventoryList::PostReplicatedChange(const TArrayView<int32> ChangedIndices, int32 FinalSize)
 {
     for (const int32 Index : ChangedIndices)
@@ -226,11 +237,13 @@ void FINFInventoryList::PostReplicatedChange(const TArrayView<int32> ChangedIndi
     }
 }
 
+// Initializes the inventory component with default settings
 UInventoryComponent::UInventoryComponent() : InventoryList(this)
 {
     PrimaryComponentTick.bCanEverTick = false;
 }
 
+// Sets up network replication properties for the component
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -238,6 +251,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &
     DOREPLIFETIME(UInventoryComponent, InventoryList);
 }
 
+// Initializes component during gameplay start
 void UInventoryComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -248,6 +262,7 @@ void UInventoryComponent::BeginPlay()
     }
 }
 
+// Adds an item to the inventory, handling server authority
 void UInventoryComponent::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
 {
     AActor *Owner = GetOwner();
@@ -263,11 +278,13 @@ void UInventoryComponent::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
     InventoryList.AddItem(ItemTag, NumItems);
 }
 
+// Server RPC implementation for adding items
 void UInventoryComponent::ServerAddItem_Implementation(const FGameplayTag &ItemTag, int32 NumItems)
 {
     AddItem(ItemTag, NumItems);
 }
 
+// Uses an item from the inventory, applying its effects or equipping it
 void UInventoryComponent::UseItem(const FINFInventoryEntry &Entry, int32 NumItems)
 {
     AActor *Owner = GetOwner();
@@ -306,11 +323,13 @@ void UInventoryComponent::UseItem(const FINFInventoryEntry &Entry, int32 NumItem
     }
 }
 
+// Server RPC implementation for using items
 void UInventoryComponent::ServerUseItem_Implementation(const FINFInventoryEntry &Entry, int32 NumItems)
 {
     UseItem(Entry, NumItems);
 }
 
+// Retrieves item definition data by gameplay tag
 FMasterItemDefinition UInventoryComponent::GetItemDefinitionByTag(const FGameplayTag &ItemTag) const
 {
     checkf(InventoryDefinitions, TEXT("No Inventory Definitions Inside Component %s"), *GetNameSafe(this));
@@ -326,16 +345,19 @@ FMasterItemDefinition UInventoryComponent::GetItemDefinitionByTag(const FGamepla
     return FMasterItemDefinition();
 }
 
+// Returns a copy of all inventory entries
 TArray<FINFInventoryEntry> UInventoryComponent::GetInventoryEntries()
 {
     return InventoryList.Entries;
 }
 
+// Adds an unequipped item entry to the inventory
 void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage)
 {
     InventoryList.AddUnEquippedItem(ItemTag, EffectPackage);
 }
 
+// Clears all items from the inventory
 void UInventoryComponent::ClearAllInventoryItems()
 {
     AActor *Owner = GetOwner();
@@ -358,11 +380,13 @@ void UInventoryComponent::ClearAllInventoryItems()
     }
 }
 
+// Validates server RPC for using items
 bool UInventoryComponent::ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems)
 {
     return Entry.IsValid() && InventoryList.HasEnough(Entry.ItemTag, NumItems);
 }
 
+// Server RPC implementation for clearing all inventory items
 void UInventoryComponent::ServerClearAllInventoryItems_Implementation()
 {
     ClearAllInventoryItems();

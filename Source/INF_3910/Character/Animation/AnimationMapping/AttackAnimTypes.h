@@ -9,7 +9,6 @@ struct FWeaponAnimMontages
 {
     GENERATED_BODY()
 
-    // Array of attack animation montages for this weapon type
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<TObjectPtr<UAnimMontage>> AttackMontages;
 };

@@ -10,9 +10,8 @@
 struct FDamageEffectInfo;
 class UProjectileInfo;
 class UCharacterClassInfo;
-/**
- *
- */
+
+// Blueprint Function Library to provide utility functions for the INF Ability System
 UCLASS()
 class INF_3910_API UINFAbilitySystemLibrary : public UBlueprintFunctionLibrary
 {
