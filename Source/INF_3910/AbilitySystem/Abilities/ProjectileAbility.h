@@ -22,6 +22,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Projectile")
 	FGameplayTag ProjectileToSpawnTag;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Custom Values|Projectile")
+	FProjectileParams CurrentProjectileParams;
+
 private:
 	UPROPERTY()
 	TObjectPtr<AActor> AvatarActorFromInfo;
@@ -29,8 +32,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<APawn> InstigatorPawnFromInfo;
 
-	FProjectileParams CurrentProjectileParams;
-
 	UFUNCTION(BlueprintCallable)
 	void SpawnProjectile();
+
+	UFUNCTION(BlueprintCallable, Category = "GameplayCue")
+	void ExecuteFireSoundCue();
 };

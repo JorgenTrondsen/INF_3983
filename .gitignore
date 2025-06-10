@@ -4,6 +4,8 @@ Content/Assets/Items/*
 !Content/Assets/Items/.gitkeep
 Content/Assets/Structures/*
 !Content/Assets/Structures/.gitkeep
+Content/Assets/Sounds/*
+!Content/Assets/Sounds/.gitkeep
 INF_3910.code-workspace
 Binaries
 DerivedDataCache

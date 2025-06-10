@@ -5,6 +5,7 @@
 #include "INF_3910/Interfaces/INFAbilitySystemInterface.h"
 #include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
 #include "INF_3910/AbilitySystem/AbilityTypes.h"
+#include "AbilitySystemComponent.h"
 
 // Constructor that sets the instancing policy to per-actor
 UProjectileAbility::UProjectileAbility()
@@ -61,6 +62,22 @@ void UProjectileAbility::SpawnProjectile()
 			SpawnedProjectile->DamageEffectInfo = DamageEffectInfo;
 
 			SpawnedProjectile->FinishSpawning(SpawnTransform);
+		}
+	}
+}
+
+void UProjectileAbility::ExecuteFireSoundCue()
+{
+	if (CurrentProjectileParams.FireSoundCueTag.IsValid() && IsValid(AvatarActorFromInfo))
+	{
+		UAbilitySystemComponent *ASC = GetAbilitySystemComponentFromActorInfo();
+		if (IsValid(ASC))
+		{
+			FGameplayCueParameters CueParams;
+			CueParams.Instigator = AvatarActorFromInfo;
+			CueParams.EffectCauser = AvatarActorFromInfo;
+
+			ASC->ExecuteGameplayCue(CurrentProjectileParams.FireSoundCueTag, CueParams);
 		}
 	}
 }

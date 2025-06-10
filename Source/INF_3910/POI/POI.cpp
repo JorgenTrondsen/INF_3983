@@ -38,8 +38,6 @@ void APOI::BeginPlay()
 
     // Update capture zone radius
     CaptureZone->SetSphereRadius(CaptureRadius);
-
-    UE_LOG(LogTemp, Log, TEXT("POI initialized at: %s"), *GetActorLocation().ToString());
 }
 
 // Called every frame
@@ -78,8 +76,6 @@ void APOI::OnCaptureZoneBeginOverlap(UPrimitiveComponent *OverlappedComponent,
 
             // Use display name
             FString PlayerName = GetPlayerDisplayName(Player);
-            UE_LOG(LogTemp, Log, TEXT("Player %s entered POI zone. Total players: %d"),
-                   *PlayerName, PlayersInZoneCount);
         }
     }
 }
@@ -93,11 +89,6 @@ void APOI::OnCaptureZoneEndOverlap(UPrimitiveComponent *OverlappedComponent,
     {
         PlayersInZone.Remove(Player);
         PlayersInZoneCount = PlayersInZone.Num();
-
-        // Use display name
-        FString PlayerName = GetPlayerDisplayName(Player);
-        UE_LOG(LogTemp, Log, TEXT("Player %s left POI zone. Total players: %d"),
-               *PlayerName, PlayersInZoneCount);
 
         // If the controlling player left, lose control immediately
         if (Player == ControllingPlayer)
@@ -198,11 +189,6 @@ void APOI::AwardPoints(APawn *Player, int32 Points)
 
     // Add points to player's score
     Player->GetPlayerState()->SetScore(Player->GetPlayerState()->GetScore() + Points);
-
-    // Use display name instead of pawn name
-    FString PlayerName = GetPlayerDisplayName(Player);
-    UE_LOG(LogTemp, Log, TEXT("Awarded %d points to %s (Total: %.0f)"),
-           Points, *PlayerName, Player->GetPlayerState()->GetScore());
 }
 
 void APOI::OnCaptureCompleted(APawn *NewController)
@@ -216,21 +202,11 @@ void APOI::OnCaptureCompleted(APawn *NewController)
     // Award capture bonus
     // AwardPoints(NewController, CaptureBonus);
 
-    // Use display name
-    FString PlayerName = GetPlayerDisplayName(NewController);
-    UE_LOG(LogTemp, Warning, TEXT("POI captured by %s!"), *PlayerName);
-
     LastScoreTime = GetWorld()->GetTimeSeconds();
 }
 
 void APOI::OnControlLost()
 {
-    if (ControllingPlayer)
-    {
-        FString PlayerName = GetPlayerDisplayName(ControllingPlayer);
-        UE_LOG(LogTemp, Warning, TEXT("%s lost control of POI"), *PlayerName);
-    }
-
     ControllingPlayer = nullptr;
     CaptureProgress = 0.0f;
 }
@@ -264,10 +240,4 @@ FString APOI::GetControllerDisplayName() const
 void APOI::SetCaptureRadius(float NewRadius)
 {
     CaptureRadius = NewRadius;
-
-    if (CaptureZone)
-    {
-        CaptureZone->SetSphereRadius(CaptureRadius);
-        UE_LOG(LogTemp, Log, TEXT("POI capture radius updated to: %.1f"), CaptureRadius);
-    }
 }

@@ -104,7 +104,6 @@ FMergedMeshes UCustomizationData::MergeModelParts(const FModelPartSelectionData 
     // Perform the merge
     if (!MeshMerger.DoMerge() || !FP_MeshMerger.DoMerge())
     {
-        UE_LOG(LogTemp, Error, TEXT("MergeModelParts: Mesh merge operation failed"));
         return FMergedMeshes();
     }
 

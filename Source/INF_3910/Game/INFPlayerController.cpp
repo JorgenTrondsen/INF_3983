@@ -172,11 +172,6 @@ void AINFPlayerController::CreatePOIWidgets()
         {
             POIStatusWidget->AddToViewport(1); // Z-order 1 (on top)
             FindAndConnectPOI();
-            UE_LOG(LogTemp, Log, TEXT("POI Status Widget created for player: %s"), *GetName());
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed to create POI Status Widget"));
         }
     }
 
@@ -187,11 +182,6 @@ void AINFPlayerController::CreatePOIWidgets()
         if (PlayerScoreWidget)
         {
             PlayerScoreWidget->AddToViewport(0); // Z-order 0 (behind POI widget)
-            UE_LOG(LogTemp, Log, TEXT("Player Score Widget created for player: %s"), *GetName());
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed to create Player Score Widget"));
         }
     }
 }
@@ -212,13 +202,10 @@ void AINFPlayerController::FindAndConnectPOI()
         if (GamePOI)
         {
             POIStatusWidget->SetPOI(GamePOI);
-            UE_LOG(LogTemp, Log, TEXT("PlayerController connected to POI: %s"), *GamePOI->GetName());
         }
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("PlayerController could not find POI in level"));
-
         // Retry after a delay (POI might not be spawned yet)
         FTimerHandle RetryTimer;
         GetWorldTimerManager().SetTimer(RetryTimer, this, &AINFPlayerController::FindAndConnectPOI, 2.0f, false);

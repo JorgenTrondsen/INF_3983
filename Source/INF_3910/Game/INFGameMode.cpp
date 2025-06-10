@@ -37,8 +37,6 @@ void AINFGameMode::BeginPlay()
     // Find POI in the level with a delay to ensure everything is spawned
     FTimerHandle DelayTimer;
     GetWorldTimerManager().SetTimer(DelayTimer, this, &AINFGameMode::FindAndRegisterPOI, 3.0f, false);
-
-    UE_LOG(LogTemp, Log, TEXT("INF Game Mode started - POI game rules active"));
 }
 
 // NEW POI INTEGRATION - Tick for win condition checking
@@ -65,9 +63,6 @@ void AINFGameMode::StartPlay()
     // Delay StartPlay to give the map time to replicate
     FTimerHandle TimerHandle;
     GetWorldTimerManager().SetTimer(TimerHandle, this, &AINFGameMode::DelayedStartPlay, 1.0f, false);
-
-    // Log that we're delaying game start
-    UE_LOG(LogTemp, Log, TEXT("GameMode: Delaying game start to allow map replication"));
 }
 
 void AINFGameMode::DelayedStartPlay()
@@ -77,15 +72,9 @@ void AINFGameMode::DelayedStartPlay()
 
 AActor *AINFGameMode::FindPlayerStart_Implementation(AController *Player, const FString &IncomingName)
 {
-    // Debug output to help trace what's happening
-    UE_LOG(LogTemp, Log, TEXT("FindPlayerStart called for %s with incoming name: %s"),
-           Player ? *Player->GetName() : TEXT("null"), *IncomingName);
-
     // Look for player starts with the "Player" tag
     TArray<AActor *> TaggedPlayerStarts;
     UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName(TEXT("Player")), TaggedPlayerStarts);
-
-    UE_LOG(LogTemp, Log, TEXT("Found %d tagged player starts"), TaggedPlayerStarts.Num());
 
     if (TaggedPlayerStarts.Num() > 0)
     {
@@ -97,7 +86,6 @@ AActor *AINFGameMode::FindPlayerStart_Implementation(AController *Player, const 
             if (PS)
             {
                 PlayerIndex = PS->GetPlayerId() % TaggedPlayerStarts.Num();
-                UE_LOG(LogTemp, Log, TEXT("Player ID: %d, selecting start %d"), PS->GetPlayerId(), PlayerIndex);
             }
         }
 
@@ -106,7 +94,6 @@ AActor *AINFGameMode::FindPlayerStart_Implementation(AController *Player, const 
     }
 
     // Fall back to default implementation if no custom player starts found
-    UE_LOG(LogTemp, Warning, TEXT("No custom player starts found, using default behavior"));
     return Super::FindPlayerStart_Implementation(Player, IncomingName);
 }
 
@@ -127,12 +114,9 @@ void AINFGameMode::FindAndRegisterPOI()
     if (FoundPOIs.Num() > 0)
     {
         GamePOI = Cast<APOI>(FoundPOIs[0]);
-        UE_LOG(LogTemp, Log, TEXT("Game Mode found and registered POI: %s"), *GamePOI->GetName());
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("No POI found in level! Win conditions may not work properly."));
-
         // Retry after a delay
         FTimerHandle RetryTimer;
         GetWorldTimerManager().SetTimer(RetryTimer, this, &AINFGameMode::FindAndRegisterPOI, 3.0f, false);
@@ -184,8 +168,6 @@ bool AINFGameMode::CheckScoreWinCondition(APawn *&OutWinner)
     if (LeadingPlayer)
     {
         OutWinner = LeadingPlayer;
-        UE_LOG(LogTemp, Warning, TEXT("Score win condition met! Winner: %s with %.0f points"),
-               *LeadingPlayer->GetName(), HighestScore);
         return true;
     }
 
@@ -207,7 +189,6 @@ bool AINFGameMode::CheckTimeWinCondition(APawn *&OutWinner)
         {
             CurrentTimeWinCandidate = CurrentController;
             TimeWinStartTime = CurrentTime;
-            UE_LOG(LogTemp, Log, TEXT("Started tracking control time for %s"), *CurrentController->GetName());
         }
         else
         {
@@ -216,8 +197,6 @@ bool AINFGameMode::CheckTimeWinCondition(APawn *&OutWinner)
             if (ControlDuration >= ControlTimeToWin)
             {
                 OutWinner = CurrentController;
-                UE_LOG(LogTemp, Warning, TEXT("Time win condition met! Winner: %s after %.0f seconds of control"),
-                       *CurrentController->GetName(), ControlDuration);
                 return true;
             }
         }
@@ -240,14 +219,10 @@ void AINFGameMode::EndGame(APawn *Winner)
     bGameEnded = true;
     WinningPlayer = Winner;
 
-    UE_LOG(LogTemp, Warning, TEXT("GAME OVER! Winner: %s"),
-           Winner ? *Winner->GetName() : TEXT("Unknown"));
-
     // Disable POI scoring
     if (GamePOI)
     {
         GamePOI->SetActorTickEnabled(false);
-        UE_LOG(LogTemp, Log, TEXT("POI scoring disabled - game ended"));
     }
 
     // Disable input for all players
@@ -262,12 +237,4 @@ void AINFGameMode::EndGame(APawn *Winner)
 
     // Call Blueprint event for UI/effects
     OnGameEnded(Winner);
-
-    // // Optionally restart level after delay
-    // FTimerHandle RestartTimer;
-    // GetWorldTimerManager().SetTimer(RestartTimer, [this]()
-    // {
-    //     UE_LOG(LogTemp, Log, TEXT("Restarting level..."));
-    //     UGameplayStatics::OpenLevel(GetWorld(), FName(*GetWorld()->GetName()));
-    // }, 10.0f, false); // Restart after 10 seconds
 }

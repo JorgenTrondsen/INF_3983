@@ -69,8 +69,6 @@ void AMapGenerator::PostInitializeComponents()
 	// calling generate map, which calls generate player starts
 	// this is done such that the PIE player start is deleted before the mesh is generated
 	GenerateMap();
-
-	UE_LOG(LogTemp, Log, TEXT("MapGenerator: PostInitializeComponents - Generating Early"));
 }
 
 // Called when the game starts or when spawned
@@ -90,8 +88,6 @@ void AMapGenerator::BeginPlay()
 			// If we have a valid seed from the session
 			if (StoredSeed != 0)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Using seed from session: %d"), StoredSeed);
-
 				// Override the replicated seed with our session seed
 				MapSeed = StoredSeed;
 				GenerateMesh();
@@ -102,16 +98,12 @@ void AMapGenerator::BeginPlay()
 	// Just log mesh status
 	bool HasMeshData = (Vertices.Num() > 0);
 	bool HasCollision = ProceduralMesh->GetBodySetup() != nullptr;
-
-	UE_LOG(LogTemp, Warning, TEXT("MapGenerator BeginPlay - HasMeshData: %d, HasCollision: %d, VertexCount: %d"),
-		   HasMeshData, HasCollision, Vertices.Num());
 }
 
 void AMapGenerator::OnRep_MapSeed()
 {
 	if (!HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Client received MapSeed: %d"), MapSeed);
 		// Always regenerate the mesh when we get a new seed
 		bHasGeneratedMesh = false;
 		GenerateMesh();
@@ -160,7 +152,6 @@ void AMapGenerator::SpawnPOI()
 {
 	if (!POIClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No POI class selected in MapGenerator!"));
 		return;
 	}
 	UWorld *World = GetWorld();
@@ -202,14 +193,7 @@ void AMapGenerator::SpawnPOI()
 			float DesiredSize = PlateauRadius * 2; // * 2 due to radius
 			float ScaleFactor = DesiredSize / LargestDimension;
 			MeshComponent->SetRelativeScale3D(FVector(ScaleFactor));
-			UE_LOG(LogTemp, Log, TEXT("POI mesh scaled to %f based on plateau radius %f"),
-				   ScaleFactor, PlateauRadius);
 		}
-		UE_LOG(LogTemp, Log, TEXT("POI spawned at plateau center: %s"), *POILocation.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn POI!"));
 	}
 }
 
@@ -305,7 +289,6 @@ void AMapGenerator::GeneratePlayerStarts(FVector Center, FVector Top, FVector Bo
 	UWorld *World = GetWorld();
 	if (!World)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("World is null!"));
 		return;
 	}
 
@@ -356,14 +339,7 @@ void AMapGenerator::GeneratePlayerStarts(FVector Center, FVector Top, FVector Bo
 
 			// This is critical: Tag the player starts so GameMode can find them
 			NewPlayerStart->PlayerStartTag = FName(TEXT("Player"));
-
-			UE_LOG(LogTemp, Log, TEXT("Spawned %s at: %s (Terrain: %.2f)"),
-				   *PlayerStartName, *SpawnLocation.ToString(), TerrainHeight);
 			Index++;
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Failed to spawn PlayerStart at: %s"), *SpawnLocation.ToString());
 		}
 	}
 }
@@ -373,7 +349,6 @@ void AMapGenerator::SpawnAssets()
 	// Only spawn assets on the server - they will replicate to clients
 	if (!HasAuthority())
 	{
-		UE_LOG(LogTemp, Log, TEXT("SpawnAssets: Not spawning on client (no authority)"));
 		return;
 	}
 
@@ -490,7 +465,6 @@ void AMapGenerator::SpawnAssets()
 			SpawnedLocations.Add(SpawnLocation);
 		}
 	}
-	UE_LOG(LogTemp, Log, TEXT("Spawned %d assets with seed %d"), SpawnedLocations.Num(), MapSeed);
 }
 
 void AMapGenerator::CalculateTerrainParameters(float &OutCenterX,

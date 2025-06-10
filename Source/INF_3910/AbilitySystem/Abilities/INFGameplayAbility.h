@@ -5,6 +5,8 @@
 #include "INFGameplayAbility.generated.h"
 
 class UINFAbilitySystemComponent;
+class AINFPlayerState;
+class UAnimData;
 
 /**
  *
@@ -23,4 +25,10 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Ability")
 	TObjectPtr<UINFAbilitySystemComponent> OwningASC;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Ability")
+	TObjectPtr<AINFPlayerState> OwningPlayerState;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations")
+	TObjectPtr<UAnimData> AnimDataAsset;
 };

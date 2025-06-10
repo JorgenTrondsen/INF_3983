@@ -17,14 +17,10 @@ void UINFGameInstance::SetMapSeed(int32 NewSeed)
     if (NewSeed != 0)
     {
         MapSeed = NewSeed;
-        UE_LOG(LogTemp, Warning, TEXT("Map seed set to: %d"), MapSeed);
     }
 }
 
 void UINFGameInstance::Init()
 {
     Super::Init();
-
-    // Log the initial seed value
-    UE_LOG(LogTemp, Warning, TEXT("Game Instance Initialized. Initial Map Seed: %d"), MapSeed);
 }
