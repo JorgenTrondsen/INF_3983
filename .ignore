@@ -1,10 +1,12 @@
-/Saved
+/.git
+/.github
+/.vscode
 /Content
 /DerivedDataCache
-/.git
-/.vscode
 /Intermediate
-/Plugins/EOSIntegrationKit/Content
-/Plugins/EOSIntegrationKit/.github
+/Saved
 /Plugins/EOSIntegrationKit/.git
+/Plugins/EOSIntegrationKit/Content
 /Plugins/EOSIntegrationKit/Intermediate
+/Plugins/WoWLandscapeImporter/.git
+/Plugins/WoWLandscapeImporter/Intermediate
