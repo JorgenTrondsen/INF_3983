@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "INF_3910/AbilitySystem/CharacterClassInfo.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "INFAbilitySystemLibrary.generated.h"
+#include "AbilitySystemLibrary.generated.h"
 
 struct FDamageEffectInfo;
 class UProjectileInfo;
@@ -13,7 +13,7 @@ class UCharacterClassInfo;
 
 // Blueprint Function Library to provide utility functions for the INF Ability System
 UCLASS()
-class INF_3910_API UINFAbilitySystemLibrary : public UBlueprintFunctionLibrary
+class INF_3910_API UAbilitySystemLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
@@ -32,7 +32,7 @@ public:
 };
 
 template <typename T>
-T *UINFAbilitySystemLibrary::GetDataTableRowByTag(UDataTable *DataTable, FGameplayTag Tag)
+T *UAbilitySystemLibrary::GetDataTableRowByTag(UDataTable *DataTable, FGameplayTag Tag)
 {
 	return DataTable->FindRow<T>(Tag.GetTagName(), FString(""));
 }

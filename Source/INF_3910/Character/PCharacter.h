@@ -10,7 +10,7 @@
 #include "UObject/ObjectPtr.h"
 #include "INF_3910/Interfaces/INFAbilitySystemInterface.h"
 #include "INF_3910/Character/Customization/CustomizationTypes.h"
-#include "INFCharacter.generated.h"
+#include "PCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -23,7 +23,7 @@ struct FModelPartSelectionData;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class INF_3910_API AINFCharacter : public ACharacter, public IAbilitySystemInterface, public IINFAbilitySystemInterface
+class INF_3910_API APCharacter : public ACharacter, public IAbilitySystemInterface, public IINFAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -58,7 +58,7 @@ class INF_3910_API AINFCharacter : public ACharacter, public IAbilitySystemInter
 	FName ProjectileSpawnSocketName = TEXT("projectile_spawnpoint");
 
 public:
-	AINFCharacter();
+	APCharacter();
 
 	// Declare the new function
 	UFUNCTION(BlueprintCallable, Category = "Character Customization")

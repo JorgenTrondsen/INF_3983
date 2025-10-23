@@ -1,5 +1,5 @@
 #include "DeathAbility.h"
-#include "INF_3910/Character/INFCharacter.h"
+#include "INF_3910/Character/PCharacter.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
 #include "INF_3910/Game/INFPlayerController.h"
@@ -17,7 +17,7 @@ void UDeathAbility::KillPlayer()
 {
     if (const FGameplayAbilityActorInfo *ActorInfo = GetCurrentActorInfo())
     {
-        if (AINFCharacter *Character = Cast<AINFCharacter>(ActorInfo->AvatarActor.Get()))
+        if (APCharacter *Character = Cast<APCharacter>(ActorInfo->AvatarActor.Get()))
         {
             Character->SetDeadState(true);
         }
@@ -29,7 +29,7 @@ void UDeathAbility::RespawnPlayer()
 {
     if (const FGameplayAbilityActorInfo *ActorInfo = GetCurrentActorInfo())
     {
-        if (AINFCharacter *Character = Cast<AINFCharacter>(ActorInfo->AvatarActor.Get()))
+        if (APCharacter *Character = Cast<APCharacter>(ActorInfo->AvatarActor.Get()))
         {
             TArray<AActor *> PlayerStarts;
             UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStarts);

@@ -5,10 +5,10 @@
 #include "INF_3910/Equipment/EquipmentStatEffects.h"
 #include "INF_3910/Equipment/EquipmentDefinition.h"
 #include "INF_3910/Inventory/ItemTypesToTables.h"
-#include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
+#include "INF_3910/Libraries/AbilitySystemLibrary.h"
 #include "Net/UnrealNetwork.h"
 
-namespace INFGameplayTags::Static
+namespace GameplayTags::Static
 {
     UE_DEFINE_GAMEPLAY_TAG_STATIC(Category_Equipment, "Item.Equipment");
 }
@@ -16,7 +16,7 @@ namespace INFGameplayTags::Static
 // Adds an item to the inventory, either stacking or creating a new entry
 void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
 {
-    if (ItemTag.MatchesTag(INFGameplayTags::Static::Category_Equipment))
+    if (ItemTag.MatchesTag(GameplayTags::Static::Category_Equipment))
     {
         // Cannot stack these categories, do nothing.
     }
@@ -48,7 +48,7 @@ void FINFInventoryList::AddItem(const FGameplayTag &ItemTag, int32 NumItems)
     NewEntry.Quantity = NumItems;
     NewEntry.ItemID = GenerateID();
 
-    if (NewEntry.ItemTag.MatchesTag(INFGameplayTags::Static::Category_Equipment) && IsValid(WeakStats.Get()))
+    if (NewEntry.ItemTag.MatchesTag(GameplayTags::Static::Category_Equipment) && IsValid(WeakStats.Get()))
     {
         UEquipmentStatEffects *StatEffects = WeakStats.Get();
         const UEquipmentDefinition *EquipmentCDO = GetDefault<UEquipmentDefinition>(Item.EquipmentItemProps.EquipmentClass);
@@ -78,7 +78,7 @@ void FINFInventoryList::RollForStats(const UEquipmentDefinition *EquipmentCDO, F
         {
             if (RandomTag.MatchesTag(Pair.Key))
             {
-                if (const FEquipmentStatEffectGroup *PossibleStat = UINFAbilitySystemLibrary::GetDataTableRowByTag<FEquipmentStatEffectGroup>(Pair.Value, RandomTag))
+                if (const FEquipmentStatEffectGroup *PossibleStat = UAbilitySystemLibrary::GetDataTableRowByTag<FEquipmentStatEffectGroup>(Pair.Value, RandomTag))
                 {
                     if (FMath::FRandRange(0.f, 1.f) < PossibleStat->ProbabilityToSelect)
                     {
@@ -105,7 +105,7 @@ void FINFInventoryList::AddAbility(const UEquipmentDefinition *EquipmentCDO, FIN
     {
         if (AbilityTag.MatchesTag(Pair.Key))
         {
-            if (const FEquipmentAbilityGroup *Ability = UINFAbilitySystemLibrary::GetDataTableRowByTag<FEquipmentAbilityGroup>(Pair.Value, AbilityTag))
+            if (const FEquipmentAbilityGroup *Ability = UAbilitySystemLibrary::GetDataTableRowByTag<FEquipmentAbilityGroup>(Pair.Value, AbilityTag))
             {
                 Entry->EffectPackage.Ability = *Ability;
                 break;
@@ -338,7 +338,7 @@ FMasterItemDefinition UInventoryComponent::GetItemDefinitionByTag(const FGamepla
     {
         if (ItemTag.MatchesTag(Pair.Key))
         {
-            return *UINFAbilitySystemLibrary::GetDataTableRowByTag<FMasterItemDefinition>(Pair.Value, ItemTag);
+            return *UAbilitySystemLibrary::GetDataTableRowByTag<FMasterItemDefinition>(Pair.Value, ItemTag);
         }
     }
 

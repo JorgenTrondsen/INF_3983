@@ -1,5 +1,5 @@
 #include "ExecCalc_Damage.h"
-#include "INF_3910/AbilitySystem/INFGameplayTags.h"
+#include "INF_3910/AbilitySystem/GameplayTags.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
 
 struct INFDamageStatics
@@ -41,7 +41,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 {
 	const FGameplayEffectSpec &EffectSpec = ExecutionParams.GetOwningSpec();
 
-	float Damage = EffectSpec.GetSetByCallerMagnitude(INFGameplayTags::Combat::Data_Damage);
+	float Damage = EffectSpec.GetSetByCallerMagnitude(GameplayTags::Combat::Data_Damage);
 	Damage = FMath::Max<float>(Damage, 0.f);
 
 	if (Damage > 0.f)

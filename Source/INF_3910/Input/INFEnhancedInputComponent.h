@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "EnhancedInputComponent.h"
-#include "INFInputConfig.h"
+#include "InputConfig.h"
 #include "INFEnhancedInputComponent.generated.h"
 
-class UINFInputConfig;
+class UInputConfig;
 /**
  *
  */
@@ -17,11 +17,11 @@ class INF_3910_API UINFEnhancedInputComponent : public UEnhancedInputComponent
 public:
 	// Binds ability input actions from config to pressed and released function callbacks
 	template <class UserClass, typename PressedFuncType, typename ReleasedFuncType>
-	void BindAbilityActions(UINFInputConfig *InputConfig, UserClass *Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc);
+	void BindAbilityActions(UInputConfig *InputConfig, UserClass *Object, PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc);
 };
 
 template <class UserClass, typename PressedFuncType, typename ReleasedFuncType>
-void UINFEnhancedInputComponent::BindAbilityActions(UINFInputConfig *InputConfig, UserClass *Object,
+void UINFEnhancedInputComponent::BindAbilityActions(UInputConfig *InputConfig, UserClass *Object,
 													PressedFuncType PressedFunc, ReleasedFuncType ReleasedFunc)
 {
 	check(InputConfig);

@@ -1,7 +1,7 @@
 #include "INFAttributeSet.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
-#include "INFGameplayTags.h"
+#include "GameplayTags.h"
 #include "AbilitySystemComponent.h"
 
 // Sets up network replication for attributes
@@ -52,7 +52,7 @@ void UINFAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData
             UAbilitySystemComponent *TargetASC = Data.Target.AbilityActorInfo->AbilitySystemComponent.Get();
 
             FGameplayTagContainer TagContainer;
-            TagContainer.AddTag(INFGameplayTags::Player::State_Dead);
+            TagContainer.AddTag(GameplayTags::Player::State_Dead);
 
             TargetASC->TryActivateAbilitiesByTag(TagContainer);
         }

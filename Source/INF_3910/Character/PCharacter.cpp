@@ -1,4 +1,4 @@
-#include "INFCharacter.h"
+#include "PCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -7,7 +7,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
+#include "INF_3910/Libraries/AbilitySystemLibrary.h"
 #include "INF_3910/AbilitySystem/CharacterClassInfo.h"
 #include "INF_3910/Game/INFPlayerState.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
@@ -19,7 +19,7 @@
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 // Constructor that initializes character components and default settings
-AINFCharacter::AINFCharacter()
+APCharacter::APCharacter()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -63,7 +63,7 @@ AINFCharacter::AINFCharacter()
 }
 
 // Called when the game starts or when spawned
-void AINFCharacter::BeginPlay()
+void APCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -80,7 +80,7 @@ void AINFCharacter::BeginPlay()
 }
 
 // Sets up input mapping context and action bindings
-void AINFCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
+void APCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
 	if (APlayerController *PlayerController = Cast<APlayerController>(GetController()))
 	{
@@ -96,14 +96,14 @@ void AINFCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCompon
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AINFCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APCharacter::Move);
 
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AINFCharacter::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APCharacter::Look);
 	}
 }
 
 // Handles character movement input based on forward and right directions
-void AINFCharacter::Move(const FInputActionValue &Value)
+void APCharacter::Move(const FInputActionValue &Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -122,7 +122,7 @@ void AINFCharacter::Move(const FInputActionValue &Value)
 }
 
 // Handles camera look input for yaw and pitch rotation
-void AINFCharacter::Look(const FInputActionValue &Value)
+void APCharacter::Look(const FInputActionValue &Value)
 {
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
@@ -134,7 +134,7 @@ void AINFCharacter::Look(const FInputActionValue &Value)
 }
 
 // Updates character appearance based on customization data and model part selections
-void AINFCharacter::UpdateAppearance(const FModelPartSelectionData &ModelPartSelections)
+void APCharacter::UpdateAppearance(const FModelPartSelectionData &ModelPartSelections)
 {
 	if (!CustomizationData)
 	{
@@ -163,13 +163,13 @@ void AINFCharacter::UpdateAppearance(const FModelPartSelectionData &ModelPartSel
 }
 
 // Returns the dynamic projectile spawn point for projectile spawning interface
-USceneComponent *AINFCharacter::GetDynamicSpawnPoint_Implementation()
+USceneComponent *APCharacter::GetDynamicSpawnPoint_Implementation()
 {
 	return DynamicProjectileSpawnPoint;
 }
 
 // Called when character is possessed by a controller on the server
-void AINFCharacter::PossessedBy(AController *NewController)
+void APCharacter::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
 
@@ -182,7 +182,7 @@ void AINFCharacter::PossessedBy(AController *NewController)
 }
 
 // Called when player state is replicated to clients
-void AINFCharacter::OnRep_PlayerState()
+void APCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
@@ -195,13 +195,13 @@ void AINFCharacter::OnRep_PlayerState()
 }
 
 // Returns the ability system component for this character
-UAbilitySystemComponent *AINFCharacter::GetAbilitySystemComponent() const
+UAbilitySystemComponent *APCharacter::GetAbilitySystemComponent() const
 {
 	return INFAbilitySystemComp;
 }
 
 // Initializes ability system component and attributes from player state
-void AINFCharacter::InitAbilityActorInfo()
+void APCharacter::InitAbilityActorInfo()
 {
 	if (AINFPlayerState *INFPlayerState = GetPlayerState<AINFPlayerState>())
 	{
@@ -222,13 +222,13 @@ void AINFCharacter::InitAbilityActorInfo()
 }
 
 // Initializes default abilities and attributes based on character class
-void AINFCharacter::InitClassDefaults()
+void APCharacter::InitClassDefaults()
 {
 	if (!CharacterTag.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No Character Tag Selected In This Character %s"), *GetNameSafe(this));
 	}
-	else if (UCharacterClassInfo *ClassInfo = UINFAbilitySystemLibrary::GetCharacterClassDefaultInfo(this))
+	else if (UCharacterClassInfo *ClassInfo = UAbilitySystemLibrary::GetCharacterClassDefaultInfo(this))
 	{
 		if (const FCharacterClassDefaultInfo *SelectedClassInfo = ClassInfo->ClassDefaultInfoMap.Find(CharacterTag))
 		{
@@ -243,7 +243,7 @@ void AINFCharacter::InitClassDefaults()
 }
 
 // Binds attribute change callbacks for health and stamina updates
-void AINFCharacter::BindCallbacksToDependencies()
+void APCharacter::BindCallbacksToDependencies()
 {
 	if (IsValid(INFAbilitySystemComp) && IsValid(INFAttributes))
 	{
@@ -260,7 +260,7 @@ void AINFCharacter::BindCallbacksToDependencies()
 }
 
 // Broadcasts initial attribute values for UI initialization
-void AINFCharacter::BroadcastInitialValues()
+void APCharacter::BroadcastInitialValues()
 {
 	if (IsValid(INFAttributes))
 	{
@@ -270,14 +270,14 @@ void AINFCharacter::BroadcastInitialValues()
 }
 
 // Registers properties for network replication
-void AINFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+void APCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AINFCharacter, bIsDead);
+	DOREPLIFETIME(APCharacter, bIsDead);
 }
 
 // Applies settings when character dies (disable input, enable physics simulation)
-void AINFCharacter::ApplyDeadSettings()
+void APCharacter::ApplyDeadSettings()
 {
 	if (APlayerController *PC = Cast<APlayerController>(GetController()))
 	{
@@ -295,7 +295,7 @@ void AINFCharacter::ApplyDeadSettings()
 }
 
 // Applies settings when character is alive (enable input, disable physics simulation)
-void AINFCharacter::ApplyAliveSettings()
+void APCharacter::ApplyAliveSettings()
 {
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Block);
@@ -315,7 +315,7 @@ void AINFCharacter::ApplyAliveSettings()
 }
 
 // Called when dead state replicates to apply appropriate settings
-void AINFCharacter::OnRep_IsDead()
+void APCharacter::OnRep_IsDead()
 {
 	if (bIsDead)
 	{
@@ -328,7 +328,7 @@ void AINFCharacter::OnRep_IsDead()
 }
 
 // Sets the dead state and triggers replication (server only)
-void AINFCharacter::SetDeadState(bool bNewIsDead)
+void APCharacter::SetDeadState(bool bNewIsDead)
 {
 	if (HasAuthority())
 	{

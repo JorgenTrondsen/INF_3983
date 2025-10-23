@@ -3,7 +3,7 @@
 #include "INF_3910/Projectiles/ProjectileInfo.h"
 #include "INF_3910/Projectiles/ProjectileBase.h"
 #include "INF_3910/Interfaces/INFAbilitySystemInterface.h"
-#include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
+#include "INF_3910/Libraries/AbilitySystemLibrary.h"
 #include "INF_3910/AbilitySystem/AbilityTypes.h"
 #include "AbilitySystemComponent.h"
 
@@ -24,7 +24,7 @@ void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo *ActorInf
 	if (!ProjectileToSpawnTag.IsValid() || !IsValid(AvatarActorFromInfo))
 		return;
 
-	if (UProjectileInfo *ProjectileInfo = UINFAbilitySystemLibrary::GetProjectileInfo(AvatarActorFromInfo))
+	if (UProjectileInfo *ProjectileInfo = UAbilitySystemLibrary::GetProjectileInfo(AvatarActorFromInfo))
 	{
 		CurrentProjectileParams = *ProjectileInfo->ProjectileInfoMap.Find(ProjectileToSpawnTag);
 	}

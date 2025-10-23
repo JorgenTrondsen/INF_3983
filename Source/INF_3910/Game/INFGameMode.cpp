@@ -1,6 +1,6 @@
 #include "INFGameMode.h"
 #include "Engine/TimerHandle.h"
-#include "INF_3910/Character/INFCharacter.h"
+#include "INF_3910/Character/PCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"

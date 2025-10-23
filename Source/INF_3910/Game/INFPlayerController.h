@@ -10,7 +10,7 @@
 
 class UEquipmentManagerComponent;
 class UINFAbilitySystemComponent;
-class UINFInputConfig;
+class UInputConfig;
 class UINFUserWidget;
 class UInventoryWidgetController;
 class UInventoryComponent;
@@ -55,7 +55,7 @@ private:
 	TObjectPtr<UINFAbilitySystemComponent> INFAbilitySystemComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Input")
-	TObjectPtr<UINFInputConfig> INFInputConfig;
+	TObjectPtr<UInputConfig> INFInputConfig;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Replicated)
 	TObjectPtr<UInventoryComponent> InventoryComponent;

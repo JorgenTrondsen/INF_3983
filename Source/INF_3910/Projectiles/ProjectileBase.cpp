@@ -4,7 +4,7 @@
 #include "Components/SphereComponent.h"
 #include "INF_3910/AbilitySystem/AbilityTypes.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "INF_3910/Libraries/INFAbilitySystemLibrary.h"
+#include "INF_3910/Libraries/AbilitySystemLibrary.h"
 
 // Constructor - Initialize projectile components and collision settings
 AProjectileBase::AProjectileBase()
@@ -68,7 +68,7 @@ void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent *OverlappedCompon
 	if (UAbilitySystemComponent *TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor))
 	{
 		DamageEffectInfo.TargetASC = TargetASC;
-		UINFAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
+		UAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
 	}
 	Destroy();
 }

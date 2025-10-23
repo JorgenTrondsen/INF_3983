@@ -2,7 +2,7 @@
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
 #include "Net/UnrealNetwork.h"
-#include "INF_3910/Character/INFCharacter.h"
+#include "INF_3910/Character/PCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "INF_3910/Character/Customization/SaveCustomization.h"
 
@@ -53,7 +53,7 @@ void AINFPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutL
 // Called when ModelPartSelectionData is replicated to update character appearance
 void AINFPlayerState::OnRep_ModelPartSelectionData()
 {
-    if (AINFCharacter *Character = GetPawn<AINFCharacter>())
+    if (APCharacter *Character = GetPawn<APCharacter>())
     {
         Character->UpdateAppearance(ModelPartSelectionData);
     }
