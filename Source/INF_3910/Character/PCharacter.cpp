@@ -7,14 +7,9 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "INF_3910/Libraries/AbilitySystemLibrary.h"
-#include "INF_3910/AbilitySystem/CharacterClassInfo.h"
 #include "INF_3910/Game/INFPlayerState.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
-#include "INF_3910/Character/Animation/INFAnimInstance.h"
-#include "UObject/Object.h"
-#include "INF_3910/Character/Customization/CustomizationData.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -45,9 +40,6 @@ APCharacter::APCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
-	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ProjectileSpawnPoint"));
-	DynamicProjectileSpawnPoint->SetupAttachment(GetMesh(), ProjectileSpawnSocketName);
 
 	GetMesh()->SetOwnerNoSee(true);
 
@@ -133,41 +125,6 @@ void APCharacter::Look(const FInputActionValue &Value)
 	}
 }
 
-// Updates character appearance based on customization data and model part selections
-void APCharacter::UpdateAppearance(const FModelPartSelectionData &ModelPartSelections)
-{
-	if (!CustomizationData)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CustomizationData asset is not assigned in %s"), *GetNameSafe(this));
-		return;
-	}
-
-	const FMergedMeshes MergedMeshes = CustomizationData->MergeModelParts(ModelPartSelections);
-
-	GetMesh()->SetAnimClass(MergedMeshes.AnimBlueprint);
-	GetMesh()->SetSkeletalMeshAsset(MergedMeshes.ThirdPersonMesh);
-
-	if (FP_Mesh)
-	{
-		FP_Mesh->SetAnimClass(MergedMeshes.AnimBlueprint);
-		FP_Mesh->SetSkeletalMeshAsset(MergedMeshes.FirstPersonMesh);
-	}
-
-	if (IsValid(INFAbilitySystemComp))
-	{
-		if (UINFAnimInstance *INFAnimInstance = Cast<UINFAnimInstance>(GetMesh()->GetAnimInstance()))
-		{
-			INFAnimInstance->InitializeWithAbilitySystem(INFAbilitySystemComp);
-		}
-	}
-}
-
-// Returns the dynamic projectile spawn point for projectile spawning interface
-USceneComponent *APCharacter::GetDynamicSpawnPoint_Implementation()
-{
-	return DynamicProjectileSpawnPoint;
-}
-
 // Called when character is possessed by a controller on the server
 void APCharacter::PossessedBy(AController *NewController)
 {
@@ -194,12 +151,6 @@ void APCharacter::OnRep_PlayerState()
 	}
 }
 
-// Returns the ability system component for this character
-UAbilitySystemComponent *APCharacter::GetAbilitySystemComponent() const
-{
-	return INFAbilitySystemComp;
-}
-
 // Initializes ability system component and attributes from player state
 void APCharacter::InitAbilityActorInfo()
 {
@@ -221,118 +172,24 @@ void APCharacter::InitAbilityActorInfo()
 	}
 }
 
-// Initializes default abilities and attributes based on character class
-void APCharacter::InitClassDefaults()
-{
-	if (!CharacterTag.IsValid())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No Character Tag Selected In This Character %s"), *GetNameSafe(this));
-	}
-	else if (UCharacterClassInfo *ClassInfo = UAbilitySystemLibrary::GetCharacterClassDefaultInfo(this))
-	{
-		if (const FCharacterClassDefaultInfo *SelectedClassInfo = ClassInfo->ClassDefaultInfoMap.Find(CharacterTag))
-		{
-			if (IsValid(INFAbilitySystemComp))
-			{
-				INFAbilitySystemComp->AddCharacterAbilities(SelectedClassInfo->StartingAbilities);
-				INFAbilitySystemComp->AddCharacterPassiveAbilities(SelectedClassInfo->StartingPassives);
-				INFAbilitySystemComp->InitializeDefaultAttributes(SelectedClassInfo->DefaultAttributes);
-			}
-		}
-	}
-}
-
-// Binds attribute change callbacks for health and stamina updates
-void APCharacter::BindCallbacksToDependencies()
-{
-	if (IsValid(INFAbilitySystemComp) && IsValid(INFAttributes))
-	{
-		// Clear existing delegates first to prevent multiple bindings from recreated characters
-		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetHealthAttribute()).Clear();
-		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetStaminaAttribute()).Clear();
-
-		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetHealthAttribute()).AddLambda([this](const FOnAttributeChangeData &Data)
-																													 { OnHealthChanged(Data.NewValue, INFAttributes->GetMaxHealth()); });
-
-		INFAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(INFAttributes->GetStaminaAttribute()).AddLambda([this](const FOnAttributeChangeData &Data)
-																													  { OnStaminaChanged(Data.NewValue, INFAttributes->GetMaxStamina()); });
-	}
-}
-
-// Broadcasts initial attribute values for UI initialization
-void APCharacter::BroadcastInitialValues()
-{
-	if (IsValid(INFAttributes))
-	{
-		OnHealthChanged(INFAttributes->GetHealth(), INFAttributes->GetMaxHealth());
-		OnStaminaChanged(INFAttributes->GetStamina(), INFAttributes->GetMaxStamina());
-	}
-}
-
-// Registers properties for network replication
-void APCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(APCharacter, bIsDead);
-}
-
-// Applies settings when character dies (disable input, enable physics simulation)
+// Applies settings when character dies (disable input for player)
 void APCharacter::ApplyDeadSettings()
 {
+	Super::ApplyDeadSettings();
+
 	if (APlayerController *PC = Cast<APlayerController>(GetController()))
 	{
 		DisableInput(PC);
 	}
-
-	GetMesh()->SetAllBodiesSimulatePhysics(true);
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->WakeAllRigidBodies();
-
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
-	GetCharacterMovement()->StopMovementImmediately();
-	GetCharacterMovement()->DisableMovement();
 }
 
-// Applies settings when character is alive (enable input, disable physics simulation)
+// Applies settings when character is alive (enable input for player)
 void APCharacter::ApplyAliveSettings()
 {
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Block);
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-
-	GetMesh()->SetAllBodiesSimulatePhysics(false);
-	GetMesh()->SetSimulatePhysics(false);
-
-	const FVector DefaultRelativeLocation = FVector(0.f, 0.f, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
-	const FRotator DefaultRelativeRotation = FRotator(0.f, 0.f, 0.f);
-	GetMesh()->SetRelativeLocationAndRotation(DefaultRelativeLocation, DefaultRelativeRotation);
+	Super::ApplyAliveSettings();
 
 	if (APlayerController *PC = Cast<APlayerController>(GetController()))
 	{
 		EnableInput(PC);
-	}
-}
-
-// Called when dead state replicates to apply appropriate settings
-void APCharacter::OnRep_IsDead()
-{
-	if (bIsDead)
-	{
-		ApplyDeadSettings();
-	}
-	else
-	{
-		ApplyAliveSettings();
-	}
-}
-
-// Sets the dead state and triggers replication (server only)
-void APCharacter::SetDeadState(bool bNewIsDead)
-{
-	if (HasAuthority())
-	{
-		bIsDead = bNewIsDead;
-		OnRep_IsDead();
 	}
 }
