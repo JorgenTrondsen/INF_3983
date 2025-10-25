@@ -4,7 +4,6 @@
 #include "INF_3910/AbilitySystem/Abilities/INFGameplayAbility.h"
 #include "InteractAbility.generated.h"
 
-class AItemActor;
 class UInventoryComponent;
 
 /**
@@ -26,6 +25,6 @@ protected:
     float InteractionDistance;
 
 private:
-    AItemActor *PerformLineTrace(AActor *OwningActor);
+    AActor *PerformLineTrace(AActor *OwningActor);
     UInventoryComponent *GetInventoryComponentFromActor(AActor *Actor);
 };

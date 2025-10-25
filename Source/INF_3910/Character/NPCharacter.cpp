@@ -17,6 +17,8 @@ ANPCharacter::ANPCharacter()
 
     // Configure NPC-specific settings
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+    // Enable visibility collision for interaction system
+    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
@@ -90,4 +92,13 @@ void ANPCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(ANPCharacter, NPCAppearanceData);
+}
+
+// Implementation of the Interactable interface - called when player interacts with this NPC
+void ANPCharacter::OnInteract_Implementation(AActor *InteractingActor)
+{
+    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Interacting with NPC"));
+    UE_LOG(LogTemp, Log, TEXT("Interacting with NPC: %s"), *GetName());
+
+    // TODO: Add dialogue system, quest system, or other NPC-specific interactions here
 }

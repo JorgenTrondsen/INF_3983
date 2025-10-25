@@ -11,12 +11,5 @@ void UINFGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo *ActorIn
     Super::OnGiveAbility(ActorInfo, Spec);
 
     OwningASC = Cast<UINFAbilitySystemComponent>(ActorInfo->AbilitySystemComponent.Get());
-
-    if (APawn *AvatarPawn = Cast<APawn>(ActorInfo->AvatarActor.Get()))
-    {
-        if (APlayerController *PC = Cast<APlayerController>(AvatarPawn->GetController()))
-        {
-            OwningPlayerState = PC->GetPlayerState<AINFPlayerState>();
-        }
-    }
+    OwningPlayerState = Cast<AINFPlayerState>(ActorInfo->OwnerActor.Get());
 }
