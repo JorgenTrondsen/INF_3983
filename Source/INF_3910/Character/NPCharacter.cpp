@@ -1,6 +1,7 @@
 #include "NPCharacter.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
+#include "INF_3910/Game/INFPlayerController.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -97,8 +98,9 @@ void ANPCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 // Implementation of the Interactable interface - called when player interacts with this NPC
 void ANPCharacter::OnInteract_Implementation(AActor *InteractingActor)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Interacting with NPC"));
-    UE_LOG(LogTemp, Log, TEXT("Interacting with NPC: %s"), *GetName());
-
-    // TODO: Add dialogue system, quest system, or other NPC-specific interactions here
+    // Get the player controller and show dialogue widget
+    if (AINFPlayerController *PlayerController = Cast<AINFPlayerController>(InteractingActor->GetInstigatorController()))
+    {
+        PlayerController->CreateDialogueWidget(this);
+    }
 }

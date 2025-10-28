@@ -6,9 +6,11 @@
 #include "INF_3910/Inventory/InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "INF_3910/UI/WidgetControllers/InventoryWidgetController.h"
+#include "INF_3910/UI/WidgetControllers/DialogueWidgetController.h"
 #include "INF_3910/UI/INFUserWidget.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/Equipment/EquipmentManagerComponent.h"
+#include "INF_3910/Character/NPCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 // Constructor to initialize components and replication settings
@@ -149,5 +151,63 @@ void AINFPlayerController::CreateInventoryWidget()
         InventoryWidget->SetWidgetController(GetInventoryWidgetController());
         InventoryWidgetController->BroadcastInitialValues();
         InventoryWidget->AddToViewport();
+    }
+}
+
+// Get or create dialogue widget controller
+UDialogueWidgetController *AINFPlayerController::GetDialogueWidgetController()
+{
+    if (!IsValid(DialogueWidgetController))
+    {
+        DialogueWidgetController = NewObject<UDialogueWidgetController>(this, DialogueWidgetControllerClass);
+    }
+
+    return DialogueWidgetController;
+}
+
+// Create and setup dialogue widget with controller binding
+void AINFPlayerController::CreateDialogueWidget(ANPCharacter *NPC)
+{
+    if (!IsValid(NPC))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Cannot create dialogue widget: NPC is invalid"));
+        return;
+    }
+
+    // Close existing dialogue widget if any
+    if (IsValid(DialogueWidget))
+    {
+        CloseDialogueWidget();
+    }
+
+    if (UUserWidget *Widget = CreateWidget<UINFUserWidget>(this, DialogueWidgetClass))
+    {
+        DialogueWidget = Cast<UINFUserWidget>(Widget);
+        UDialogueWidgetController *Controller = GetDialogueWidgetController();
+        Controller->CurrentNPC = NPC;
+        DialogueWidget->SetWidgetController(Controller);
+        Controller->BroadcastInitialValues();
+        DialogueWidget->AddToViewport();
+
+        // Optionally set input mode to UI only or UI and Game
+        FInputModeUIOnly InputMode;
+        InputMode.SetWidgetToFocus(DialogueWidget->TakeWidget());
+        SetInputMode(InputMode);
+        bShowMouseCursor = true;
+    }
+}
+
+// Close the dialogue widget
+void AINFPlayerController::CloseDialogueWidget()
+{
+    if (IsValid(DialogueWidget))
+    {
+        DialogueWidget->RemoveFromParent();
+        DialogueWidget = nullptr;
+
+        // Reset input mode to game only
+        FInputModeGameOnly InputMode;
+        SetInputMode(InputMode);
+        bShowMouseCursor = false;
     }
 }

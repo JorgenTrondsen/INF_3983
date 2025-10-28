@@ -26,6 +26,10 @@ public:
     // IInteractableInterface
     virtual void OnInteract_Implementation(AActor *InteractingActor) override;
 
+    // Display name for this NPC (shown in dialogue and UI)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPC")
+    FString DisplayName;
+
 protected:
     // Override initialization to support NPC-specific setup
     virtual void InitAbilityActorInfo() override;

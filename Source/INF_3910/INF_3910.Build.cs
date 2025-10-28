@@ -18,7 +18,10 @@ public class INF_3910 : ModuleRules
 			"GameplayTasks", 
 			"GameplayTags",
 			"NetCore", 
-			"UMG"
+			"UMG",
+			"HTTP",
+			"Json",
+			"JsonUtilities"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent" });
