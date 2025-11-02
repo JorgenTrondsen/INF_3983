@@ -1,9 +1,31 @@
 #include "INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/Abilities/ProjectileAbility.h"
 #include "INF_3910/AbilitySystem/Abilities/INFGameplayAbility.h"
+#include "INF_3910/AbilitySystem/AbilityTasks/InteractTrace.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "INF_3910/Equipment/EquipmentManagerComponent.h"
+
+void UINFAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+    ABILITYLIST_SCOPE_LOCK();
+
+    for (FGameplayAbilitySpec &Spec : GetActivatableAbilities())
+    {
+        if (Spec.IsActive())
+            continue;
+
+        TArray<UGameplayAbility *> Instances = Spec.GetAbilityInstances();
+
+        if (UINFGameplayAbility *INFAbility = Cast<UINFGameplayAbility>(Instances.Last()))
+        {
+            if (INFAbility->bIsClientPassive)
+            {
+                TryActivateAbility(Spec.Handle);
+            }
+        }
+    }
+}
 
 // Grants a collection of abilities to the character and assigns input tags
 void UINFAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant)

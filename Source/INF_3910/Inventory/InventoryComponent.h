@@ -63,7 +63,7 @@ struct FINFInventoryList : public FFastArraySerializer
     void SetStats(UEquipmentStatEffects *InStats);
     void RollForStats(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects);
     void AddAbility(const UEquipmentDefinition *EquipmentCDO, FINFInventoryEntry *Entry, UEquipmentStatEffects *StatEffects);
-    void AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage);
+    void AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage, int32 NumItems = 1);
 
     // FFastArraySerializer Contract
     void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize);
@@ -103,6 +103,8 @@ struct TStructOpsTypeTraits<FINFInventoryList> : TStructOpsTypeTraitsBase2<FINFI
     };
 };
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FItemDroppedSignature, const FINFInventoryEntry * /* Entry */, int32 /* Num Items */);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class INF_3910_API UInventoryComponent : public UActorComponent
 {
@@ -110,6 +112,7 @@ class INF_3910_API UInventoryComponent : public UActorComponent
 
 public:
     FEquipmentItemUsed EquipmentItemDelegate;
+    FItemDroppedSignature ItemDroppedDelegate;
 
     UPROPERTY(Replicated)
     FINFInventoryList InventoryList;
@@ -125,12 +128,18 @@ public:
     UFUNCTION(BlueprintCallable)
     void UseItem(const FINFInventoryEntry &Entry, int32 NumItems);
 
+    UFUNCTION(BlueprintCallable)
+    void DropItem(const FINFInventoryEntry &Entry, int32 NumItems);
+
+    UFUNCTION(BlueprintCallable)
+    void PickupItem(AItemActor *Item);
+
     UFUNCTION(BlueprintPure)
     FMasterItemDefinition GetItemDefinitionByTag(const FGameplayTag &ItemTag) const;
 
     TArray<FINFInventoryEntry> GetInventoryEntries();
     void AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage);
-
+    void SpawnItem(const FTransform &SpawnTransform, const FINFInventoryEntry *Entry, int32 NumItems);
     void ClearAllInventoryItems();
 
 private:
@@ -140,6 +149,9 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Item Definitions")
     TObjectPtr<UItemTypesToTables> InventoryDefinitions;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Item Spawn")
+    TSubclassOf<AItemActor> DefaultItemClass;
+
     UFUNCTION(Server, Reliable)
     void ServerAddItem(const FGameplayTag &ItemTag, int32 NumItems);
 
@@ -147,6 +159,14 @@ private:
     void ServerUseItem(const FINFInventoryEntry &Entry, int32 NumItems);
 
     bool ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems);
+
+    UFUNCTION(Server, Reliable)
+    void ServerDropItem(const FINFInventoryEntry &Entry, int32 NumItems);
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ServerPickupItem(AItemActor *Item);
+
+    bool ServerPickupItem_Validate(AItemActor *Item);
 
     UFUNCTION(Server, Reliable)
     void ServerClearAllInventoryItems();

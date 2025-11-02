@@ -1,27 +1,27 @@
-#include "ItemInstance.h"
+#include "EquipmentInstance.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
-#include "ItemActor.h"
+#include "EquipmentActor.h"
 #include "INF_3910/Equipment/EquipmentDefinition.h"
 #include "GameFramework/Character.h"
 
-void UItemInstance::OnEquipped()
+void UEquipmentInstance::OnEquipped()
 {
 }
 
-void UItemInstance::OnUnEquipped()
+void UEquipmentInstance::OnUnEquipped()
 {
 }
 
-// Spawns item actors and attaches them to the character's mesh
-void UItemInstance::SpawnItemActors(const TArray<FItemActorToSpawn> &ActorsToSpawn, const FGameplayTag &SlotTag)
+// Spawns equipment actors and attaches them to the character's mesh
+void UEquipmentInstance::SpawnEquipmentActors(const TArray<FEquipmentActorToSpawn> &ActorsToSpawn, const FGameplayTag &SlotTag)
 {
     if (ACharacter *OwningCharacter = GetCharacter())
     {
         FStreamableManager &Manager = UAssetManager::GetStreamableManager();
-        TWeakObjectPtr<UItemInstance> WeakThis(this);
+        TWeakObjectPtr<UEquipmentInstance> WeakThis(this);
 
-        for (const FItemActorToSpawn &ActorToSpawn : ActorsToSpawn)
+        for (const FEquipmentActorToSpawn &ActorToSpawn : ActorsToSpawn)
         {
             FName AttachSocket;
             if (const FName *MappedSocket = ActorToSpawn.SlotAttachmentMap.Find(SlotTag))
@@ -31,7 +31,7 @@ void UItemInstance::SpawnItemActors(const TArray<FItemActorToSpawn> &ActorsToSpa
 
             if (IsValid(ActorToSpawn.EquipmentClass.Get()))
             {
-                AItemActor *NewActor = this->GetWorld()->SpawnActorDeferred<AItemActor>(
+                AEquipmentActor *NewActor = this->GetWorld()->SpawnActorDeferred<AEquipmentActor>(
                     ActorToSpawn.EquipmentClass.Get(),
                     FTransform::Identity,
                     OwningCharacter);
@@ -50,7 +50,7 @@ void UItemInstance::SpawnItemActors(const TArray<FItemActorToSpawn> &ActorsToSpa
                                              if (!WeakThis.IsValid())
                                                  return;
 
-                                             AItemActor *NewActor = WeakThis->GetWorld()->SpawnActorDeferred<AItemActor>(
+                                             AEquipmentActor *NewActor = WeakThis->GetWorld()->SpawnActorDeferred<AEquipmentActor>(
                                                  ActorToSpawn.EquipmentClass.Get(),
                                                  FTransform::Identity,
                                                  OwningCharacter);
@@ -67,7 +67,7 @@ void UItemInstance::SpawnItemActors(const TArray<FItemActorToSpawn> &ActorsToSpa
 }
 
 // Destroys all spawned actors associated with this item instance
-void UItemInstance::DestroySpawnedActors()
+void UEquipmentInstance::DestroySpawnedActors()
 {
     for (AActor *Actor : SpawnedActors)
     {
@@ -76,7 +76,7 @@ void UItemInstance::DestroySpawnedActors()
 }
 
 // Gets the character that owns this item instance
-ACharacter *UItemInstance::GetCharacter()
+ACharacter *UEquipmentInstance::GetCharacter()
 {
     if (const APlayerController *PlayerController = Cast<APlayerController>(GetOuter()))
     {

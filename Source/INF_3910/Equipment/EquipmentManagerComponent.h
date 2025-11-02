@@ -8,7 +8,7 @@
 #include "EquipmentManagerComponent.generated.h"
 
 class UINFAbilitySystemComponent;
-class UItemInstance;
+class UEquipmentInstance;
 class UEquipmentDefinition;
 class UEquipmentManagerComponent;
 class UDataTable; // Add this forward declaration
@@ -47,7 +47,7 @@ private:
     TSubclassOf<UEquipmentDefinition> EquipmentDefinition = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UItemInstance> Instance = nullptr;
+    TObjectPtr<UEquipmentInstance> Instance = nullptr;
 };
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FEquipmentEntrySignature, const FINFEquipmentEntry & /* Equipment Entry */);
@@ -71,8 +71,8 @@ struct FINFEquipmentList : public FFastArraySerializer
     void RemoveEquipmentStats(FINFEquipmentEntry *Entry);
     void AddEquipmentAbility(FINFEquipmentEntry *Entry);
     void RemoveEquipmentAbility(FINFEquipmentEntry *Entry);
-    UItemInstance *AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage, UDataTable *ItemTable);
-    void RemoveEntry(UItemInstance *ItemInstance);
+    UEquipmentInstance *AddEntry(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage, UDataTable *ItemTable);
+    void RemoveEntry(UEquipmentInstance *EquipmentInstance);
 
     // Add this getter
     const TArray<FINFEquipmentEntry> &GetEntries() const { return Entries; }
@@ -122,7 +122,7 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
     void EquipItem(const TSubclassOf<UEquipmentDefinition> &EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage);
-    void UnEquipItem(UItemInstance *ItemInstance);
+    void UnEquipItem(UEquipmentInstance *EquipmentInstance);
 
     // Add this property to hold the DataTable for item definitions
     UPROPERTY(EditDefaultsOnly, Category = "Data")
@@ -136,7 +136,7 @@ private:
     void ServerEquipItem(TSubclassOf<UEquipmentDefinition> EquipmentDefinition, const FEquipmentEffectPackage &EffectPackage);
 
     UFUNCTION(Server, Reliable)
-    void ServerUnEquipItem(UItemInstance *ItemInstance);
+    void ServerUnEquipItem(UEquipmentInstance *EquipmentInstance);
 
     // Add this
     UFUNCTION(Server, Reliable)

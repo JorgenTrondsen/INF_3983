@@ -1,14 +1,19 @@
 #include "NPCharacter.h"
 #include "INF_3910/AbilitySystem/INFAbilitySystemComponent.h"
 #include "INF_3910/AbilitySystem/INFAttributeSet.h"
-#include "INF_3910/Game/INFPlayerController.h"
+#include "INF_3910/UI/WidgetControllers/DialogueWidgetController.h"
+#include "INF_3910/UI/INFUserWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "Net/UnrealNetwork.h"
+#include "AIController.h"
 
 // Constructor that initializes NPC character settings
 ANPCharacter::ANPCharacter()
 {
+    AIControllerClass = AAIController::StaticClass();
+
     // NPCs will own their own ability system component
     INFAbilitySystemComp = CreateDefaultSubobject<UINFAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
     INFAbilitySystemComp->SetIsReplicated(true);
@@ -16,14 +21,9 @@ ANPCharacter::ANPCharacter()
 
     INFAttributes = CreateDefaultSubobject<UINFAttributeSet>(TEXT("AttributeSet"));
 
-    // Configure NPC-specific settings
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
     // Enable visibility collision for interaction system
     GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
-
-    bUseControllerRotationPitch = false;
-    bUseControllerRotationYaw = false;
-    bUseControllerRotationRoll = false;
 
     GetCharacterMovement()->bOrientRotationToMovement = true;
     GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
@@ -95,12 +95,60 @@ void ANPCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
     DOREPLIFETIME(ANPCharacter, NPCAppearanceData);
 }
 
-// Implementation of the Interactable interface - called when player interacts with this NPC
-void ANPCharacter::OnInteract_Implementation(AActor *InteractingActor)
+UDialogueWidgetController *ANPCharacter::GetDialogueWidgetController(APlayerController *PlayerController)
 {
-    // Get the player controller and show dialogue widget
-    if (AINFPlayerController *PlayerController = Cast<AINFPlayerController>(InteractingActor->GetInstigatorController()))
+    if (!IsValid(DialogueWidgetController))
     {
-        PlayerController->CreateDialogueWidget(this);
+        DialogueWidgetController = NewObject<UDialogueWidgetController>(PlayerController, DialogueWidgetControllerClass);
+    }
+
+    return DialogueWidgetController;
+}
+
+void ANPCharacter::CreateDialogueWidget(APlayerController *PlayerController, UUserWidget *Widget)
+{
+    TObjectPtr<UINFUserWidget> DialogueWidget = Cast<UINFUserWidget>(Widget);
+    UDialogueWidgetController *WidgetController = GetDialogueWidgetController(PlayerController);
+    if (WidgetController)
+    {
+        WidgetController->NPCName = this->DisplayName;
+        DialogueWidget->SetWidgetController(WidgetController);
+        WidgetController->BroadcastInitialValues();
+        DialogueWidget->AddToViewport();
+
+        FInputModeUIOnly InputMode;
+        InputMode.SetWidgetToFocus(DialogueWidget->TakeWidget());
+        PlayerController->SetInputMode(InputMode);
+        PlayerController->bShowMouseCursor = true;
+    }
+}
+
+void ANPCharacter::FacePlayer(APlayerController *PlayerController)
+{
+    if (ACharacter *PlayerCharacter = PlayerController->GetCharacter())
+    {
+        FVector NPCEyeLocation = GetMesh()->GetSocketLocation(FName("bone_Head"));
+        FVector PlayerEyeLocation = PlayerCharacter->GetMesh()->GetSocketLocation(FName("bone_Head"));
+        FRotator LookAtRotation = (PlayerEyeLocation - NPCEyeLocation).Rotation();
+
+        // Temporarily disable replication of rotation changes on server
+        if (HasAuthority())
+        {
+            SetReplicates(false);
+        }
+        SetActorRotation(FRotator(0.f, LookAtRotation.Yaw, 0.f));
+        PitchRotation = LookAtRotation.Pitch;
+    }
+}
+
+void ANPCharacter::StopFacingPlayer()
+{
+    SetActorRotation(FRotator(0.f, 0.f, 0.f));
+    PitchRotation = 0.f;
+
+    // Re-enable replication of rotation changes on server
+    if (HasAuthority())
+    {
+        SetReplicates(true);
     }
 }

@@ -1,5 +1,5 @@
 #include "DialogueWidgetController.h"
-#include "INF_3910/Character/NPCharacter.h"
+#include "INF_3910/Character/AI/NPCharacter.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Json.h"
@@ -7,15 +7,12 @@
 
 void UDialogueWidgetController::BroadcastInitialValues()
 {
-    if (IsValid(CurrentNPC))
-    {
-        // Broadcast NPC name when dialogue starts
-        OnNPCNameChanged.Broadcast(CurrentNPC->DisplayName);
+    // Broadcast NPC name when dialogue starts
+    OnNPCNameChanged.Broadcast(NPCName);
 
-        // You can broadcast an initial greeting here
-        FString InitialGreeting = FString::Printf(TEXT("Hello! I'm %s. How can I help you?"), *CurrentNPC->DisplayName);
-        OnDialogueTextChanged.Broadcast(InitialGreeting);
-    }
+    // You can broadcast an initial greeting here
+    FString InitialGreeting = FString::Printf(TEXT("Hello! I'm %s. How can I help you?"), *NPCName);
+    OnDialogueTextChanged.Broadcast(InitialGreeting);
 }
 
 void UDialogueWidgetController::SubmitPlayerInput(const FText &PlayerText)
@@ -54,13 +51,10 @@ void UDialogueWidgetController::SendLLMRequest(const FString &UserMessage)
     // Build messages array with system message (if NPC exists) + conversation history
     TArray<TSharedPtr<FJsonValue>> MessagesArray;
 
-    if (IsValid(CurrentNPC))
-    {
-        TSharedPtr<FJsonObject> SystemMsg = MakeShareable(new FJsonObject());
-        SystemMsg->SetStringField(TEXT("role"), TEXT("system"));
-        SystemMsg->SetStringField(TEXT("content"), FString::Printf(TEXT("You are %s. Keep responses concise (2-3 sentences)."), *CurrentNPC->DisplayName));
-        MessagesArray.Add(MakeShareable(new FJsonValueObject(SystemMsg)));
-    }
+    TSharedPtr<FJsonObject> SystemMsg = MakeShareable(new FJsonObject());
+    SystemMsg->SetStringField(TEXT("role"), TEXT("system"));
+    SystemMsg->SetStringField(TEXT("content"), FString::Printf(TEXT("You are %s. Keep responses concise (2-3 sentences)."), *NPCName));
+    MessagesArray.Add(MakeShareable(new FJsonValueObject(SystemMsg)));
 
     for (const auto &Msg : ConversationHistory)
     {

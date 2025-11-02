@@ -5,6 +5,20 @@
 #include "UObject/NoExportTypes.h"
 #include "EquipmentDefinition.generated.h"
 
+class UEquipmentInstance;
+class AEquipmentActor;
+USTRUCT(BlueprintType)
+struct FEquipmentActorToSpawn
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditDefaultsOnly)
+    TSoftClassPtr<AEquipmentActor> EquipmentClass = nullptr;
+
+    UPROPERTY(EditDefaultsOnly)
+    TMap<FGameplayTag, FName> SlotAttachmentMap;
+};
+
 /**
  *
  */
@@ -19,6 +33,12 @@ public:
 
     UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Info")
     FGameplayTagContainer SlotTags;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Info")
+    TSubclassOf<UEquipmentInstance> InstanceType;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Actors")
+    TArray<FEquipmentActorToSpawn> ActorsToSpawn;
 
     UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Stats")
     FGameplayTagContainer PossibleStatRolls;

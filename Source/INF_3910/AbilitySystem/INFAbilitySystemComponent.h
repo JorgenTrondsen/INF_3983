@@ -6,6 +6,7 @@
 #include "INFAbilitySystemComponent.generated.h"
 
 struct FINFEquipmentEntry;
+class UInteractTrace;
 DECLARE_MULTICAST_DELEGATE(FOnAttributesGiven);
 /**
  *
@@ -17,6 +18,8 @@ class INF_3910_API UINFAbilitySystemComponent : public UAbilitySystemComponent
 
 public:
 	FOnAttributesGiven OnAttributesGiven;
+
+	virtual void OnRep_ActivateAbilities() override;
 
 	void AddCharacterAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &AbilitiesToGrant);
 	void AddCharacterPassiveAbilities(const TArray<TSubclassOf<class UGameplayAbility>> &PassivesToGrant);
@@ -32,6 +35,9 @@ public:
 	void AddEquipmentAbility(FINFEquipmentEntry *EquipmentEntry);
 	void RemoveEquipmentAbility(FINFEquipmentEntry *EquipmentEntry);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ASC")
+	TObjectPtr<UInteractTrace> InteractTraceTask;
+
 private:
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;
 
@@ -40,7 +46,7 @@ private:
 
 	FGameplayAbilitySpecHandle GrantEquipmentAbility(const FINFEquipmentEntry *EquipmentEntry, TSubclassOf<UGameplayAbility> AbilityClass);
 
-	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	UFUNCTION(BlueprintCallable, Category = "ASC")
 	bool IsTagActive(FGameplayTag TagToCheck) const;
 
 	UFUNCTION(Server, Reliable)

@@ -21,7 +21,8 @@ public class INF_3910 : ModuleRules
 			"UMG",
 			"HTTP",
 			"Json",
-			"JsonUtilities"
+			"JsonUtilities",
+			"AIModule"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent" });

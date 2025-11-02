@@ -16,6 +16,7 @@ class UInventoryWidgetController;
 class UInventoryComponent;
 class UDialogueWidgetController;
 class ANPCharacter;
+struct FINFInventoryEntry;
 /**
  *
  */
@@ -39,16 +40,8 @@ public:
 	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 
 	UInventoryWidgetController *GetInventoryWidgetController();
-	UDialogueWidgetController *GetDialogueWidgetController();
-
 	UFUNCTION(BlueprintCallable)
 	void CreateInventoryWidget();
-
-	UFUNCTION(BlueprintCallable)
-	void CreateDialogueWidget(ANPCharacter *NPC);
-
-	UFUNCTION(BlueprintCallable)
-	void CloseDialogueWidget();
 
 	UFUNCTION(BlueprintPure)
 	UEquipmentManagerComponent *GetEquipmentComponent() const { return EquipmentComponent; }
@@ -85,18 +78,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Widgets")
 	TSubclassOf<UINFUserWidget> InventoryWidgetClass;
 
-	UPROPERTY()
-	TObjectPtr<UDialogueWidgetController> DialogueWidgetController;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Widgets")
-	TSubclassOf<UDialogueWidgetController> DialogueWidgetControllerClass;
-
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	TObjectPtr<UINFUserWidget> DialogueWidget;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Widgets")
-	TSubclassOf<UINFUserWidget> DialogueWidgetClass;
-
 	UINFAbilitySystemComponent *GetINFAbilitySystemComponent();
 	void BindCallbacksToDependencies();
+
+	void SpawnItem(const FINFInventoryEntry *Entry, int32 NumItems);
 };

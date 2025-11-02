@@ -28,54 +28,33 @@ public:
     // Delegates to notify widget of changes
     UPROPERTY(BlueprintAssignable, Category = "Dialogue")
     FOnNPCNameChanged OnNPCNameChanged;
-
     UPROPERTY(BlueprintAssignable, Category = "Dialogue")
     FOnDialogueTextChanged OnDialogueTextChanged;
 
-    UPROPERTY()
-    TObjectPtr<ANPCharacter> CurrentNPC;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|NPC")
+    FString NPCName;
 
-    // Called when player submits text input
     UFUNCTION(BlueprintCallable)
     void SubmitPlayerInput(const FText &PlayerText);
 
-    // API URL for the LLM service
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|API")
     FString APIURL = TEXT("https://desktop-aoartue.tail892650.ts.net/v1/chat/completions");
 
-    // Model name to use for LLM requests
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|API")
     FString ModelName = TEXT("cpatonn/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit");
 
-    // Clear the conversation history
     UFUNCTION(BlueprintCallable, Category = "Dialogue")
     void ClearConversationHistory();
 
 private:
-    // Send HTTP request to LLM API
     void SendLLMRequest(const FString &UserMessage);
-
-    // Handle HTTP response when complete
     void OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
-    // Handle streaming data as it arrives (called multiple times)
     void OnHttpRequestProgress64(FHttpRequestPtr Request, uint64 BytesSent, uint64 BytesReceived);
-
-    // Parse streaming SSE data
     void ParseStreamingData(const FString &StreamData);
 
-    // Conversation history to maintain context
     TArray<TPair<FString, FString>> ConversationHistory; // Pairs of (role, content)
-
-    // Buffer to accumulate the complete dialogue response
     FString DialogueBuffer;
-
-    // Buffer for incomplete streaming chunks
     FString StreamBuffer;
-
-    // Track total bytes processed to only parse new data
     uint64 LastProcessedBytes;
-
-    // Keep reference to active request
     TSharedPtr<IHttpRequest> ActiveRequest;
 };

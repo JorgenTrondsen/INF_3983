@@ -20,6 +20,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Input")
 	FGameplayTag InputTag;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values|Multiplayer")
+	bool bIsClientPassive = false;
+
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo *ActorInfo, const FGameplayAbilitySpec &Spec) override;
 
 protected:

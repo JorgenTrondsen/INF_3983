@@ -2,10 +2,14 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "NativeGameplayTags.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
 #include "INF_3910/Equipment/EquipmentStatEffects.h"
 #include "INF_3910/Equipment/EquipmentDefinition.h"
 #include "INF_3910/Inventory/ItemTypesToTables.h"
+#include "INF_3910/Inventory/ItemActor.h"
 #include "INF_3910/Libraries/AbilitySystemLibrary.h"
+#include "INF_3910/INF_3910.h"
 #include "Net/UnrealNetwork.h"
 
 namespace GameplayTags::Static
@@ -115,14 +119,14 @@ void FINFInventoryList::AddAbility(const UEquipmentDefinition *EquipmentCDO, FIN
 }
 
 // Adds an unequipped item with predefined effect package to the inventory
-void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage)
+void FINFInventoryList::AddUnEquippedItem(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage, int32 NumItems)
 {
     const FMasterItemDefinition Item = OwnerComponent->GetItemDefinitionByTag(ItemTag);
 
     FINFInventoryEntry &NewEntry = Entries.AddDefaulted_GetRef();
     NewEntry.ItemTag = ItemTag;
     NewEntry.ItemName = Item.ItemName;
-    NewEntry.Quantity = 1;
+    NewEntry.Quantity = NumItems;
     NewEntry.ItemID = GenerateID();
     NewEntry.EffectPackage = EffectPackage;
 
@@ -323,12 +327,6 @@ void UInventoryComponent::UseItem(const FINFInventoryEntry &Entry, int32 NumItem
     }
 }
 
-// Server RPC implementation for using items
-void UInventoryComponent::ServerUseItem_Implementation(const FINFInventoryEntry &Entry, int32 NumItems)
-{
-    UseItem(Entry, NumItems);
-}
-
 // Retrieves item definition data by gameplay tag
 FMasterItemDefinition UInventoryComponent::GetItemDefinitionByTag(const FGameplayTag &ItemTag) const
 {
@@ -351,10 +349,115 @@ TArray<FINFInventoryEntry> UInventoryComponent::GetInventoryEntries()
     return InventoryList.Entries;
 }
 
+void UInventoryComponent::SpawnItem(const FTransform &SpawnTransform, const FINFInventoryEntry *Entry, int32 NumItems)
+{
+    if (!IsValid(DefaultItemClass))
+        return;
+    AItemActor *NewActor = GetWorld()->SpawnActorDeferred<AItemActor>(DefaultItemClass, SpawnTransform);
+
+    NewActor->SetParams(Entry, NumItems);
+    NewActor->ValidationBits |= SERVER_BITS;
+
+    FMasterItemDefinition Item = GetItemDefinitionByTag(Entry->ItemTag);
+
+    // Check if static mesh is already loaded
+    if (IsValid(Item.StaticItemMesh.Get()))
+    {
+        NewActor->SetMesh(Item.StaticItemMesh.Get());
+        NewActor->FinishSpawning(SpawnTransform);
+    }
+    // Check if skeletal mesh is already loaded
+    else if (IsValid(Item.SkeletalItemMesh.Get()))
+    {
+        NewActor->SetMesh(Item.SkeletalItemMesh.Get());
+        NewActor->FinishSpawning(SpawnTransform);
+    }
+    // Neither is loaded, need to async load the appropriate one
+    else
+    {
+        FStreamableManager &Manager = UAssetManager::GetStreamableManager();
+
+        // Check which mesh type is defined and load it
+        if (!Item.StaticItemMesh.IsNull())
+        {
+            Manager.RequestAsyncLoad(Item.StaticItemMesh.ToSoftObjectPath(),
+                                     [NewActor, Item, SpawnTransform]
+                                     {
+                                         NewActor->SetMesh(Item.StaticItemMesh.Get());
+                                         NewActor->FinishSpawning(SpawnTransform);
+                                     });
+        }
+        else if (!Item.SkeletalItemMesh.IsNull())
+        {
+            Manager.RequestAsyncLoad(Item.SkeletalItemMesh.ToSoftObjectPath(),
+                                     [NewActor, Item, SpawnTransform]
+                                     {
+                                         NewActor->SetMesh(Item.SkeletalItemMesh.Get());
+                                         NewActor->FinishSpawning(SpawnTransform);
+                                     });
+        }
+    }
+}
+
 // Adds an unequipped item entry to the inventory
 void UInventoryComponent::AddUnEquippedItemEntry(const FGameplayTag &ItemTag, const FEquipmentEffectPackage &EffectPackage)
 {
     InventoryList.AddUnEquippedItem(ItemTag, EffectPackage);
+}
+
+// Server RPC implementation for using items
+void UInventoryComponent::ServerUseItem_Implementation(const FINFInventoryEntry &Entry, int32 NumItems)
+{
+    UseItem(Entry, NumItems);
+}
+
+// Validates server RPC for using items
+bool UInventoryComponent::ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems)
+{
+    return Entry.IsValid() && InventoryList.HasEnough(Entry.ItemTag, NumItems);
+}
+
+void UInventoryComponent::DropItem(const FINFInventoryEntry &Entry, int32 NumItems)
+{
+    if (!GetOwner()->HasAuthority())
+    {
+        ServerDropItem(Entry, NumItems);
+        return;
+    }
+
+    ItemDroppedDelegate.Broadcast(&Entry, NumItems);
+    InventoryList.RemoveItem(Entry, NumItems);
+}
+
+void UInventoryComponent::ServerDropItem_Implementation(const FINFInventoryEntry &Entry, int32 NumItems)
+{
+    DropItem(Entry, NumItems);
+}
+
+void UInventoryComponent::PickupItem(AItemActor *Item)
+{
+    if (!IsValid(Item))
+        return;
+
+    if (!GetOwner()->HasAuthority())
+    {
+        ServerPickupItem(Item);
+        return;
+    }
+
+    InventoryList.AddUnEquippedItem(Item->ItemTag, Item->EffectPackage, Item->NumItems);
+
+    Item->Destroy();
+}
+
+void UInventoryComponent::ServerPickupItem_Implementation(AItemActor *Item)
+{
+    PickupItem(Item);
+}
+
+bool UInventoryComponent::ServerPickupItem_Validate(AItemActor *Item)
+{
+    return Item->ValidationBits & SERVER_BITS;
 }
 
 // Clears all items from the inventory
@@ -378,12 +481,6 @@ void UInventoryComponent::ClearAllInventoryItems()
             InventoryList.RemoveItem(Entry, Entry.Quantity);
         }
     }
-}
-
-// Validates server RPC for using items
-bool UInventoryComponent::ServerUseItem_Validate(const FINFInventoryEntry &Entry, int32 NumItems)
-{
-    return Entry.IsValid() && InventoryList.HasEnough(Entry.ItemTag, NumItems);
 }
 
 // Server RPC implementation for clearing all inventory items

@@ -6,20 +6,8 @@
 
 class UEquipmentDefinition;
 class UGameplayEffect;
-class UItemInstance;
-class AItemActor;
-
-USTRUCT(BlueprintType)
-struct FItemActorToSpawn
-{
-    GENERATED_BODY()
-
-    UPROPERTY(EditDefaultsOnly)
-    TSoftClassPtr<AItemActor> EquipmentClass = nullptr;
-
-    UPROPERTY(EditDefaultsOnly)
-    TMap<FGameplayTag, FName> SlotAttachmentMap;
-};
+class UEquipmentInstance;
+class AEquipmentActor;
 
 USTRUCT(BlueprintType)
 struct FEquipmentItemProps
@@ -57,16 +45,15 @@ struct FMasterItemDefinition : public FTableRowBase
     FText ItemName = FText();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TObjectPtr<UTexture2D> Icon = nullptr;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     FText Description = FText();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TSubclassOf<UItemInstance> InstanceType;
+    TSoftObjectPtr<UStaticMesh> StaticItemMesh = nullptr;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    TSoftObjectPtr<USkeletalMesh> SkeletalItemMesh = nullptr;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-    TArray<FItemActorToSpawn> ActorsToSpawn;
+    TSoftObjectPtr<UTexture2D> Icon = nullptr;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     FConsumableProps ConsumableProps = FConsumableProps();
