@@ -1,5 +1,4 @@
 #include "DialogueWidgetController.h"
-#include "INF_3910/Character/AI/NPCharacter.h"
 #include "HttpModule.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Json.h"
@@ -27,6 +26,7 @@ void UDialogueWidgetController::SubmitPlayerInput(const FText &PlayerText)
     DialogueBuffer.Empty();
     StreamBuffer.Empty();
     LastProcessedBytes = 0;
+    bIsStreaming = false;
 
     SendLLMRequest(PlayerText.ToString());
 }
@@ -102,12 +102,14 @@ void UDialogueWidgetController::OnHttpResponseReceived(FHttpRequestPtr Request, 
     if (!bWasSuccessful || !Response.IsValid())
     {
         OnDialogueTextChanged.Broadcast(TEXT("Error: Failed to connect to AI service."));
+        OnStreamStop.Broadcast(false);
         return;
     }
 
     if (Response->GetResponseCode() != 200)
     {
         OnDialogueTextChanged.Broadcast(FString::Printf(TEXT("Error: Server returned code %d"), Response->GetResponseCode()));
+        OnStreamStop.Broadcast(false);
         return;
     }
 
@@ -119,6 +121,9 @@ void UDialogueWidgetController::OnHttpResponseReceived(FHttpRequestPtr Request, 
     // Save assistant's response to history
     if (!DialogueBuffer.IsEmpty())
         ConversationHistory.Add(TPair<FString, FString>(TEXT("assistant"), DialogueBuffer));
+
+    // Broadcast that streaming has stopped
+    OnStreamStop.Broadcast(false);
 }
 
 void UDialogueWidgetController::ParseStreamingData(const FString &StreamData)
@@ -164,6 +169,12 @@ void UDialogueWidgetController::ParseStreamingData(const FString &StreamData)
                     {
                         DialogueBuffer += Content;
                         OnDialogueTextChanged.Broadcast(DialogueBuffer);
+
+                        if (!bIsStreaming)
+                        {
+                            bIsStreaming = true;
+                            OnStreamStart.Broadcast(true);
+                        }
                     }
                 }
             }

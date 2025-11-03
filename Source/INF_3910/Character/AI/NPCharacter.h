@@ -8,6 +8,7 @@
 
 class UDialogueWidgetController;
 class UINFUserWidget;
+class UAnimData;
 
 /**
  * NPC Character class that inherits from BaseCharacter
@@ -64,6 +65,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Custom Values|Widgets")
     TSubclassOf<UINFUserWidget> DialogueWidgetClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animations")
+    TObjectPtr<UAnimData> AnimDataAsset;
 
 private:
     UDialogueWidgetController *GetDialogueWidgetController(APlayerController *PlayerController);

@@ -80,3 +80,22 @@ void UInteractTrace::TriggerInteract()
         IInteractInterface::Execute_TriggerInteract(ThisFrameInteractActor.GetObject(), PlayerController);
     }
 }
+
+FString UInteractTrace::GetInteractAnimation()
+{
+    if (ThisFrameInteractActor)
+    {
+        static const TMap<FName, FString> ActorNameMap = {
+            {FName("BP_ItemActor_Base_C"), "Loot"},
+        };
+
+        FName ActorClassName = ThisFrameInteractActor.GetObject()->GetClass()->GetFName();
+
+        if (const FString *FoundName = ActorNameMap.Find(ActorClassName))
+        {
+            return *FoundName;
+        }
+    }
+
+    return "";
+}

@@ -23,6 +23,9 @@ public:
     virtual void TickTask(float DeltaTime) override;
 
     UFUNCTION(BlueprintCallable, Category = "InteractTrace")
+    FString GetInteractAnimation();
+
+    UFUNCTION(BlueprintCallable, Category = "InteractTrace")
     void TriggerInteract();
 
 private:

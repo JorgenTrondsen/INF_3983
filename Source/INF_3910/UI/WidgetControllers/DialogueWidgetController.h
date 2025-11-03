@@ -5,12 +5,12 @@
 #include "Interfaces/IHttpRequest.h"
 #include "DialogueWidgetController.generated.h"
 
-class ANPCharacter;
 class IHttpRequest;
-class IHttpResponse;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNPCNameChanged, const FString &, NPCName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueTextChanged, const FString &, DialogueText);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStreamStart, bool, bIsStreaming);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStreamStop, bool, bIsStreaming);
 
 /**
  * Widget controller for managing dialogue UI interactions with NPCs
@@ -30,6 +30,10 @@ public:
     FOnNPCNameChanged OnNPCNameChanged;
     UPROPERTY(BlueprintAssignable, Category = "Dialogue")
     FOnDialogueTextChanged OnDialogueTextChanged;
+    UPROPERTY(BlueprintAssignable, Category = "Dialogue")
+    FOnStreamStart OnStreamStart;
+    UPROPERTY(BlueprintAssignable, Category = "Dialogue")
+    FOnStreamStop OnStreamStop;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|NPC")
     FString NPCName;
@@ -57,4 +61,5 @@ private:
     FString StreamBuffer;
     uint64 LastProcessedBytes;
     TSharedPtr<IHttpRequest> ActiveRequest;
+    bool bIsStreaming = false;
 };
