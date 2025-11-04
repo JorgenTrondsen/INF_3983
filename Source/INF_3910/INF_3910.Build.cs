@@ -22,7 +22,8 @@ public class INF_3910 : ModuleRules
 			"HTTP",
 			"Json",
 			"JsonUtilities",
-			"AIModule"
+			"AIModule",
+			"AnimGraphRuntime"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent" });

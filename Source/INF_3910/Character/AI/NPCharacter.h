@@ -40,7 +40,7 @@ public:
     UFUNCTION(BlueprintCallable)
     void StopFacingPlayer();
 
-    UPROPERTY(BlueprintReadOnly, Category = "NPC")
+    UPROPERTY(BlueprintReadWrite, Category = "NPC")
     bool bIsInDialogue = false;
 
     UPROPERTY(BlueprintReadOnly, Category = "NPC")
