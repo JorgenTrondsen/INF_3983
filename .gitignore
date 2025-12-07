@@ -24,6 +24,9 @@ Plugins/EOSIntegrationKit
 *.suo
 *.xcodeproj
 *.xcworkspace
+Build/
+Windows/
+Windows.zip
 .DS_Store
 Plugins
 

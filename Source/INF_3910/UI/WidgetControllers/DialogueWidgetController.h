@@ -9,8 +9,8 @@ class IHttpRequest;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNPCNameChanged, const FString &, NPCName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueTextChanged, const FString &, DialogueText);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStreamStart, bool, bIsStreaming);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStreamStop, bool, bIsStreaming);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTalkStart, bool, bIsTalking);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTalkStop, bool, bIsTalking);
 
 /**
  * Widget controller for managing dialogue UI interactions with NPCs
@@ -31,9 +31,9 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Dialogue")
     FOnDialogueTextChanged OnDialogueTextChanged;
     UPROPERTY(BlueprintAssignable, Category = "Dialogue")
-    FOnStreamStart OnStreamStart;
+    FOnTalkStart OnTalkStart;
     UPROPERTY(BlueprintAssignable, Category = "Dialogue")
-    FOnStreamStop OnStreamStop;
+    FOnTalkStop OnTalkStop;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|NPC")
     FString NPCName;
@@ -42,7 +42,7 @@ public:
     void SubmitPlayerInput(const FText &PlayerText);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|API")
-    FString APIURL = TEXT("https://desktop-aoartue.tail892650.ts.net/v1/chat/completions");
+    FString APIURL = TEXT("https://jorg1-4090.tail892650.ts.net/v1/chat/completions");
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|API")
     FString ModelName = TEXT("cpatonn/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit");
@@ -61,5 +61,7 @@ private:
     FString StreamBuffer;
     uint64 LastProcessedBytes;
     TSharedPtr<IHttpRequest> ActiveRequest;
-    bool bIsStreaming = false;
+    bool bIsTalking = false;
+    bool bIsThinking = false;
+    int32 ThinkingAnimationIndex = 0;
 };

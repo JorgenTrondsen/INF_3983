@@ -26,7 +26,7 @@ void UDialogueWidgetController::SubmitPlayerInput(const FText &PlayerText)
     DialogueBuffer.Empty();
     StreamBuffer.Empty();
     LastProcessedBytes = 0;
-    bIsStreaming = false;
+    bIsTalking = false;
 
     SendLLMRequest(PlayerText.ToString());
 }
@@ -53,8 +53,13 @@ void UDialogueWidgetController::SendLLMRequest(const FString &UserMessage)
 
     TSharedPtr<FJsonObject> SystemMsg = MakeShareable(new FJsonObject());
     SystemMsg->SetStringField(TEXT("role"), TEXT("system"));
-    SystemMsg->SetStringField(TEXT("content"), FString::Printf(TEXT("You are %s. Keep responses concise (2-3 sentences)."), *NPCName));
+    SystemMsg->SetStringField(TEXT("content"), FString::Printf(TEXT("You are %s, a wizard in his underwear because a goblin stole your robes this morning. Responses should only be plain text(Only the necessary special characters)."), *NPCName));
     MessagesArray.Add(MakeShareable(new FJsonValueObject(SystemMsg)));
+
+    // Disable thinking mode
+    TSharedPtr<FJsonObject> ChatTemplateKwargs = MakeShareable(new FJsonObject());
+    ChatTemplateKwargs->SetBoolField(TEXT("enable_thinking"), false);
+    JsonObject->SetObjectField(TEXT("chat_template_kwargs"), ChatTemplateKwargs);
 
     for (const auto &Msg : ConversationHistory)
     {
@@ -102,14 +107,14 @@ void UDialogueWidgetController::OnHttpResponseReceived(FHttpRequestPtr Request, 
     if (!bWasSuccessful || !Response.IsValid())
     {
         OnDialogueTextChanged.Broadcast(TEXT("Error: Failed to connect to AI service."));
-        OnStreamStop.Broadcast(false);
+        OnTalkStop.Broadcast(false);
         return;
     }
 
     if (Response->GetResponseCode() != 200)
     {
         OnDialogueTextChanged.Broadcast(FString::Printf(TEXT("Error: Server returned code %d"), Response->GetResponseCode()));
-        OnStreamStop.Broadcast(false);
+        OnTalkStop.Broadcast(false);
         return;
     }
 
@@ -123,7 +128,7 @@ void UDialogueWidgetController::OnHttpResponseReceived(FHttpRequestPtr Request, 
         ConversationHistory.Add(TPair<FString, FString>(TEXT("assistant"), DialogueBuffer));
 
     // Broadcast that streaming has stopped
-    OnStreamStop.Broadcast(false);
+    OnTalkStop.Broadcast(false);
 }
 
 void UDialogueWidgetController::ParseStreamingData(const FString &StreamData)
@@ -167,13 +172,16 @@ void UDialogueWidgetController::ParseStreamingData(const FString &StreamData)
                     FString Content;
                     if (Delta->TryGetStringField(TEXT("content"), Content))
                     {
+                        if (Content.IsEmpty())
+                            continue;
+
                         DialogueBuffer += Content;
                         OnDialogueTextChanged.Broadcast(DialogueBuffer);
 
-                        if (!bIsStreaming)
+                        if (!bIsTalking)
                         {
-                            bIsStreaming = true;
-                            OnStreamStart.Broadcast(true);
+                            bIsTalking = true;
+                            OnTalkStart.Broadcast(true);
                         }
                     }
                 }

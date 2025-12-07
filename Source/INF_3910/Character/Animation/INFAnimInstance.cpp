@@ -44,7 +44,7 @@ void UINFAnimInstance::SetPitchRotation()
             PitchRotator = FMath::FInterpTo(PitchRotator, TargetPitch, GetWorld()->GetDeltaSeconds(), 25.0f);
         }
     }
-    else // The character is an NPC
+    else if (NPCharacter) // The character is an NPC
     {
         if (NPCharacter->bIsInDialogue)
         { // Use the local pitch rotation defined for the NPC during dialogue
